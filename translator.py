@@ -1,4 +1,4 @@
-import tokenizer
+import src.tokenizer
 
 # TODO: logika pro celý proces:
 # input je jen string source kódu ✓

@@ -9,11 +9,20 @@ y	db 42h
     ;2) saving vars to vars
     y=x;
 
-	;3) arithmetic, vars only
-	x=x+y;
-	y=x-y;
+	;3) plus
+	y=x+y;
 
-	;4) arithmetic, constants too
+	;4) simulated minus
+	y=x-y;	
+	
+	mov b,a
+	lda y
+	add b
+	inr b
+	cma
+	hlt
+
+	;5) arithmetic, constants too
 	y=x+4;
 	x=2-y;
 
@@ -34,11 +43,4 @@ y	db 42h
 	;simulated arithmetic
 	y=x*5;
 	y=x/5;
-
-	mov b,a
-	lda y
-	add b
-	inr b
-	cma
-	hlt
   
