@@ -1,0 +1,119 @@
+Summary of 8080 Instructions
+------- -- ---- ------------
+
+Abbreviations used in this Summary:
+
+      R       Any of the 8-Bit registers A,B,C,D,E,H,L.
+      data    Any 8-bit or 16-bit value.
+      PC      Program Counter.
+      SP      Stack Pointer.
+      RM      Register A,B,C,D,E,H,L or memory M pointed by HL.
+      BD      Either register pair BC or DE  (B=BC, D=DE).
+      BP      Any byte pair symbol (B=BC, D=DE, H=HL, PSW=AF).
+      RP      Any register pair (B=BC, D=DE, H=HL, SP=SP).
+      Addr    A 16-Byte address.
+
+8-Bit Transfers
+              Flags
+MOV   RM1,RM2 -      Moves data from one register to another.
+MVI   RM,data -      Puts 8 bits into register, or memory.
+LDA   Addr    -      Puts 8 bits at location Addr into A Register.
+STA   Addr    -      Stores 8 bits at location Addr.
+LDAX  BD      -      Loads A register with 8 bits from location in BC or DE.
+STAX  BD      -      Stores A register at location in BC or DE.
+
+16-Bit Transfers
+
+LHLD  Addr    -      Loads HL register with 16 bits found at Addr and Addr+1.
+SHLD  Addr    -      Stores HL register contents at Addr and Addr+1.
+LXI   RP,data -      Loads 16 bits into B,D,H, or SP.
+PUSH  BP      -      Puts 16 bits of BP onto stack. SP=SP-2.
+POP   BP             Takes top of stack, puts it in BP. SP=SP+2.
+XTHL          -      Exchanges HL with top of stack.
+SPHL          -      Puts contents of HL into SP (stack pointer).
+PCHL          -      Puts contents of HL into PC (program counter) [=JMP (HL].
+XCHG          -      Exchanges HL and DE.
+
+8-Bit Arithmetic
+
+ADD   RM      ZSPCA  Adds contents of register R to A register.
+SUB   RM      ZSPCA  Subtracts contents of register R from A register.
+INR   RM      ZSPA   Increments register R by one.  R=R+1.
+DCR   RM      ZSPA   Decrements register R by one.  R=R-1.
+CMP   RM      ZSPCA  Compares contents of R with A register.
+ANA   RM      ZSPCA  Logically ANDs contents of R with A register.
+ORA   RM      ZSPCA  Logically ORs contents of R with A register.
+XRA   RM      ZSPCA  Exclusive-OR contents of R with A register.
+
+ADI   data    ZSPCA  Adds 8 bit data to contents of A register.
+SUI   data    ZSPCA  Subtracts 8 bit data from contents of A register.
+CPI   data    ZSPCA  Compares 8 bit data with contents of A register.
+ANI   data    ZSPCA  Logically ORs 8 bit data with contents of A register.
+ORI   data    ZSPCA  Logically ORs 8 bit data with contents of A register.
+XRI   data    ZSPCA  Exclusive-OR 8 bit data with A register.
+
+DAA           ZSPCA  Convert A register to packed Binary Coded Decimal.
+ADC   RM      ZSPCA  Add with carry.
+ACI   data    ZSPCA  Add with carry immediate.
+SBB   RM      ZSPCA  Subtract with borrow.
+SBI   data    ZSPCA  Subtract with borrow immediate.
+
+16-Bit Arithmetic
+
+DAD   RP      C      Adds contents of register RP to contents of HL register.
+INX   RP      -      Increments register RP.
+DCX   RP      -      Decrements register RP.
+
+Jumps, Calls, and Returns
+
+JMP   Addr    -      Unconditional Jump to location Addr.
+CALL  Addr    -      Unconditional Subroutine call to location Addr.
+RET           -      Unconditional return from subroutine.
+
+       Conditional variations
+
+       Flag condition          Jump         Call         Return
+       --------------          ------       ------       ------
+        Nonzero                JNZ          CNZ          RNZ
+        Zero                   JZ           CZ           RZ
+        No Carry               JNC          CNC          RNC
+        Carry                  JC           CC           RC
+        Parity Odd             JPO          CPO          RPO
+        Parity Even            JPE          CPE          RPE
+        Plus                   JP           CP           RP
+        Minus                  JM           CM           RM
+
+Rotations
+              Flags
+RAL           C      Rotate Accumulator Left:  Bit0=C  C=Bit7.
+RAR           C      Rotate Accumulator Right:  Bit7=C  C=Bit0.
+RLC           C      Rotate Accumulator Left thru Carry:  Bit0=Bit7  C=Bit7.
+RRC           C      Rotate Accumulator Right thru Carry:  Bit7=Bit0  C=Bit0.
+
+Other Instructions
+
+IN    Port    -      Data from Port placed in A register.
+OUT   Port    -      Data from A register placed in Port.
+
+CMC           C      Complement Carry Flag.
+STC           C      Set Carry Flag = 1.
+CMA           -      Complement A register.
+
+HLT           -      Halt CPU and wait for interrupt.
+NOP           -      No operation.
+
+DI            -      Disable Interrupts.
+EI            -      Enable Interrupts.
+
+RST 0         -      Call 0000H.
+RST 1         -      Call 0008H.
+RST 2         -      Call 0010H.
+RST 3         -      Call 0018H.
+RST 4         -      Call 0020H.
+RST 5         -      Call 0028H.
+RST 6         -      Call 0030H.
+RST 7         -      Call 0038H.
+
+Assembler Directives
+
+DB    data    -      Define Byte
