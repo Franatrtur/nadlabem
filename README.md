@@ -7,7 +7,7 @@ Our NadLabem language is a superset of assembly that targets the 8bit i8080 proc
 
 ### Usage
 1) Install nadlabem
-2) run 'main.py --help' to see relevant flags and instructions
+2) run python 'main.py --help' to see relevant flags and instructions
 
 ### Language
 
