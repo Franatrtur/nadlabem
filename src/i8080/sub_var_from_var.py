@@ -33,7 +33,7 @@ class SubVarFromVarLexer(Lexer):
         return [
             f"{spacing}LDA {self.var2_label} {self.comment}",
             f"{spacing}MOV B,A",
-            f"{spacing}LDA,{self.var3_label}",
+            f"{spacing}LDA {self.var3_label}",
             f"{spacing}CMA",
             f"{spacing}INR A",
             f"{spacing}ADD B",
