@@ -60,7 +60,9 @@ def main() -> None:
         if args.output:
 
             if Path(args.output).exists():
-                raise FileExistsError(f"File {args.output} already exists")
+                overwrite = input(f"\nFile {args.output} already exists, do you wanna overwrite it? (y/n): ")
+                if overwrite.lower() != "y":
+                    exit()
 
             if config.verbose:
                 print()
