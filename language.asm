@@ -14,15 +14,8 @@ y	db 42h
 
 	;4) simulated minus
 	y=x-y;	
-	
-	mov b,a
-	lda y
-	add b
-	inr b
-	cma
-	hlt
 
-	;5) arithmetic, constants too
+	;5) arithmetic, constants tooLDA 100h
 	y=x+4;
 	x=2-y;
 

@@ -1,6 +1,6 @@
 import re
 
-
+#TODO: add if while and other tokens
 
 class Token:
     def __init__(self, string: str):
@@ -21,7 +21,7 @@ class NumberToken(Token):
         return string.isnumeric()
 
 
-class WordToken(Token):
+class NameToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
     
@@ -48,13 +48,40 @@ class SemicolonToken(Token):
         return string == ";"
 
 
-class ArithmeticToken(Token):
+class PlusToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
-        return string in "+-*/"
+        return string in "+"
+
+
+class MinusToken(Token):
+    def __init__(self, string: str):
+        super().__init__(string)
+    
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string in "-"
+
+
+class MultiplyToken(Token):
+    def __init__(self, string: str):
+        super().__init__(string)
+    
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string in "*"
+
+
+class DivideToken(Token):
+    def __init__(self, string: str):
+        super().__init__(string)
+    
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string in "/"
 
 
 class RelationalToken(Token):
@@ -93,13 +120,17 @@ class UnknownToken(Token):
         return True
 
 
+#order matters as it is used for detection
 TOKEN_TYPES = [
     NumberToken,
-    WordToken,
+    NameToken,
 
     EqualsToken,
     SemicolonToken,
-    ArithmeticToken,
+    PlusToken,
+    MinusToken,
+    MultiplyToken,
+    DivideToken,
     RelationalToken,
 
     CodeBlockBeginToken,
@@ -123,6 +154,7 @@ class Line:
 
     def __str__(self):
         return f"Line[{','.join(map(str, self.tokens))}\"]"
+
 
 
 def split_tokens(line_string: str) -> list[str]:
