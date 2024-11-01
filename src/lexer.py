@@ -1,5 +1,5 @@
-from tokenizer import Line
-from tree import Tree
+from .tokenizer import Line
+from .tree import Tree
 
 
 
@@ -21,9 +21,10 @@ class Lexer(Tree):
 
 class InitialLexer(Lexer):
 
-    def __init__(self):
+    def __init__(self, translator):
         super().__init__(None, None)
         self.root = self
+        self.translator = translator
 
     @staticmethod
     def detect(self, line: Line) -> bool:

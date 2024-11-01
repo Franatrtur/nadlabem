@@ -1,5 +1,5 @@
-from lexer import Lexer
-from tokenizer import NameToken, NumberToken, Line, EqualsToken
+from .lexer import Lexer
+from .tokenizer import NameToken, NumberToken, Line, EqualsToken
 
 class SaveLiteralToVarLexer(Lexer):
 

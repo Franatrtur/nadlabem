@@ -1,7 +1,7 @@
-from lexer import Lexer
-from tokenizer import SemicolonToken, Line
+from .lexer import Lexer
+from .tokenizer import SemicolonToken, Line
 
-
+#TODO: register db variables
 class IgnoreLexer(Lexer):
 
     @staticmethod

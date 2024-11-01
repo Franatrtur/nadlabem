@@ -1,9 +1,8 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
-from tokenizer import tokenize, split_tokens
-from translator import translate
+from src.tokenizer import tokenize, split_tokens
+from src.translator import translate
 
 
 def test_tokenize_asm():

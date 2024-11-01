@@ -1,19 +1,19 @@
-from tree import Tree
-from tokenizer import Line
-from lexer import Lexer, InitialLexer
+from .tree import Tree
+from .tokenizer import Line
+from .lexer import Lexer, InitialLexer
 
 
 # ------------ LEXERS BEGIN --------------
-from ignore import IgnoreLexer, NoLexer
+from .ignore import IgnoreLexer, NoLexer
 
-from save_literal_to_var import SaveLiteralToVarLexer
-from save_var_to_var import SaveVarToVarLexer
+from .save_literal_to_var import SaveLiteralToVarLexer
+from .save_var_to_var import SaveVarToVarLexer
 
-from add_var_to_var import AddVarToVarLexer
-from add_literal_to_var import AddLiteralToVarLexer
+from .add_var_to_var import AddVarToVarLexer
+from .add_literal_to_var import AddLiteralToVarLexer
 
-from sub_literal_from_var import SubLiteralFromVarLexer
-from sub_var_from_var import SubVarFromVarLexer
+from .sub_literal_from_var import SubLiteralFromVarLexer
+from .sub_var_from_var import SubVarFromVarLexer
 
 #order matters as priority is used for detection
 LEXERS: list[Lexer] = [
