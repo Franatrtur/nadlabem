@@ -2,8 +2,9 @@ from .tree import Tree
 from .tokenizer import Line
 from .lexer import Lexer, ProgramFrame
 from .config import TranslationConfig
+from .ui import progress_bar
 
-from .lexers import LEXERS
+from .target import TARGETS
 
 
 def parse(lines: list[Line], config: TranslationConfig) -> ProgramFrame:
@@ -12,12 +13,15 @@ def parse(lines: list[Line], config: TranslationConfig) -> ProgramFrame:
 
     for line in lines:
 
+        if config.verbose:
+            progress_bar("Parsing ", line.number, len(lines))
+
         top_lexer = stack[-1]
 
         if not top_lexer.process(line, stack):
             top_lexer = stack[-1] #reload, as the top lexer might have left
 
-            new_lexer = select_lexer_class(line)(top_lexer, top_lexer.root)
+            new_lexer = select_lexer_class(line, config.target_cpu)(top_lexer, top_lexer.root)
             top_lexer.children.append(new_lexer)
 
             stack.append(new_lexer)
@@ -27,7 +31,9 @@ def parse(lines: list[Line], config: TranslationConfig) -> ProgramFrame:
     return initial_lexer
 
 
-def select_lexer_class(line: Line) -> Lexer:
-    for lexer in LEXERS:
+def select_lexer_class(line: Line, target_cpu: str) -> Lexer:
+    lexers = TARGETS[target_cpu].LEXERS
+
+    for lexer in lexers:
         if lexer.detect(line):
             return lexer

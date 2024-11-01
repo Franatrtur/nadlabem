@@ -1,6 +1,7 @@
 from .tokenizer import Line
 from .tree import Tree
 from .config import TranslationConfig
+from .ui import progress_bar
 
 
 class Lexer(Tree):
@@ -35,6 +36,13 @@ class ProgramFrame(Lexer):
 
     def translate(self) -> list[str]:
         translated = []
-        for child in self.children:
+        for i, child in enumerate(self.children):
             translated.extend(child.translate())
+
+            if self.config.verbose:
+                progress_bar("Translating", i+1, len(self.children))
+
         return translated
+
+    def updateProgress(self, progress: float):
+        self.progress = 0

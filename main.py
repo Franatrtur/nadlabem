@@ -6,11 +6,13 @@ import argparse
 from pathlib import Path
 #import translator
 
-from src.translator import NadlabemTranslator, TranslationConfig
+from src.config import TranslationConfig
+from src.translator import NadlabemTranslator, TARGETS
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("file", help="The input file name")
-# parser.add_argument("-p", "--processor", help="Choose Processor")
+parser.add_argument("-p", "--processor", "--target", help="Choose Processor target", default="i8080")
 
 parser.add_argument("-dev", "--devmode", action="store_true", help="Developper mode flag")
 parser.add_argument("-nomap", "--nomap", action="store_true", help="Dont generate mapping comments flag")
@@ -28,8 +30,12 @@ def main() -> None:
     with open(args.file, 'r') as file:
         code = file.read()
 
+        if args.processor not in TARGETS:
+            raise ValueError(f"Unknown processor {args.processor}")
+
         translator = NadlabemTranslator(
             config = TranslationConfig(
+                target_cpu=args.processor,
                 generate_mapping=not args.nomap,
                 erase_comments=args.nocomments,
                 devmode=args.devmode,
