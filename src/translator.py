@@ -46,5 +46,8 @@ class NadLabemTranslator:
         if(self.config.devmode):
             print("\nTranslated:", translated, "\n")
 
+        if(self.config.erase_comments):
+            translated = map(lambda line_str: line_str.split(";")[0], translated)
+
         #join lines
         return "\n".join(translated)
