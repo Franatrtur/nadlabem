@@ -1,3 +1,8 @@
-from src import tokenizer, lexer, parser, translator
+# __init__.py
+import os
+import importlib
 
-__all__ = [tokenizer, lexer, parser, translator]
+# Automatically import each .py file in the folder (except __init__.py)
+modules = [f[:-3] for f in os.listdir(os.path.dirname(__file__)) if f.endswith('.py') and f != '__init__.py']
+for module in modules:
+    globals()[module] = importlib.import_module(f'.{module}', __name__)

@@ -1,5 +1,5 @@
-from .lexer import Lexer
-from .tokenizer import NameToken, NumberToken, Line, EqualsToken, SemicolonToken, MinusToken
+from ..lexer import Lexer
+from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, SemicolonToken, MinusToken
 
 class SubLiteralFromVarLexer(Lexer):
 

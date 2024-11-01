@@ -1,7 +1,7 @@
-from .lexer import Lexer
-from .tokenizer import NameToken, NumberToken, Line, EqualsToken, PlusToken
+from ..lexer import Lexer
+from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, PlusToken
 
-class AddLiteralToVarLexer(Lexer):
+class AddVarToVarLexer(Lexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
@@ -10,7 +10,7 @@ class AddLiteralToVarLexer(Lexer):
             isinstance(line.tokens[1], EqualsToken) and \
             isinstance(line.tokens[2], NameToken) and \
             isinstance(line.tokens[3], PlusToken) and \
-            isinstance(line.tokens[4], NumberToken)
+            isinstance(line.tokens[4], NameToken)
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #exit right away
@@ -18,7 +18,7 @@ class AddLiteralToVarLexer(Lexer):
         
         self.var1_name = line.tokens[0].string
         self.var2_name = line.tokens[2].string
-        self.literal = line.tokens[4].string
+        self.var3_name = line.tokens[4].string
         self.original_line = line
 
         #ano, spapal jsem to já
@@ -27,16 +27,18 @@ class AddLiteralToVarLexer(Lexer):
     def translate(self) -> list[str]:
         return [
             f"LDA {self.var2_name} ;{self.original_line.string} (line {self.original_line.number})",
-            f"MVI B,{self.literal}",
+            f"MOV B,A",
+            f"LDA {self.var3_name}",
             f"ADD B",
             f"STA {self.var1_name}"
         ]
 
 """
-x=y+4;
+x=x+y;
 ---
 LDA <target2>
-MVI B,<8bit data>
+MOV B,A
+LDA <target3>
 ADD B
 STA <target1>
 """

@@ -1,5 +1,4 @@
 
-
 class Tree:
     def __init__(self, parent, root):
         self.root: Tree = root
