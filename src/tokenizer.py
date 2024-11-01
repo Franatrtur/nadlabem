@@ -11,15 +11,21 @@ class Token:
 
 
 class NumberToken(Token):
-    # TODO: can add support for hex numbers like "45h" or "e4h"
     def __init__(self, string: str):
         super().__init__(string)
-        self.value = int(string)
+        self.value = int(string) if string.isnumeric() else int(string[0:-1], 16)
     
     @staticmethod
     def detect(string: str) -> bool:
-        return string.isnumeric()
+        return string.isnumeric() or re.match(r"^[0-9a-fA-F]+h$", string) #hex numbers
 
+class KeywordToken(Token):
+    def __init__(self, string: str):
+        super().__init__(string)
+    
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string.lower() in ["if", "then", "while", "else", "for", "end"]
 
 class NameToken(Token):
     def __init__(self, string: str):
@@ -29,7 +35,6 @@ class NameToken(Token):
     def detect(string: str) -> bool:
         return string.isalpha()
 
-
 class EqualsToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
@@ -37,7 +42,6 @@ class EqualsToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
         return string == "="
-
 
 class SemicolonToken(Token):
     def __init__(self, string: str):
@@ -47,7 +51,6 @@ class SemicolonToken(Token):
     def detect(string: str) -> bool:
         return string == ";"
 
-
 class PlusToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
@@ -55,7 +58,6 @@ class PlusToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
         return string in "+"
-
 
 class MinusToken(Token):
     def __init__(self, string: str):
@@ -65,7 +67,6 @@ class MinusToken(Token):
     def detect(string: str) -> bool:
         return string in "-"
 
-
 class MultiplyToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
@@ -73,7 +74,6 @@ class MultiplyToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
         return string in "*"
-
 
 class DivideToken(Token):
     def __init__(self, string: str):
@@ -83,7 +83,6 @@ class DivideToken(Token):
     def detect(string: str) -> bool:
         return string in "/"
 
-
 class RelationalToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
@@ -91,7 +90,6 @@ class RelationalToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
         return string in "<>"
-
 
 class CodeBlockBeginToken(Token):
     def __init__(self, string: str):
@@ -101,7 +99,6 @@ class CodeBlockBeginToken(Token):
     def detect(string: str) -> bool:
         return string == "{"
 
-
 class CodeBlockEndToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
@@ -109,7 +106,6 @@ class CodeBlockEndToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
         return string == "}"
-
 
 class UnknownToken(Token):
     def __init__(self, string: str):
@@ -120,9 +116,10 @@ class UnknownToken(Token):
         return True
 
 
-#order matters as it is used for detection
+#order matters as priority is used for detection
 TOKEN_TYPES = [
     NumberToken,
+    KeywordToken,
     NameToken,
 
     EqualsToken,
