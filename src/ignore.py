@@ -22,7 +22,7 @@ class IgnoreLexer(Lexer):
             self.original_line.string
         ]
 
-
+#TODO: raise error when detect is run as it shouldnt ever run
 #fallback ignore lexer for when all lexers fail
 class NoLexer(IgnoreLexer):
 
