@@ -1,10 +1,12 @@
 from .tokenizer import Line
 from .tree import Tree
 from .config import TranslationConfig
-from .ui import progress_bar
-
 
 class Lexer(Tree):
+
+    def __init__(self, line: Line, parent: "Lexer", root: "Lexer"):
+        super().__init__(parent, root)
+        self.start_line = line
 
     @staticmethod
     def detect(self, line: Line) -> bool:
@@ -17,32 +19,36 @@ class Lexer(Tree):
     def translate(self) -> list[str]:
         pass
 
+    @property
+    def map(self) -> str:
+        return f"{self.start_line.string} (line {self.start_line.number})"
 
-#TODO: add global registering of variables
+        
+    @property
+    def comment(self):
+        return f";{self.map}" if self.root.config.generate_mapping else ""
 
-class ProgramFrame(Lexer):
+    def __str__(self) -> str:
+        if self.children:
+            string_children = ', '.join([str(child) for child in self.children])
+            return f"{self.__class__.__name__}({self.map}, [{string_children}])"
+        return f"{self.__class__.__name__}({self.map})"
 
-    def __init__(self, config: TranslationConfig):
-        super().__init__(None, None)
-        self.root = self
-        self.config = config
 
-    @staticmethod
-    def detect(self, line: Line) -> bool:
-        raise "Initial ProgramFrame lexer cannot detect by design"
 
-    def process(self, line: Line, stack: list[Lexer]) -> bool: #vrátí, jestli to spapal
-        return False
+class VariableLexer(Lexer):
 
-    def translate(self) -> list[str]:
-        translated = []
-        for i, child in enumerate(self.children):
-            translated.extend(child.translate())
+    @classmethod
+    def create(cls, line: Line, parent: Lexer, root: Lexer, label: str, init_value: int) -> "VariableLexer":
+        var = cls(line, parent, root)
 
-            if self.config.verbose:
-                progress_bar("Translating", i+1, len(self.children))
+        var.label = label
+        var.init_value = value
+        var.synthetic = True
 
-        return translated
+        root.register_variable(var)
 
-    def updateProgress(self, progress: float):
-        self.progress = 0
+        return var
+
+    def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
+        raise "Abstract class"

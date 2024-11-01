@@ -14,17 +14,17 @@ class SaveLiteralToVarLexer(Lexer):
         #exit right away
         stack.pop()
         
-        self.var1_name = line.tokens[0].string
+        self.var1_label = line.tokens[0].string
         self.literal = line.tokens[2].string
-        self.original_line = line
 
         #ano, spapal jsem to já
         return True
 
     def translate(self) -> list[str]:
+        spacing = " " * self.root.config.tabspaces
         return [
-            f"MVI A,{self.literal} ;{self.original_line.string} (line {self.original_line.number})",
-            f"STA {self.var1_name}"
+            f"{spacing}MVI A,{self.literal} {self.comment}",
+            f"{spacing}STA {self.var1_label}"
         ]
 
 """

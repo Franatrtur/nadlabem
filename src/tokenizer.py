@@ -1,6 +1,8 @@
 import re
+from typing import Type
 
 #TODO: add if while and other tokens
+
 
 class Token:
     def __init__(self, string: str):
@@ -8,6 +10,20 @@ class Token:
 
     def __str__(self):
         return f"{self.__class__.__name__}(\"{self.string}\")"
+
+    @staticmethod
+    def literal(string: str, class_name: str) -> Type['Token']:
+        # Define a new subclass of Token with a custom detect method
+
+        return type(class_name, (Token,), {
+            "detect": staticmethod(lambda s: s.lower() == string.lower()),
+        })
+
+    @classmethod
+    def match(cls, token: 'Token') -> bool:
+        # Checks if the token is exactly an instance of the calling class
+        return isinstance(token, cls)
+
 
 
 class NumberToken(Token):
@@ -19,97 +35,74 @@ class NumberToken(Token):
     def detect(string: str) -> bool:
         return string.isnumeric() or re.match(r"^[0-9a-fA-F]+h$", string) #hex numbers
 
+
+DefineByteToken = Token.literal("db", "DefineByteToken")
+
+
+#TODO: split each keyword into its own token
 class KeywordToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string.lower() in ["if", "then", "while", "else", "for", "end"]
 
 class NameToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string.isalpha()
 
 class EqualsToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string == "="
 
 class SemicolonToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string == ";"
 
 class PlusToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string in "+"
 
 class MinusToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string in "-"
 
 class MultiplyToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string in "*"
 
 class DivideToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string in "/"
 
 class RelationalToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string in "<>"
 
 class CodeBlockBeginToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
         return string == "{"
 
-class CodeBlockEndToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string == "}"
+CodeBlockEndToken = Token.literal("}", "CodeBlockEndToken")
 
 class UnknownToken(Token):
-    def __init__(self, string: str):
-        super().__init__(string)
     
     @staticmethod
     def detect(string: str) -> bool:
@@ -119,6 +112,8 @@ class UnknownToken(Token):
 #order matters as priority is used for detection
 TOKEN_TYPES = [
     NumberToken,
+
+    DefineByteToken,
     KeywordToken,
     NameToken,
 
@@ -174,6 +169,20 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
                 break
 
     return line
+
+
+def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subsequent_tokens: bool = False) -> bool:
+    length_match = False
+
+    if ignore_subsequent_tokens:
+        length_match = len(line.tokens) >= len(token_types)
+    else:
+        length_match = len(line.tokens) == len(token_types)
+
+    if not length_match:
+        return False
+
+    return all(token_types[i].match(line.tokens[i]) for i in range(len(token_types)))
 
 
 

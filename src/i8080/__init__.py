@@ -1,6 +1,6 @@
 from ..lexer import Lexer
 
-
+from .variable import DefineByteLexer
 from .ignore import IgnoreLexer, NoLexer
 
 from .save_literal_to_var import SaveLiteralToVarLexer
@@ -15,6 +15,7 @@ from .sub_var_from_var import SubVarFromVarLexer
 
 #order matters as priority is used for detection
 LEXERS: list[Lexer] = [
+    DefineByteLexer,
     IgnoreLexer,
 
     SaveLiteralToVarLexer,

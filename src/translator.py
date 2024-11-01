@@ -8,7 +8,7 @@ from .target import TARGETS
 #TODO: ensure last instruction is hlt
 
 
-class NadlabemTranslator:
+class NadLabemTranslator:
     
     def __init__(self, config: TranslationConfig):
         self.config = config
@@ -31,20 +31,20 @@ class NadlabemTranslator:
         self.lines = lines
 
         if(self.config.devmode):
-            print("Tokenized:", [line.__str__() for line in lines])
+            print("\nTokenized:", [line.__str__() for line in lines])
 
         #parse a the semantic tree
         parsed_program = parser.parse(lines, self.config)
         self.parsed_program = parsed_program
         
         if(self.config.devmode):
-            print("Parsed:", parsed_program)
+            print("\nParsed:", parsed_program)
 
         translated = parsed_program.translate()
         self.translated = translated
         
         if(self.config.devmode):
-            print("Translated:", translated)
+            print("\nTranslated:", translated, "\n")
 
         #join lines
         return "\n".join(translated)

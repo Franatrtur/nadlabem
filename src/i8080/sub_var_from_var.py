@@ -16,23 +16,23 @@ class SubVarFromVarLexer(Lexer):
         #exit right away
         stack.pop()
         
-        self.var1_name = line.tokens[0].string
-        self.var2_name = line.tokens[2].string
-        self.var3_name = line.tokens[4].string
-        self.original_line = line
+        self.var1_label = line.tokens[0].string
+        self.var2_label = line.tokens[2].string
+        self.var3_label = line.tokens[4].string
 
         #ano, spapal jsem to já
         return True
 
     def translate(self) -> list[str]:
+        spacing = " " * self.root.config.tabspaces
         return [
-            f"LDA {self.var2_name} ;{self.original_line.string} (line {self.original_line.number})",
-            f"MOV B,A",
-            f"LDA,{self.var3_name}",
-            f"CMA",
-            f"INR A",
-            f"ADD B",
-            f"STA {self.var1_name}"
+            f"{spacing}LDA {self.var2_label} {self.comment}",
+            f"{spacing}MOV B,A",
+            f"{spacing}LDA,{self.var3_label}",
+            f"{spacing}CMA",
+            f"{spacing}INR A",
+            f"{spacing}ADD B",
+            f"{spacing}STA {self.var1_label}"
         ]
 
 """
