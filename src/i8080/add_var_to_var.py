@@ -21,9 +21,9 @@ class AddVarToVarLexer(Lexer):
         self.var2_label = line.tokens[2].string
         self.var3_label = line.tokens[4].string
 
-        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.root)
         self.var2 = self.root.get_variable(self.var2_label, line)
         self.var3 = self.root.get_variable(self.var3_label, line)
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.root)
 
         #ano, spapal jsem to já
         return True

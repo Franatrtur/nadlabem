@@ -137,7 +137,7 @@ class Line:
         token.line_string = self.string
 
     def __str__(self):
-        return f"Line[{','.join(map(str, self.tokens))}\"]"
+        return f"Line {self.number}: \"{self.string}\" [{','.join(map(str, self.tokens))}\"]"
 
 
 

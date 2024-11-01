@@ -4,8 +4,6 @@ from .ui import progress_bar
 from .lexer import Lexer
 from .lexer import VariableLexer
 
-#TODO: add global registering of variables
-
 
 
 class ProgramFrame(Lexer):
