@@ -14,7 +14,6 @@ class Token:
     @staticmethod
     def literal(string: str, class_name: str) -> Type['Token']:
         # Define a new subclass of Token with a custom detect method
-
         return type(class_name, (Token,), {
             "detect": staticmethod(lambda s: s.lower() == string.lower()),
         })
@@ -38,9 +37,24 @@ class NumberToken(Token):
 
 DefineByteToken = Token.literal("db", "DefineByteToken")
 
+IfToken = Token.literal("if", "IfToken")
 
-#TODO: split each keyword into its own token
+ThenToken = Token.literal("then", "ThenToken")
+
+WhileToken = Token.literal("while", "WhileToken")
+
+ElseToken = Token.literal("else", "ElseToken")
+
+ForToken = Token.literal("for", "ForToken")
+
+EndToken = Token.literal("end", "EndToken")
+
+
+#falling through
 class KeywordToken(Token):
+
+    def __init__(self, string):
+        raise f"Missing token for {string}, fell through to KeywordToken"
     
     @staticmethod
     def detect(string: str) -> bool:
@@ -52,53 +66,22 @@ class NameToken(Token):
     def detect(string: str) -> bool:
         return string.isalpha()
 
-class EqualsToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string == "="
 
-class SemicolonToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string == ";"
+EqualsToken = Token.literal("=", "EqualsToken")
 
-class PlusToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string in "+"
+SemicolonToken = Token.literal(";", "SemicolonToken")
 
-class MinusToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string in "-"
+PlusToken = Token.literal("+", "PlusToken")
 
-class MultiplyToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string in "*"
+MinusToken = Token.literal("-", "MinusToken")
 
-class DivideToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string in "/"
+MultiplyToken = Token.literal("*", "MultiplyToken")
 
-class RelationalToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string in "<>"
+DivideToken = Token.literal("/", "DivideToken")
 
-class CodeBlockBeginToken(Token):
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string == "{"
+RelationalToken = Token.literal("<>", "RelationalToken")
+
+CodeBlockBeginToken = Token.literal("{", "CodeBlockBeginToken")
 
 CodeBlockEndToken = Token.literal("}", "CodeBlockEndToken")
 
@@ -114,7 +97,16 @@ TOKEN_TYPES = [
     NumberToken,
 
     DefineByteToken,
-    KeywordToken,
+
+    IfToken,
+    ThenToken,
+    WhileToken,
+    ElseToken,
+    ForToken,
+    EndToken,
+
+    KeywordToken, #not used
+
     NameToken,
 
     EqualsToken,
