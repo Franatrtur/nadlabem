@@ -1,5 +1,6 @@
 from ..lexer import Lexer
 from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, PlusToken
+from .variable import DefineByteLexer
 
 class AddVarToVarLexer(Lexer):
 
@@ -19,6 +20,10 @@ class AddVarToVarLexer(Lexer):
         self.var1_label = line.tokens[0].string
         self.var2_label = line.tokens[2].string
         self.var3_label = line.tokens[4].string
+
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.root)
+        self.var2 = self.root.get_variable(self.var2_label, line)
+        self.var3 = self.root.get_variable(self.var3_label, line)
 
         #ano, spapal jsem to já
         return True

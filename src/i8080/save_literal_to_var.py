@@ -1,5 +1,6 @@
 from ..lexer import Lexer
 from ..tokenizer import NameToken, NumberToken, Line, EqualsToken
+from .variable import DefineByteLexer
 
 class SaveLiteralToVarLexer(Lexer):
 
@@ -16,6 +17,8 @@ class SaveLiteralToVarLexer(Lexer):
         
         self.var1_label = line.tokens[0].string
         self.literal = line.tokens[2].string
+
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.root)
 
         #ano, spapal jsem to já
         return True

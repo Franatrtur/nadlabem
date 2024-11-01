@@ -43,12 +43,19 @@ class VariableLexer(Lexer):
         var = cls(line, parent, root)
 
         var.label = label
-        var.init_value = value
+        var.init_value = init_value
         var.synthetic = True
 
-        root.register_variable(var)
+        root.register_variable(var, line)
 
         return var
+
+    @classmethod
+    def create_if_doesnt_exist(cls, label: str, line: Line, parent: Lexer, root: "ProgramFrame") -> "VariableLexer":
+        if not root.has_variable(label):
+            return cls.create(line, parent, root, label, 0)
+        else:
+            return root.get_variable(label, line)
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         raise "Abstract class"

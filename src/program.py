@@ -22,13 +22,34 @@ class ProgramFrame(Lexer):
                 variables.append(child)
         return variables
 
-    def register_variable(self, variable: VariableLexer):
+    def has_variable(self, label: str) -> bool:
         variables = self.get_variables()
         for var in variables:
-            if var.label == variable.label:
-                raise Exception(f"Variable {variable.label} already exists: {variable}")
+            if var.label == label:
+                return True
+        return False
+
+    def get_variable(self, label: str, traceback: Line) -> VariableLexer:
+        variables = self.get_variables()
+        for var in variables:
+            if var.label == label:
+                return var
+        raise Exception(f"Variable {label} is not defined. Traceback: {traceback}")
+
+    def register_variable(self, variable: VariableLexer, traceback: Line):
+        if self.has_variable(variable.label):
+            raise Exception(f"Variable {variable.label} already exists: {variable}. Traceback: {traceback}")
 
         self.children.insert(0, variable)
+
+    def generate_variable(self, preffered_name: str, init_value: int, traceback: Line):
+        label_num = 1
+        label = f"{preffered_name}{label_num}"
+        while self.has_variable(label):
+            label_num += 1
+            label = f"{preffered_name}{label_num}"
+        
+        return VariableLexer.create(traceback, self, self, label, init_value)
 
     @staticmethod
     def detect(self, line: Line) -> bool:

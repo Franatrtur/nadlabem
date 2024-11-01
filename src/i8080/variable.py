@@ -7,13 +7,6 @@ class DefineByteLexer(VariableLexer):
     @staticmethod
     def detect(line: Line) -> bool:
         return match_token_pattern(line, [NameToken, DefineByteToken, NumberToken], ignore_subsequent_tokens=True)
-        
-        len(line.tokens) >= 3 and \
-            isinstance(line.tokens[0], NameToken) and \
-            DefineByteToken.match(line.tokens[1]) and \
-            isinstance(line.tokens[2], NumberToken)
-            #DefineByteToken.is_type(line.tokens[1]) and \
-            #isinstance(line.tokens[1], DefineByteToken) and \
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #exit right away
