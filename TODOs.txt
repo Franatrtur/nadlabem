@@ -1,0 +1,8 @@
+make sure program ends with HLT
+if generate mapping is enabled, include a comment disclaimer about nadlabem at the top of the generated file
+rename test files to not have redundant _test.asm
+rename test files to end .brandejs
+swapping literal and variable when adding and subing
+make if token
+make while token
+make for token
