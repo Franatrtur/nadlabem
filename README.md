@@ -5,6 +5,20 @@ Our Brandejs language is a superset of assembly that targets the 8bit i8080 proc
  - It is open source.
  - It has no external dependencies.
 
+### Brandejs source code example
+```
+x = 5
+y = 10 - x ; comment
+
+if(x != 5){
+    z = 0
+}else{
+    z = 1
+}
+    LDA z
+    HLT ; program end
+```
+
 ### Usage
 1) Install nadlabem
 2) run `python main.py --help` to see relevant flags and instructions
