@@ -1,19 +1,22 @@
+from typing import Type
+
 from .tree import Tree
 from .tokenizer import Line
 from .lexer import Lexer
-from .program import ProgramFrame
+from .program import Program
 from .config import TranslationConfig
 from .ui import progress_bar
 
 from .target import TARGETS
 
 
-def parse(lines: list[Line], config: TranslationConfig) -> ProgramFrame:
+def parse(lines: list[Line], config: TranslationConfig) -> Program:
 
-    initial_lexer = ProgramFrame(Line("", -1), config)
+    program = Program(Line("", -1), config)
     
-    #context
-    stack: list[Lexer] = [initial_lexer]
+    #currently open lexers
+    #lexers are added here, they exit on their own
+    stack: list[Lexer] = [program]
 
     for line in lines:
 
@@ -25,17 +28,19 @@ def parse(lines: list[Line], config: TranslationConfig) -> ProgramFrame:
         if not top_lexer.process(line, stack):
             top_lexer = stack[-1] #reload, as the top lexer might have left
 
-            new_lexer = select_lexer_class(line, config.target_cpu)(line, top_lexer, top_lexer.root)
+            new_lexer = select_lexer_class(line, config.target_cpu)(
+                line, parent=top_lexer, program=program
+            )
             top_lexer.children.append(new_lexer)
 
             stack.append(new_lexer)
 
             new_lexer.process(line, stack)
 
-    return initial_lexer
+    return program
 
 
-def select_lexer_class(line: Line, target_cpu: str) -> Lexer:
+def select_lexer_class(line: Line, target_cpu: str) -> Type[Lexer]:
     lexers = TARGETS[target_cpu].LEXERS
 
     for lexer_class in lexers:

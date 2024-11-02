@@ -2,11 +2,35 @@ from .tokenizer import Line
 from .config import TranslationConfig
 from .ui import progress_bar
 from .lexer import Lexer
-from .lexer import VariableLexer
 
 
+class VariableLexer(Lexer):
 
-class ProgramFrame(Lexer):
+    @classmethod
+    def create(cls, line: Line, parent: Lexer, program: Lexer, label: str, init_value: int) -> "VariableLexer":
+        var = cls(line, parent, program)
+
+        var.label = label
+        var.init_value = init_value
+        var.synthetic = True
+
+        #attach to program
+        program.register_variable(var, line)
+
+        return var
+
+    @classmethod
+    def create_if_doesnt_exist(cls, label: str, line: Line, parent: Lexer, program: "Program") -> "VariableLexer":
+        if not program.has_variable(label):
+            return cls.create(line, parent, program, label, 0)
+        else:
+            return program.get_variable(label, line)
+
+    def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
+        raise "Abstract class"
+
+
+class Program(Lexer):
 
     def __init__(self, line: Line, config: TranslationConfig):
         super().__init__(line, None, None)
@@ -51,7 +75,7 @@ class ProgramFrame(Lexer):
 
     @staticmethod
     def detect(self, line: Line) -> bool:
-        raise "Initial ProgramFrame lexer cannot detect by design"
+        raise "Initial Program lexer cannot detect by design"
 
     def process(self, line: Line, stack: list[Lexer]) -> bool: #vrátí, jestli to spapal
         return False

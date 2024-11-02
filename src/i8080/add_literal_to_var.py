@@ -9,24 +9,24 @@ class AddLiteralToVarLexer(Lexer):
         return match_token_pattern(line, [NameToken, EqualsToken, NameToken, PlusToken, NumberToken, SemicolonToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
-        #exit right away
+        #one line instruction (exit right away)
         stack.pop()
         
         self.var1_label = line.tokens[0].string
         self.var2_label = line.tokens[2].string
         self.literal = line.tokens[4].string
 
-        self.var2 = self.root.get_variable(self.var2_label, line)
-        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.root)
+        self.var2 = self.program.get_variable(self.var2_label, line)
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.program)
 
         #ano, spapal jsem to já
         return True
 
     def translate(self) -> list[str]:
-        spacing = " " * self.root.config.tabspaces
+        spacing = " " * self.program.config.tabspaces
 
         return [
-            f"{spacing}LDA {self.var2_label} {self.comment}",
+            f"{spacing}LDA {self.var2_label} {self.map_comment}",
             f"{spacing}MVI B,{self.literal}",
             f"{spacing}ADD B",
             f"{spacing}STA {self.var1_label}"

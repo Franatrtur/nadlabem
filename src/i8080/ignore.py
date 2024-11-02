@@ -11,15 +11,12 @@ class IgnoreLexer(Lexer):
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #exit right away
         stack.pop()
-        
-        self.original_line = line
-
         #ano, spapal jsem to já
         return True
 
     def translate(self) -> list[str]:
         return [
-            self.original_line.string
+            self.start_line.string
         ]
 
 #TODO: raise error when detect is run as it shouldnt ever run
