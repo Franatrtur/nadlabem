@@ -1,10 +1,15 @@
 ;ignore all lines not ending with ";"
-x	db 2
-y	db 42h
 
-	;1) saving literals to vars
-    ;
-	y=5;
+;1) define variables if not defined before
+x = 5;
+; transpiles to :
+x		DB 5
+
+;2)saving literals to vars defined before
+y=5;
+; transpiles to :
+		MOV	A,5
+		STA y
 
     ;2) saving vars to vars
     y=x;
