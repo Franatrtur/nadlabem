@@ -1,32 +1,36 @@
 from ..lexer import Lexer
-from ..tokenizer import NameToken, NumberToken, Line, EqualsToken
+from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, SemicolonToken, match_token_pattern
 from .variable import DefineByteLexer
 
 class SaveLiteralToVarLexer(Lexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return len(line.tokens) == 4 and \
-            isinstance(line.tokens[0], NameToken) and \
-            isinstance(line.tokens[1], EqualsToken) and \
-            isinstance(line.tokens[2], NumberToken)
+        #handle negative literals too
+        return  match_token_pattern(line, [NameToken, EqualsToken, NumberToken, SemicolonToken]) or\
+                match_token_pattern(line, [NameToken, EqualsToken, MinusToken, NumberToken, SemicolonToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
-        #exit right away
+        #one line instruction (exit right away)
         stack.pop()
         
         self.var1_label = line.tokens[0].string
-        self.literal = line.tokens[2].string
 
-        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.root)
+        if MinusToken.match(line.tokens[2]):
+            # make a two´s complement sign inversion
+            self.literal_val = ((line.tokens[3].value ^ 0xff) + 1) & 0xFF
+        else:
+            self.literal_val = line.tokens[2].value
+
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.program)
 
         #ano, spapal jsem to já
         return True
 
     def translate(self) -> list[str]:
-        spacing = " " * self.root.config.tabspaces
+        spacing = " " * self.program.config.tabspaces
         return [
-            f"{spacing}MVI A,{self.literal} {self.comment}",
+            f"{spacing}MVI A,{self.literal_val} {self.map_comment}",
             f"{spacing}STA {self.var1_label}"
         ]
 
