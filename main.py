@@ -1,6 +1,4 @@
-# import sys
-# import os
-# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+#!/usr/bin/env python3
 
 import argparse
 from pathlib import Path
@@ -23,15 +21,16 @@ parser.add_argument("-out", "--output", help="Output file destination (default=p
 parser.add_argument("-tab", "--tabspaces", help="Tab space amount  (default=8)", default=8)
 args = parser.parse_args()
 
-#TODO: add auto-spacing with TABS
-
 def main() -> None:
-    
-    with open(args.file, 'r') as file:
+    file_path = Path(args.file)
+    if not file_path.is_file():
+        raise ValueError(f"The file {file_path} does not exist!")
+
+    with file_path.open() as file:
         code = file.read()
 
         if args.processor not in TARGETS:
-            raise ValueError(f"Unknown processor {args.processor}")
+            raise ValueError(f"Unknown processor {args.processor}!")
 
         config = TranslationConfig(
             target_cpu=args.processor,
@@ -46,9 +45,7 @@ def main() -> None:
             with open("logo.txt", "r") as file:
                 print("\033[96m" + file.read() + '\033[0m')
 
-        translator = NadLabemTranslator(
-            config=config
-        )
+        translator = NadLabemTranslator(config)
 
         if config.verbose:
             print(config)
@@ -57,7 +54,6 @@ def main() -> None:
         output = translator.translate(code)
 
         if args.output:
-
             if Path(args.output).exists():
                 overwrite = input(f"\nFile {args.output} already exists, do you wanna overwrite it? (y/n): ")
                 if overwrite.lower() != "y":
