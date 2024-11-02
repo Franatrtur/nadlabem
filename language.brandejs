@@ -18,7 +18,7 @@ y = x - y;
 ;6) arithmetic add of variables and literal
 x = y + 4;
 
-;7) arithmetic add of variables and literal
+;7) arithmetic sub of variables and literal
 x = y - 4;
 
 

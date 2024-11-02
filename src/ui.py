@@ -5,7 +5,8 @@ def progress_bar(name: str, iteration: int, total: int, length=40):
     bar = '■' * filled_length + '-' * (length - filled_length)
     extended_name = name + ": " + ' ' * (15 - len(name))
     print(f'\r{extended_name}[{bar}] {percent:.0f}% Complete', end='\r')
-    time.sleep(0.02)
+    #wait one second total
+    time.sleep(0.33 / total)
     if iteration == total:
         print()
         time.sleep(0.2)
