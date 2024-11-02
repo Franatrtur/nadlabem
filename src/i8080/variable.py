@@ -1,13 +1,13 @@
 from ..tokenizer import Line, NameToken, DefineByteToken, NumberToken, match_token_pattern
 from ..config import TranslationConfig
 from ..lexer import Lexer
-from ..program import VariableLexer
+from ..labels import VariableLexer
 
 class DefineByteLexer(VariableLexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return match_token_pattern(line, [NameToken, DefineByteToken, NumberToken], ignore_subsequent_tokens=True)
+        return match_token_pattern(line, [NameToken, DefineByteToken, NumberToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #exit right away (1 line instruction)
@@ -21,5 +21,4 @@ class DefineByteLexer(VariableLexer):
         return True
 
     def translate(self) -> list[str]:
-        spacing = " " * (self.program.config.tabspaces - len(self.label))
-        return [f"{self.label}{spacing}DB {self.init_value} {self.map_comment if self.synthetic else ''}"]
+        return [f"{self.program.justify_label(self.label, self)}DB {self.init_value} {self.map_comment if self.synthetic else ''}"]

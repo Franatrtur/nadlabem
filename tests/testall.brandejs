@@ -1,0 +1,12 @@
+x=1;
+LDA x;
+y=x
+x= y   -1
+y=x+x
+y=x-y
+z=-5
+y=5-x
+x=5+y
+
+;whooooaaaa
+x=y-1; comment

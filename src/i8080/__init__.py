@@ -1,7 +1,7 @@
 from ..lexer import Lexer
 
 from .variable import DefineByteLexer
-from .ignore import NoLexer
+from .ignore import NoLexer, AssemblyInstructionLexer
 
 from .save_literal_to_var import SaveLiteralToVarLexer
 from .save_var_to_var import SaveVarToVarLexer
@@ -12,10 +12,14 @@ from .add_literal_to_var import AddLiteralToVarLexer
 from .sub_literal_from_var import SubLiteralFromVarLexer
 from .sub_var_from_var import SubVarFromVarLexer
 
+from .if_var_eq import IfVarEqLexer
+from .if_var_literal_eq import IfVarLiteralEqLexer
+
 
 #order matters as priority is used for detection
 LEXERS: list[Lexer] = [
     DefineByteLexer,
+    AssemblyInstructionLexer,
 
     SaveLiteralToVarLexer,
     SaveVarToVarLexer,
@@ -25,6 +29,9 @@ LEXERS: list[Lexer] = [
 
     SubLiteralFromVarLexer,
     SubVarFromVarLexer,
+
+    IfVarEqLexer,
+    IfVarLiteralEqLexer,
 
     NoLexer
 ]

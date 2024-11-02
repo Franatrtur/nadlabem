@@ -46,13 +46,18 @@ class NadLabemTranslator:
         if self.config.devmode:
             print("\nTranslated:", translated, "\n")
 
-        if self.config.generate_mapping:
+        if self.config.generate_mapping and not self.config.erase_comments:
             translated.insert(0, ";Compiled by NadLabem:")
             translated.insert(1, ";A Python-powered, dependency-free brandejs-to-assembly transpiler for the i8080 processor.")
+            translated.insert(2, "")
 
         #remove comments
         if self.config.erase_comments:
-            translated = map(lambda line_str: line_str.split(";")[0], translated)
+            translated = list(map(lambda line_str: line_str.split(";")[0], translated))
+
+        #check hlt
+        if self.config.verbose and "hlt" not in translated[-1].lower():
+            print("\nWarning: missing HLT at the end of the program\n")
 
         #join lines
         return "\n".join(translated)

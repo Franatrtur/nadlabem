@@ -2,32 +2,8 @@ from .tokenizer import Line
 from .config import TranslationConfig
 from .ui import progress_bar
 from .lexer import Lexer
-
-
-class VariableLexer(Lexer):
-
-    @classmethod
-    def create(cls, line: Line, parent: Lexer, program: Lexer, label: str, init_value: int) -> "VariableLexer":
-        var = cls(line, parent, program)
-
-        var.label = label
-        var.init_value = init_value
-        var.synthetic = True
-
-        #attach to program
-        program.register_variable(var, line)
-
-        return var
-
-    @classmethod
-    def create_if_doesnt_exist(cls, label: str, line: Line, parent: Lexer, program: "Program") -> "VariableLexer":
-        if not program.has_variable(label):
-            return cls.create(line, parent, program, label, 0)
-        else:
-            return program.get_variable(label, line)
-
-    def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
-        raise "Abstract class"
+from .labels import VariableLexer
+from .errors import LexicalError
 
 
 class Program(Lexer):
@@ -37,6 +13,7 @@ class Program(Lexer):
         self.root = self
         self.program = self
         self.config = config
+        self.labels: set[str] = set()
 
     def get_variables(self) -> list[VariableLexer]:
         variables = []
@@ -60,18 +37,22 @@ class Program(Lexer):
         raise Exception(f"Variable {label} is not defined. Traceback: {traceback}")
 
     def register_variable(self, variable: VariableLexer, traceback: Line):
-        if self.has_variable(variable.label):
-            raise Exception(f"Variable {variable.label} already exists: {variable}. Traceback: {traceback}")
+        if variable.label in self.labels:
+            raise Exception(f"Label {variable.label} already exists: {variable}. Traceback: {traceback}")
 
         self.children.insert(0, variable)
 
-    def generate_variable(self, preffered_name: str, init_value: int, traceback: Line):
+    def generate_label(self, preffered_name: str):
         label_num = 1
         label = f"{preffered_name}{label_num}"
-        while self.has_variable(label):
+        while label in self.labels:
             label_num += 1
             label = f"{preffered_name}{label_num}"
-        
+        self.labels.add(label)
+        return label
+
+    def generate_variable(self, preffered_name: str, init_value: int, traceback: Line):
+        label = self.generate_label(preffered_name)
         return VariableLexer.create(traceback, self, self, label, init_value)
 
     @staticmethod
@@ -90,3 +71,9 @@ class Program(Lexer):
                 progress_bar("Translating", i+1, len(self.children))
 
         return translated
+
+    def justify_label(self, label: str, lexer: Lexer):
+        if len(label) >= self.config.tabspaces:
+            raise LexicalError(f"Label {label} too long > {self.config.tabspaces}. {lexer.start_line}")
+        spacing = " " * (self.config.tabspaces - len(label))
+        return label + spacing

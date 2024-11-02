@@ -22,7 +22,23 @@ x = y + 4;
 x = y - 4;
 
 ;8) if statement proposal:
-if(x==0){}
+if(x == 0){
+	...regular assembly code or brandejs code
+}
+if(x < 0){
+	...regular assembly code or brandejs code
+}
+if(x > 0){
+	...regular assembly code or brandejs code
+}
+if(x <= 0){
+	...regular assembly code or brandejs code
+}
+if(x >= 0){
+	...regular assembly code or brandejs code
+}else{
+
+}
 
 
 	;if statement

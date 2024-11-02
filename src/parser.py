@@ -31,7 +31,7 @@ def parse(lines: list[Line], config: TranslationConfig) -> Program:
             new_lexer = select_lexer_class(line, config.target_cpu)(
                 line, parent=top_lexer, program=program
             )
-            top_lexer.children.append(new_lexer)
+            top_lexer.add_child(new_lexer)
 
             stack.append(new_lexer)
 

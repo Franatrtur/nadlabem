@@ -1,6 +1,6 @@
 from src.config import TranslationConfig
 from src.translator import NadLabemTranslator
-from src.tokenizer import tokenize
+from src.tokenizer import tokenize, c
 
 
 def test_tokenize_asm():
@@ -50,7 +50,8 @@ def main():
     # save_var_to_var_test()
     # add_var_to_var_test()
     # add_literal_to_var_test()
-    huge_test()
+    # huge_test()
+    print(tokenize("x = 5;"))
 
 
 if __name__ == "__main__":

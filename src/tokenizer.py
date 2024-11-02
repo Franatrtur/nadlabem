@@ -27,7 +27,7 @@ class Token:
         # Define a new subclass of Token with a custom detect method
         return type(class_name, (Token,), {
             "detect": staticmethod(lambda s: any(cls.detect(s) for cls in classes)),
-            "match": classmethod(lambda token: any(cls.match(token) for cls in classes))
+            "match": classmethod(lambda cls, token: any(cls.match(token) for cls in classes))
         })
 
 
@@ -58,8 +58,10 @@ class NameToken(Token):
         return string.isalpha()
 
 EqualsToken = Token.literal("=", "EqualsToken")
+NegationToken = Token.literal("!", "NegationToken")
 
 SemicolonToken = Token.literal(";", "SemicolonToken")
+CommaToken = Token.literal(",", "CommaToken")
 
 PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
@@ -98,7 +100,11 @@ TOKEN_TYPES = [
     NameToken,
 
     EqualsToken,
+    NegationToken,
+
     SemicolonToken,
+    CommaToken,
+
     PlusToken,
     MinusToken,
     MultiplyToken,
@@ -169,27 +175,46 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
 
                 if token_type is SemicolonToken:
                     comment_state = True
+                    token_type = IgnoreToken
 
                 token = token_type(token_string)
                 break
 
         if not token:
             raise f"Unexpected \"{str}\" - Unknown token"
-            
+
         line.pushToken(token)
 
     return line
 
 
-def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subsequent_tokens: bool = True) -> bool:
-    length_match = False
-
-    if ignore_subsequent_tokens:
-        length_match = len(line.tokens) >= len(token_types)
-    else:
-        length_match = len(line.tokens) == len(token_types)
-
-    if not length_match:
+def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subsequent_tokens: bool = False, ignore_commented_tokens: bool = True) -> bool:
+    
+    # First check if we have enough tokens to match the pattern
+    if len(line.tokens) < len(token_types):
         return False
 
-    return all(token_types[i].match(line.tokens[i]) for i in range(len(token_types)))
+    # Check if pattern matches for the required token types
+    pattern_match = all(
+        token_types[i].match(line.tokens[i]) or 
+        (IgnoreToken.match(line.tokens[i]) and ignore_commented_tokens)
+        for i in range(len(token_types))
+    )
+
+    if not pattern_match:
+        return False
+
+    # If we don't need to check subsequent tokens, we're done
+    if not ignore_subsequent_tokens:
+        # Check remaining tokens after pattern match
+        # Only return True if all remaining tokens are ignored tokens (when ignore_commented_tokens is True)
+        remaining_tokens = line.tokens[len(token_types):]
+        if remaining_tokens:
+            return all(
+                IgnoreToken.match(token) and ignore_commented_tokens
+                for token in remaining_tokens
+            )
+        return True
+
+    # If we need exact match, verify no extra tokens
+    return len(line.tokens) == len(token_types)
