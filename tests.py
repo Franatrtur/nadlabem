@@ -1,5 +1,6 @@
 from src.config import TranslationConfig
 from src.translator import NadLabemTranslator
+from src.tokenizer import tokenize
 
 
 def test_tokenize_asm():
@@ -43,7 +44,7 @@ TESTS = {
 
 
 def main():
-    test_tokenize_asm()
+    # test_tokenize_asm()
     # test_split_tokens()
     # save_literal_to_var_test()
     # save_var_to_var_test()

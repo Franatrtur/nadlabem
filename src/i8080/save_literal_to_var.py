@@ -1,5 +1,5 @@
 from ..lexer import Lexer
-from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, SemicolonToken, match_token_pattern
+from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, match_token_pattern
 from .variable import DefineByteLexer
 
 class SaveLiteralToVarLexer(Lexer):
@@ -7,8 +7,8 @@ class SaveLiteralToVarLexer(Lexer):
     @staticmethod
     def detect(line: Line) -> bool:
         #handle negative literals too
-        return  match_token_pattern(line, [NameToken, EqualsToken, NumberToken, SemicolonToken]) or \
-                match_token_pattern(line, [NameToken, EqualsToken, MinusToken, NumberToken, SemicolonToken])
+        return  match_token_pattern(line, [NameToken, EqualsToken, NumberToken]) or \
+                match_token_pattern(line, [NameToken, EqualsToken, MinusToken, NumberToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #one line instruction (exit right away)

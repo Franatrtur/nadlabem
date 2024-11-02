@@ -75,7 +75,7 @@ GreaterThanToken = Token.literal(">", "RelationalToken")
 CodeBlockBeginToken = Token.literal("{", "CodeBlockBeginToken")
 CodeBlockEndToken = Token.literal("}", "CodeBlockEndToken")
 
-class UnknownToken(Token):
+class IgnoreToken(Token):
     
     @staticmethod
     def detect(string: str) -> bool:
@@ -112,8 +112,6 @@ TOKEN_TYPES = [
 
     CodeBlockBeginToken,
     CodeBlockEndToken,
-
-    UnknownToken
 ]
 
 
@@ -153,18 +151,37 @@ def split_tokens(line_string: str) -> list[str]:
 def tokenize(line_string: str, line_number: int | None = None) -> Line:
     token_strings = split_tokens(line_string)
     line = Line(line_string, line_number)
+    
+    comment_state = False  # is set to True once ; is encountered
 
     for token_string in token_strings:
+
+        token: Token = None
+
+        if comment_state:
+            token = IgnoreToken(token_string)
+            line.pushToken(token)
+            continue
+
         for token_type in TOKEN_TYPES:
+
             if token_type.detect(token_string):
 
-                line.pushToken(token_type(token_string))
+                if token_type is SemicolonToken:
+                    comment_state = True
+
+                token = token_type(token_string)
                 break
+
+        if not token:
+            raise f"Unexpected \"{str}\" - Unknown token"
+            
+        line.pushToken(token)
 
     return line
 
 
-def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subsequent_tokens: bool = False) -> bool:
+def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subsequent_tokens: bool = True) -> bool:
     length_match = False
 
     if ignore_subsequent_tokens:

@@ -1,20 +1,29 @@
 from ..lexer import Lexer
-from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, SemicolonToken, MinusToken, match_token_pattern
+from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, match_token_pattern
 from .variable import DefineByteLexer
 
 class SubLiteralFromVarLexer(Lexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return match_token_pattern(line, [NameToken, EqualsToken, NameToken, MinusToken, NumberToken, SemicolonToken])
+        return match_token_pattern(line, [NameToken, EqualsToken, NameToken, MinusToken, NumberToken]) or \
+            match_token_pattern(line, [NameToken, EqualsToken, NumberToken, MinusToken, NameToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #exit right away
         stack.pop()
         
         self.var1_label = line.tokens[0].string
-        self.var2_label = line.tokens[2].string
-        self.literal = line.tokens[4].string
+        
+        if NameToken.match(line.tokens[2]):
+            name_token_index = 2
+            literal_token_index = 4
+        else:
+            name_token_index = 4
+            literal_token_index = 2
+
+        self.var2_label = line.tokens[name_token_index].string
+        self.literal = line.tokens[literal_token_index].string
 
         self.var2 = self.program.get_variable(self.var2_label, line)
         self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.program)

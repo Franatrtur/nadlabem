@@ -14,7 +14,7 @@ parser.add_argument("-p", "--processor", "--target", help="Choose Processor targ
 
 parser.add_argument("-dev", "--devmode", action="store_true", help="Developper mode flag")
 parser.add_argument("-nomap", "--nomapping", action="store_true", help="Dont generate mapping comments flag")
-parser.add_argument("-nocom", "--nocomments", action="store_true", help="Erase any comments flag")
+parser.add_argument("-nocom", "--nocomments", action="store_true", help="Erase all comments flag")
 parser.add_argument("-novb", "--noverbose", action="store_true", help="Dont generate generation info output")
 
 parser.add_argument("-out", "--output", help="Output file destination (default=prints to console)", default=None)
@@ -22,7 +22,6 @@ parser.add_argument("-tab", "--tabspaces", help="Tab space amount  (default=8)",
 args = parser.parse_args()
 
 def main() -> None:
-
     if not args.devmode:
         sys.tracebacklimit = 0
 
@@ -37,12 +36,12 @@ def main() -> None:
             raise ValueError(f"Unknown processor {args.processor}!")
 
         config = TranslationConfig(
-            target_cpu=args.processor,
-            generate_mapping=not args.nomapping,
-            erase_comments=args.nocomments,
-            devmode=args.devmode,
-            tabspaces=int(args.tabspaces),
-            verbose=not args.noverbose
+            target_cpu = args.processor,
+            generate_mapping = not args.nomapping,
+            erase_comments = args.nocomments,
+            devmode = args.devmode,
+            tabspaces = int(args.tabspaces),
+            verbose = not args.noverbose
         )
 
         if config.verbose:

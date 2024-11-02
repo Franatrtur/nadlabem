@@ -23,31 +23,35 @@ class NadLabemTranslator:
         lines: list[tokenizer.Line] = []
         for number, line in enumerate(string_lines):
             
-            if(self.config.verbose):
+            if self.config.verbose:
                 progress_bar("Tokenizing", number+1, len(string_lines))
 
             lines.append(tokenizer.tokenize(line, number+1))
 
         self.lines = lines
 
-        if(self.config.devmode):
+        if self.config.devmode:
             print("\nTokenized:", [line.__str__() for line in lines])
 
         #parse a the semantic tree
         parsed_program = parser.parse(lines, self.config)
         self.parsed_program = parsed_program
         
-        if(self.config.devmode):
+        if self.config.devmode:
             print("\nParsed:", parsed_program)
 
         translated = parsed_program.translate()
         self.translated = translated
         
-        if(self.config.devmode):
+        if self.config.devmode:
             print("\nTranslated:", translated, "\n")
 
+        if self.config.generate_mapping:
+            translated.insert(0, ";Compiled by NadLabem:")
+            translated.insert(1, ";A Python-powered, dependency-free brandejs-to-assembly transpiler for the i8080 processor.")
+
         #remove comments
-        if(self.config.erase_comments):
+        if self.config.erase_comments:
             translated = map(lambda line_str: line_str.split(";")[0], translated)
 
         #join lines

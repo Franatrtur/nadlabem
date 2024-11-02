@@ -21,6 +21,9 @@ x = y + 4;
 ;7) arithmetic sub of variables and literal
 x = y - 4;
 
+;8) if statement proposal:
+if(x==0){}
+
 
 	;if statement
 	if x<0 end navesti_ano else navesti_ne;

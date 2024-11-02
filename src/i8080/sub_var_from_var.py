@@ -1,12 +1,12 @@
 from ..lexer import Lexer
-from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, SemicolonToken, match_token_pattern
+from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, match_token_pattern
 from .variable import DefineByteLexer
 
 class SubVarFromVarLexer(Lexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return match_token_pattern(line, [NameToken, EqualsToken, NameToken, MinusToken, NameToken, SemicolonToken])
+        return match_token_pattern(line, [NameToken, EqualsToken, NameToken, MinusToken, NameToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #exit right away

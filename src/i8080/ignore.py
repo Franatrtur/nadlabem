@@ -1,12 +1,11 @@
 from ..lexer import Lexer
-from ..tokenizer import SemicolonToken, Line
+from ..tokenizer import Line
 
-#TODO: register db variables
-class IgnoreLexer(Lexer):
+# AS OF THE CHANGE OF BRANDEJS LANGUAGE GRAMMAR,
+# IgnoreLexer class is DEPRACATED and is not included in i8080 lexers
+# it is replaced by the NoLexer fallthrough:
 
-    @staticmethod
-    def detect(line: Line) -> bool:
-        return len(line.tokens) == 0 or not isinstance(line.tokens[-1], SemicolonToken)
+class NoLexer(Lexer):
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #exit right away
@@ -18,10 +17,6 @@ class IgnoreLexer(Lexer):
         return [
             self.start_line.string
         ]
-
-#TODO: raise error when detect is run as it shouldnt ever run
-#fallback ignore lexer for when all lexers fail
-class NoLexer(IgnoreLexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
