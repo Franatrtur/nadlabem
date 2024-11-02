@@ -16,7 +16,7 @@ class NadLabemTranslator:
     def translate(self, code: str) -> str:
 
         #split by lines
-        string_lines: list[str] = code.split("\n")
+        string_lines = code.split("\n")
         self.string_lines = string_lines
 
         #map string lines to semantic lines
@@ -46,6 +46,7 @@ class NadLabemTranslator:
         if(self.config.devmode):
             print("\nTranslated:", translated, "\n")
 
+        #remove comments
         if(self.config.erase_comments):
             translated = map(lambda line_str: line_str.split(";")[0], translated)
 

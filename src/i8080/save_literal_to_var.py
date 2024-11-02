@@ -7,18 +7,18 @@ class SaveLiteralToVarLexer(Lexer):
     @staticmethod
     def detect(line: Line) -> bool:
         #handle negative literals too
-        return  match_token_pattern(line, [NameToken, EqualsToken, NumberToken, SemicolonToken]) or\
+        return  match_token_pattern(line, [NameToken, EqualsToken, NumberToken, SemicolonToken]) or \
                 match_token_pattern(line, [NameToken, EqualsToken, MinusToken, NumberToken, SemicolonToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #one line instruction (exit right away)
         stack.pop()
-        
+
         self.var1_label = line.tokens[0].string
 
         if MinusToken.match(line.tokens[2]):
             # make a two´s complement sign inversion
-            self.literal_val = ((line.tokens[3].value ^ 0xff) + 1) & 0xFF
+            self.literal_val = ((line.tokens[3].value ^ 0xFF) + 1) & 0xFF
         else:
             self.literal_val = line.tokens[2].value
 

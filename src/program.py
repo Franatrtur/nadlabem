@@ -35,6 +35,7 @@ class Program(Lexer):
     def __init__(self, line: Line, config: TranslationConfig):
         super().__init__(line, None, None)
         self.root = self
+        self.program = program
         self.config = config
 
     def get_variables(self) -> list[VariableLexer]:
