@@ -2,7 +2,7 @@
 
 import argparse
 from pathlib import Path
-#import translator
+import sys
 
 from src.config import TranslationConfig
 from src.translator import NadLabemTranslator, TARGETS
@@ -22,6 +22,10 @@ parser.add_argument("-tab", "--tabspaces", help="Tab space amount  (default=8)",
 args = parser.parse_args()
 
 def main() -> None:
+
+    if not args.devmode:
+        sys.tracebacklimit = 0
+
     file_path = Path(args.file)
     if not file_path.is_file():
         raise ValueError(f"The file {file_path} does not exist!")
@@ -57,6 +61,8 @@ def main() -> None:
             if Path(args.output).exists():
                 overwrite = input(f"\nFile {args.output} already exists, do you wanna overwrite it? (y/n): ")
                 if overwrite.lower() != "y":
+                    print()
+                    print("\33[44m", "ABORTED", '\033[0m')
                     exit()
 
             if config.verbose:
