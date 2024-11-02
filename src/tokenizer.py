@@ -1,10 +1,9 @@
 import re
 from typing import Type
 
-#TODO: add if while and other tokens
-
 
 class Token:
+
     def __init__(self, string: str):
         self.string = string
 
@@ -13,7 +12,7 @@ class Token:
 
     @staticmethod
     def literal(string: str, class_name: str) -> Type['Token']:
-        # Define a new subclass of Token with a custom detect method
+        # Define a new subclass of Token with a custom detect method, case insensitive
         return type(class_name, (Token,), {
             "detect": staticmethod(lambda s: s.lower() == string.lower()),
         })
@@ -22,6 +21,14 @@ class Token:
     def match(cls, token: 'Token') -> bool:
         # Checks if the token is exactly an instance of the calling class
         return isinstance(token, cls)
+
+    @staticmethod
+    def any(*classes: Type["Token"], class_name: str = "CombinedToken") -> Type["Token"]:
+        # Define a new subclass of Token with a custom detect method
+        return type(class_name, (Token,), {
+            "detect": staticmethod(lambda s: any(cls.detect(s) for cls in classes)),
+            "match": classmethod(lambda token: any(cls.match(token) for cls in classes))
+        })
 
 
 
@@ -34,31 +41,15 @@ class NumberToken(Token):
     def detect(string: str) -> bool:
         return string.isnumeric() or re.match(r"^[0-9a-fA-F]+h$", string) #hex numbers
 
-
 DefineByteToken = Token.literal("db", "DefineByteToken")
+HaltToken = Token.literal("hlt", "HaltToken")
 
 IfToken = Token.literal("if", "IfToken")
-
 ThenToken = Token.literal("then", "ThenToken")
-
 WhileToken = Token.literal("while", "WhileToken")
-
 ElseToken = Token.literal("else", "ElseToken")
-
 ForToken = Token.literal("for", "ForToken")
-
 EndToken = Token.literal("end", "EndToken")
-
-
-#falling through
-class KeywordToken(Token):
-
-    def __init__(self, string):
-        raise f"Missing token for {string}, fell through to KeywordToken"
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string.lower() in ["if", "then", "while", "else", "for", "end"]
 
 class NameToken(Token):
     
@@ -66,23 +57,22 @@ class NameToken(Token):
     def detect(string: str) -> bool:
         return string.isalpha()
 
-
 EqualsToken = Token.literal("=", "EqualsToken")
 
 SemicolonToken = Token.literal(";", "SemicolonToken")
 
 PlusToken = Token.literal("+", "PlusToken")
-
 MinusToken = Token.literal("-", "MinusToken")
-
 MultiplyToken = Token.literal("*", "MultiplyToken")
-
 DivideToken = Token.literal("/", "DivideToken")
 
-RelationalToken = Token.literal("<>", "RelationalToken")
+OpenParenToken = Token.literal("(", "OpenParenToken")
+CloseParenToken = Token.literal(")", "CloseParenToken")
+
+LessThanToken = Token.literal("<", "RelationalToken")
+GreaterThanToken = Token.literal(">", "RelationalToken")
 
 CodeBlockBeginToken = Token.literal("{", "CodeBlockBeginToken")
-
 CodeBlockEndToken = Token.literal("}", "CodeBlockEndToken")
 
 class UnknownToken(Token):
@@ -105,8 +95,6 @@ TOKEN_TYPES = [
     ForToken,
     EndToken,
 
-    KeywordToken, #not used
-
     NameToken,
 
     EqualsToken,
@@ -115,13 +103,26 @@ TOKEN_TYPES = [
     MinusToken,
     MultiplyToken,
     DivideToken,
-    RelationalToken,
+
+    OpenParenToken,
+    CloseParenToken,
+
+    LessThanToken,
+    GreaterThanToken,
 
     CodeBlockBeginToken,
     CodeBlockEndToken,
 
     UnknownToken
 ]
+
+
+#Good-to-have token types
+KeywordToken = Token.any(IfToken, ElseToken, EndToken, ThenToken, WhileToken, ForToken, class_name="KeywordToken")
+
+AlgebraicToken = Token.any(PlusToken, MinusToken, MultiplyToken, DivideToken, class_name="AlgebricToken")
+
+RelationalToken = Token.any(LessThanToken, GreaterThanToken, class_name="RelationalToken")
 
 
 class Line:
@@ -175,6 +176,3 @@ def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subse
         return False
 
     return all(token_types[i].match(line.tokens[i]) for i in range(len(token_types)))
-
-
-
