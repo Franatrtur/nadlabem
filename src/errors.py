@@ -8,7 +8,7 @@ class NadLabemError(Exception):
         self.kwargs = kwargs
 
     def __str__(self):
-        return f"{self.__class__.__name__}: {self.error_string} on {self.line}, {self.kwargs}"
+        return f"{self.error_string} on {self.line}, {self.kwargs}"
 
 
 class NameError(NadLabemError):

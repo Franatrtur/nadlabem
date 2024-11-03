@@ -13,7 +13,9 @@ from .target import TARGETS
 
 def parse(lines: list[Line], config: TranslationConfig) -> Program:
 
-    program = Program(Line("", -1), config)
+    target = TARGETS[config.target_cpu]
+
+    program = target.PROGRAM(config)
     
     #currently open lexers
     #lexers are added here, they exit on their own
@@ -31,8 +33,8 @@ def parse(lines: list[Line], config: TranslationConfig) -> Program:
             if not top_lexer.process(line, stack):
                 top_lexer = stack[-1] #reload, as the top lexer might have left
 
-                new_lexer = select_lexer_class(line, config.target_cpu)(
-                    line, parent=top_lexer, program=program
+                new_lexer = select_lexer_class(line, target.LEXERS)(
+                    line, parent=top_lexer
                 )
                 top_lexer.add_child(new_lexer)
 
@@ -53,9 +55,7 @@ def parse(lines: list[Line], config: TranslationConfig) -> Program:
     return program
 
 
-def select_lexer_class(line: Line, target_cpu: str) -> Type[Lexer]:
-    lexers = TARGETS[target_cpu].LEXERS
-
+def select_lexer_class(line: Line, lexers: list[Type[Lexer]]) -> Type[Lexer]:
     for lexer_class in lexers:
         if lexer_class.detect(line):
             return lexer_class

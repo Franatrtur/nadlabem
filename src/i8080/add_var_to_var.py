@@ -1,5 +1,5 @@
 from ..lexer import Lexer
-from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, PlusToken, match_token_pattern
+from ..tokenizer import NameToken, NumberLiteralToken, Line, EqualsToken, PlusToken, match_token_pattern
 from .variable import DefineByteLexer
 
 class AddVarToVarLexer(Lexer):
@@ -11,14 +11,14 @@ class AddVarToVarLexer(Lexer):
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         #one line instruction (exit right away)
         stack.pop()
-        
+
         self.var1_label = line.tokens[0].string
         self.var2_label = line.tokens[2].string
         self.var3_label = line.tokens[4].string
 
         self.var2 = self.program.get_variable(self.var2_label, line)
         self.var3 = self.program.get_variable(self.var3_label, line)
-        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.program)
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self, self.var1_label)
 
         #ano, spapal jsem to já
         return True

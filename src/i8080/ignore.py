@@ -1,16 +1,16 @@
 from ..lexer import Lexer
-from ..labels import InstructionLexer
-from ..tokenizer import Line, match_token_pattern, NameToken, NumberToken, CommaToken, Token, IgnoreToken
+from ..labeled import DirectiveLexer
+from ..tokenizer import Line, match_token_pattern, NameToken, NumberLiteralToken, CommaToken, Token, IgnoreToken
 from ..errors import SyntaxError
 
 no_arguments = [NameToken]
 no_argument_labeled = [NameToken, NameToken]
-one_argument = [NameToken, Token.any(NameToken, NumberToken)]
-one_argument_labeled = [NameToken, NameToken, Token.any(NameToken, NumberToken)]
-two_arguments = [NameToken, Token.any(NameToken, NumberToken), CommaToken, Token.any(NameToken, NumberToken)]
-two_arguments_labeled = [NameToken, NameToken, Token.any(NameToken, NumberToken), CommaToken, Token.any(NameToken, NumberToken)]
+one_argument = [NameToken, Token.any(NameToken, NumberLiteralToken)]
+one_argument_labeled = [NameToken, NameToken, Token.any(NameToken, NumberLiteralToken)]
+two_arguments = [NameToken, Token.any(NameToken, NumberLiteralToken), CommaToken, Token.any(NameToken, NumberLiteralToken)]
+two_arguments_labeled = [NameToken, NameToken, Token.any(NameToken, NumberLiteralToken), CommaToken, Token.any(NameToken, NumberLiteralToken)]
 
-class AssemblyInstructionLexer(InstructionLexer):
+class AssemblyInstructionLexer(DirectiveLexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
@@ -43,6 +43,7 @@ class AssemblyInstructionLexer(InstructionLexer):
 
         self.synthetic = False
 
+        self.register()
         #ano, spapal jsem to já
         return True
 
@@ -55,7 +56,7 @@ class NoLexer(Lexer):
         stack.pop()
 
         if not match_token_pattern(line, []):
-            raise SyntaxError(f"Unexpected syntax", line)
+            raise SyntaxError("Unexpected syntax", line)
 
         #ano, spapal jsem to já
         return True

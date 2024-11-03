@@ -1,11 +1,11 @@
 from ..lexer import Lexer
-from ..tokenizer import (Line, match_token_pattern, IfToken, OpenParenToken, NegationToken, ElseToken, NumberToken,
+from ..tokenizer import (Line, match_token_pattern, IfToken, OpenParenToken, NegationToken, ElseToken, NumberLiteralToken,
                         NameToken, EqualsToken, CloseParenToken, CodeBlockBeginToken, CodeBlockEndToken)
 from .variable import DefineByteLexer
 from ..errors import SyntaxError
 
-if_eq_pattern = [IfToken, OpenParenToken, NameToken, EqualsToken, EqualsToken, NumberToken, CloseParenToken, CodeBlockBeginToken]
-if_neq_pattern = [IfToken, OpenParenToken, NameToken, NegationToken, EqualsToken, NumberToken, CloseParenToken, CodeBlockBeginToken]
+if_eq_pattern = [IfToken, OpenParenToken, NameToken, EqualsToken, EqualsToken, NumberLiteralToken, CloseParenToken, CodeBlockBeginToken]
+if_neq_pattern = [IfToken, OpenParenToken, NameToken, NegationToken, EqualsToken, NumberLiteralToken, CloseParenToken, CodeBlockBeginToken]
 
 else_pattern = [CodeBlockEndToken, ElseToken, CodeBlockBeginToken]
 
@@ -14,8 +14,8 @@ end_pattern = [CodeBlockEndToken]
 
 class IfVarLiteralEqLexer(Lexer):
 
-    def __init__(self, line: Line, parent: "Lexer", program: "Program"):
-        super().__init__(line, parent, program)
+    def __init__(self, line: Line, parent: "Lexer"):
+        super().__init__(line, parent)
         self.stage = 0
         #stage 0 is before "if(...){"
         #stage 1 is waiting for the  "}else{" or "}"
@@ -27,8 +27,7 @@ class IfVarLiteralEqLexer(Lexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return match_token_pattern(line, if_eq_pattern, ignore_commented_tokens=False) or \
-            match_token_pattern(line, if_neq_pattern, ignore_commented_tokens=False)
+        return match_token_pattern(line, if_eq_pattern) or match_token_pattern(line, if_neq_pattern)
 
     def add_child(self, child: Lexer):
         super().add_child(child)

@@ -1,5 +1,5 @@
 from ..lexer import Lexer
-from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, match_token_pattern
+from ..tokenizer import NameToken, NumberLiteralToken, Line, EqualsToken, MinusToken, match_token_pattern
 from .variable import DefineByteLexer
 
 class SaveLiteralToVarLexer(Lexer):
@@ -7,11 +7,11 @@ class SaveLiteralToVarLexer(Lexer):
     @staticmethod
     def detect(line: Line) -> bool:
         #handle negative literals too
-        return  match_token_pattern(line, [NameToken, EqualsToken, NumberToken]) or \
-                match_token_pattern(line, [NameToken, EqualsToken, MinusToken, NumberToken])
+        return  match_token_pattern(line, [NameToken, EqualsToken, NumberLiteralToken]) or \
+                match_token_pattern(line, [NameToken, EqualsToken, MinusToken, NumberLiteralToken])
 
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
-        #one line instruction (exit right away)
+        #exit right away
         stack.pop()
 
         self.var1_label = line.tokens[0].string
@@ -22,9 +22,9 @@ class SaveLiteralToVarLexer(Lexer):
         else:
             self.literal_val = line.tokens[2].value
 
-        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.program)
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self, self.var1_label)
 
-        #ano, spapal jsem to já
+        #ano, spapal jsem to já, one line instruction (exit right away)
         return True
 
     def translate(self) -> list[str]:

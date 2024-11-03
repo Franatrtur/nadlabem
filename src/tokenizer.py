@@ -1,5 +1,6 @@
 import re
 from typing import Type
+from .errors import SyntaxError, ParsingError
 
 
 class Token:
@@ -32,7 +33,7 @@ class Token:
 
 
 
-class NumberToken(Token):
+class NumberLiteralToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
         self.value = int(string) if string.isnumeric() else int(string[0:-1], 16)
@@ -52,13 +53,18 @@ ForToken = Token.literal("for", "ForToken")
 EndToken = Token.literal("end", "EndToken")
 
 class NameToken(Token):
-    
     @staticmethod
     def detect(string: str) -> bool:
         return string.isalpha()
 
 EqualsToken = Token.literal("=", "EqualsToken")
 NegationToken = Token.literal("!", "NegationToken")
+
+
+class QuoteToken(Token):
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string in ["\"", "'", "`"]
 
 SemicolonToken = Token.literal(";", "SemicolonToken")
 CommaToken = Token.literal(",", "CommaToken")
@@ -78,15 +84,17 @@ CodeBlockBeginToken = Token.literal("{", "CodeBlockBeginToken")
 CodeBlockEndToken = Token.literal("}", "CodeBlockEndToken")
 
 class IgnoreToken(Token):
-    
     @staticmethod
     def detect(string: str) -> bool:
         return True
 
+class StringLiteralToken(Token):
+    pass
+
 
 #order matters as priority is used for detection
-TOKEN_TYPES = [
-    NumberToken,
+TOKEN_DETECTORS = [
+    NumberLiteralToken,
 
     DefineByteToken,
 
@@ -98,6 +106,8 @@ TOKEN_TYPES = [
     EndToken,
 
     NameToken,
+
+    QuoteToken,
 
     EqualsToken,
     NegationToken,
@@ -138,11 +148,11 @@ class Line:
     def pushToken(self, token: Token):
         self.tokens.append(token)
         token.line = self
-        token.line_number = self.number
-        token.line_string = self.string
 
     def __str__(self):
         return f"Line {self.number}: \"{self.string}\" [{','.join(map(str, self.tokens))}\"]"
+    def __repr__(self):
+        return str(self)
 
 
 
@@ -159,6 +169,7 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
     line = Line(line_string, line_number)
     
     comment_state = False  # is set to True once ; is encountered
+    string_state = False  # is set to True between quotation marks
 
     for token_string in token_strings:
 
@@ -169,7 +180,7 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
             line.pushToken(token)
             continue
 
-        for token_type in TOKEN_TYPES:
+        for token_type in TOKEN_DETECTORS:
 
             if token_type.detect(token_string):
 
@@ -181,7 +192,7 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
                 break
 
         if not token:
-            raise f"Unexpected \"{str}\" - Unknown token"
+            raise ParsingError(f"Unexpected \"{token_string}\" - Unknown token", f"Line {line_number}: \"{line_string}\"")
 
         line.pushToken(token)
 
@@ -204,16 +215,14 @@ def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subse
         return False
 
     # If we don't need to check subsequent tokens, we're done
-    if not ignore_subsequent_tokens:
-        # Check remaining tokens after pattern match
-        # Only return True if all remaining tokens are ignored tokens (when ignore_commented_tokens is True)
-        remaining_tokens = line.tokens[len(token_types):]
-        if remaining_tokens:
-            return all(
-                IgnoreToken.match(token) and ignore_commented_tokens
-                for token in remaining_tokens
-            )
+    if ignore_subsequent_tokens:
         return True
+
+    if ignore_commented_tokens:
+        # Check remaining tokens after pattern match
+        # Only return True if all remaining tokens are ignored tokens
+        remaining_tokens = line.tokens[len(token_types):]
+        return all(IgnoreToken.match(token) for token in remaining_tokens)
 
     # If we need exact match, verify no extra tokens
     return len(line.tokens) == len(token_types)

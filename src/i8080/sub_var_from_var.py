@@ -1,5 +1,5 @@
 from ..lexer import Lexer
-from ..tokenizer import NameToken, NumberToken, Line, EqualsToken, MinusToken, match_token_pattern
+from ..tokenizer import NameToken, NumberLiteralToken, Line, EqualsToken, MinusToken, match_token_pattern
 from .variable import DefineByteLexer
 
 class SubVarFromVarLexer(Lexer):
@@ -19,7 +19,7 @@ class SubVarFromVarLexer(Lexer):
         #assert variables exist
         self.var2 = self.program.get_variable(self.var2_label, line)
         self.var3 = self.program.get_variable(self.var3_label, line)
-        self.var1 = DefineByteLexer.create_if_doesnt_exist(self.var1_label, line, self, self.program)
+        self.var1 = DefineByteLexer.create_if_doesnt_exist(self, self.var1_label)
 
         #ano, spapal jsem to já
         return True

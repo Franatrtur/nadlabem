@@ -1,0 +1,4 @@
+x = 5
+;missing end code block "}", should throw an error
+if(x==5){
+    y = 1

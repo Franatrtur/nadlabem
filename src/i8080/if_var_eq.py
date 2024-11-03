@@ -2,6 +2,8 @@ from ..lexer import Lexer
 from ..tokenizer import (Line, match_token_pattern, IfToken, OpenParenToken, NegationToken, ElseToken,
                         NameToken, EqualsToken, CloseParenToken, CodeBlockBeginToken, CodeBlockEndToken)
 from .variable import DefineByteLexer
+from .ignore import AssemblyInstructionLexer
+from .shortcuts import jump_var1_eq_var2
 from ..errors import SyntaxError
 
 if_eq_pattern = [IfToken, OpenParenToken, NameToken, EqualsToken, EqualsToken, NameToken, CloseParenToken, CodeBlockBeginToken]
@@ -14,8 +16,8 @@ end_pattern = [CodeBlockEndToken]
 
 class IfVarEqLexer(Lexer):
 
-    def __init__(self, line: Line, parent: "Lexer", program: "Program"):
-        super().__init__(line, parent, program)
+    def __init__(self, line: Line, parent: "Lexer"):
+        super().__init__(line, parent)
         self.stage = 0
         #stage 0 is before "if(...){"
         #stage 1 is waiting for the  "}else{" or "}"
@@ -27,8 +29,7 @@ class IfVarEqLexer(Lexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return match_token_pattern(line, if_eq_pattern, ignore_commented_tokens=False) or \
-            match_token_pattern(line, if_neq_pattern, ignore_commented_tokens=False)
+        return match_token_pattern(line, if_eq_pattern) or match_token_pattern(line, if_neq_pattern)
 
     def add_child(self, child: Lexer):
         super().add_child(child)
@@ -83,8 +84,8 @@ class IfVarEqLexer(Lexer):
 
         spacing = " " * self.program.config.tabspaces
 
-        if_branch_start_label = self.program.generate_label("if")
-        out_label = self.program.generate_label("out")        
+        if_branch_target = AssemblyInstructionLexer.create(self, "NOP", label=self.program.generate_label("if"))
+        out_target = AssemblyInstructionLexer.create(self, "NOP", label=self.program.generate_label("out"))        
 
         translated_if_branch: list[str] = []
         for child in self.if_branch:
@@ -94,20 +95,15 @@ class IfVarEqLexer(Lexer):
             translated_else_branch.extend(child.translate())
 
         #stage 0
-        translated_if_clause =  [
-            f"{spacing}LDA {self.var1_label} {self.map_comment}",
-            f"{spacing}MOV B,A",
-            f"{spacing}LDA {self.var2_label}",
-            f"{spacing}CMP B",
-            f"{spacing}{('JNZ' if self.negation else 'JZ')} {if_branch_start_label}"
-        ]
+        translated_if_clause = jump_var1_eq_var2(self.var1_label, self.var2_label, if_branch_target.label, self, self.negation)
 
-        label_spacing = self.program.config.tabspaces - len(if_branch_start_label)
+        label_spacing = self.program.config.tabspaces - len(if_branch_target.label)
 
-        translated_else_branch.append(f"{spacing}JMP {out_label}")
-        translated_if_branch.append(f"{self.program.justify_label(out_label, self)}NOP")
+        translated_if_branch.append(out_target.translate()[0])
+        if self.else_branch:
+            translated_else_branch.append(f"{spacing}JMP {out_target.label}")
 
-        translated_if_branch.insert(0, f"{self.program.justify_label(if_branch_start_label, self)}NOP")
+        translated_if_branch.insert(0, if_branch_target.translate()[0])
 
         return translated_if_clause + translated_else_branch + translated_if_branch
 

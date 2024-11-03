@@ -4,9 +4,9 @@ from .config import TranslationConfig
 
 class Lexer(Tree):
 
-    def __init__(self, line: Line, parent: "Lexer", program: "Program"):
-        super().__init__(parent, root=program)
-        self.program = program
+    def __init__(self, line: Line, parent: "Lexer"):
+        super().__init__(parent, root=parent.root if parent else None)
+        self.program: "Program" = self.root
         self.start_line = line
 
     @staticmethod
@@ -27,10 +27,18 @@ class Lexer(Tree):
         
     @property
     def map_comment(self):
-        return f";{self.mapping}" if self.root.config.generate_mapping else ""
+        return f";{self.mapping}" if self.root.config.generate_mapping else self.comment
+        
+    @property
+    def comment(self):
+        orig_comment = ";".join(self.start_line.string.split(";")[1:])
+        return "" if not orig_comment else ";" + orig_comment
 
     def __str__(self) -> str:
         if self.children:
             string_children = ', '.join([str(child) for child in self.children])
             return f"{self.__class__.__name__}({self.mapping}, [{string_children}])"
         return f"{self.__class__.__name__}({self.mapping})"
+
+    def __repr__(self) -> str:
+        return str(self)

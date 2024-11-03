@@ -1,5 +1,7 @@
 from ..lexer import Lexer
 
+from .program import ProgramI8080
+
 from .variable import DefineByteLexer
 from .ignore import NoLexer, AssemblyInstructionLexer
 
@@ -35,6 +37,8 @@ LEXERS: list[Lexer] = [
 
     NoLexer
 ]
+
+PROGRAM = ProgramI8080
 
 
 # __init__.py
