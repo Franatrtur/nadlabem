@@ -40,6 +40,8 @@ if(x >= 0){
 
 }
 
+A=b
+
 
 	;if statement
 	if x<0 end navesti_ano else navesti_ne;

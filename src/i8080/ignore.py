@@ -1,6 +1,7 @@
 from ..lexer import Lexer
 from ..labels import InstructionLexer
 from ..tokenizer import Line, match_token_pattern, NameToken, NumberToken, CommaToken, Token, IgnoreToken
+from ..errors import SyntaxError
 
 no_arguments = [NameToken]
 no_argument_labeled = [NameToken, NameToken]
@@ -53,8 +54,8 @@ class NoLexer(Lexer):
         #exit right away
         stack.pop()
 
-        if line.tokens:
-            raise Exception(f"Invalid syntax line {line}, fell through to no lexer")
+        if not match_token_pattern(line, []):
+            raise SyntaxError(f"Unexpected syntax", line)
 
         #ano, spapal jsem to já
         return True

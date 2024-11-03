@@ -2,7 +2,7 @@ from .tokenizer import Line
 from .config import TranslationConfig
 from .ui import progress_bar
 from .lexer import Lexer
-from .errors import TranslationError
+from .errors import NameError
 
 
 class InstructionLexer(Lexer):
@@ -36,7 +36,7 @@ class InstructionLexer(Lexer):
         
         spacing_length = self.program.config.tabspaces - len(self.label) if self.labeled else self.program.config.tabspaces
         if spacing_length <= 0:
-            raise TranslationError(f"Label too long. {self}")
+            raise NameError(f"Label too long. {self}")
         
         spacing = " " * spacing_length
         return [f"{self.label if self.label else ''}{spacing}{self.command} {arguments_string} {self.map_comment if self.synthetic else ''}"]

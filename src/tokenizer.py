@@ -196,8 +196,7 @@ def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subse
 
     # Check if pattern matches for the required token types
     pattern_match = all(
-        token_types[i].match(line.tokens[i]) or 
-        (IgnoreToken.match(line.tokens[i]) and ignore_commented_tokens)
+        token_types[i].match(line.tokens[i])
         for i in range(len(token_types))
     )
 

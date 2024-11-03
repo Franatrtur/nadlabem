@@ -1,11 +1,21 @@
-class LexicalError(Exception):
-    """Exception raised for errors during the tokenizing phase."""
+
+
+class NadLabemError(Exception):
+
+    def __init__(self, error_string: str, line: "Line", **kwargs):
+        self.error_string = error_string
+        self.line = line
+        self.kwargs = kwargs
+
+    def __str__(self):
+        return f"{self.__class__.__name__}: {self.error_string} on {self.line}, {self.kwargs}"
+
+
+class NameError(NadLabemError):
     pass
 
-class SyntaxError(Exception):
-    """Exception raised for errors during the parsing phase."""
+class SyntaxError(NadLabemError):
     pass
 
-class TranslationError(Exception):
-    """Exception raised for errors during the translating phase."""
+class ParsingError(NadLabemError):
     pass

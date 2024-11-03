@@ -3,7 +3,7 @@ from .config import TranslationConfig
 from .ui import progress_bar
 from .lexer import Lexer
 from .labels import VariableLexer
-from .errors import LexicalError
+from .errors import NameError
 
 
 class Program(Lexer):
@@ -34,11 +34,11 @@ class Program(Lexer):
         for var in variables:
             if var.label == label:
                 return var
-        raise Exception(f"Variable {label} is not defined. Traceback: {traceback}")
+        raise NameError(f"Variable {label} is not defined", traceback)
 
     def register_variable(self, variable: VariableLexer, traceback: Line):
         if variable.label in self.labels:
-            raise Exception(f"Label {variable.label} already exists: {variable}. Traceback: {traceback}")
+            raise NameError(f"Label {variable.label} already exists: {variable}", traceback)
 
         self.children.insert(0, variable)
 
@@ -74,6 +74,6 @@ class Program(Lexer):
 
     def justify_label(self, label: str, lexer: Lexer):
         if len(label) >= self.config.tabspaces:
-            raise LexicalError(f"Label {label} too long > {self.config.tabspaces}. {lexer.start_line}")
+            raise NameError(f"Label {label} too long > {self.config.tabspaces} characters", lexer.start_line)
         spacing = " " * (self.config.tabspaces - len(label))
         return label + spacing

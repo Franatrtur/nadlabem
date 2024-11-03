@@ -13,33 +13,62 @@ x = 5;
 ; this is a comment
 y = 11;
 x = x + 1;
-z = y-z;
+z = y-x;
 x = 0;
 y = x+5;
-;y should not be defined and should throw an error
-x = y;
-y = 5;
 x   db  5h
 x=efh;
-x   db  1
-y   db  1
+x = 1
+y = 1
 
 if (x == y) {
     z = 2
 }
 
-LDA z
-
-x = 5
-y = -6
-
 if (x != y) {
-    z = 2
-} else {
     z = 3
 }
 
-LDA z
+    LDA z
+    HLT
+x = 1
+y = 1
+
+if (x == y) {
+
+    z = 2
+
+} else {
+
+    z = 3
+    
+}
+
+    LDA z
+    HLT
+x = 1
+y = 1
+z = 1
+
+if (x == y) {
+    if (z == y) {
+        z = 2
+    }
+}
+
+    LDA z
+x = 1
+
+if (x == 1) {
+    z = 2
+}
+
+if (x != 1) {
+    z = 3
+}
+
+    LDA z
+    HLT
 x       db 5 ; this is a test file with no nadlabem code
 y       DB 32h
 ;blankline, next two lines should not be processed as there is no content
@@ -3335,3 +3364,16 @@ x=5+y
 
 ;whooooaaaa
 x=y-1; comment
+i=0
+
+loop    NOP
+
+i = i + 1
+
+if(i != 50h){
+        JMP loop
+}
+
+
+        LDA i
+        HLT

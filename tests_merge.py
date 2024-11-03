@@ -9,8 +9,21 @@ def merge_brandejs_files():
         print("Error: 'tests' directory not found")
         return False
     
+    # Delete existing merged file if it exists
+    output_path = tests_dir / 'merged.brandejs'
+    if output_path.exists():
+        try:
+            output_path.unlink()
+            print(f"Deleted existing merged file: {output_path}")
+        except Exception as e:
+            print(f"Error deleting existing merged file: {str(e)}")
+            return False
+    
     # Get all .brandejs files in the tests directory
     brandejs_files = glob.glob(str(tests_dir / '*.brandejs'))
+    
+    # Filter out the merged file from the list if it was recreated by something else
+    brandejs_files = [f for f in brandejs_files if Path(f).name != 'merged.brandejs']
     
     if not brandejs_files:
         print("No .brandejs files found in tests directory")
@@ -29,7 +42,6 @@ def merge_brandejs_files():
             return False
     
     # Write merged content to output file
-    output_path = tests_dir / 'merged.brandejs'
     try:
         with open(output_path, 'w', encoding='utf-8') as output_file:
             output_file.write('\n'.join(merged_content))

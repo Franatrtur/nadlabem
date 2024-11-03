@@ -6,6 +6,7 @@ from .lexer import Lexer
 from .program import Program
 from .config import TranslationConfig
 from .ui import progress_bar
+from .errors import ParsingError, NameError, SyntaxError, NadLabemError
 
 from .target import TARGETS
 
@@ -25,17 +26,29 @@ def parse(lines: list[Line], config: TranslationConfig) -> Program:
 
         top_lexer = stack[-1]
 
-        if not top_lexer.process(line, stack):
-            top_lexer = stack[-1] #reload, as the top lexer might have left
+        try:
 
-            new_lexer = select_lexer_class(line, config.target_cpu)(
-                line, parent=top_lexer, program=program
-            )
-            top_lexer.add_child(new_lexer)
+            if not top_lexer.process(line, stack):
+                top_lexer = stack[-1] #reload, as the top lexer might have left
 
-            stack.append(new_lexer)
+                new_lexer = select_lexer_class(line, config.target_cpu)(
+                    line, parent=top_lexer, program=program
+                )
+                top_lexer.add_child(new_lexer)
 
-            new_lexer.process(line, stack)
+                stack.append(new_lexer)
+
+                new_lexer.process(line, stack)
+
+        except NadLabemError as e:
+            if isinstance(e, NameError) or isinstance(e, SyntaxError):
+                raise e
+            else:
+                raise ParsingError("Unexpected" + str(e), line)
+
+
+    if len(stack) != 1:
+        raise SyntaxError(f"Expected an end to context {stack[-1].__class__.__name__}", line)
 
     return program
 

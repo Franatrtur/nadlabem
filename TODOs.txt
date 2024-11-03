@@ -1,1 +1,16 @@
+!! extract all literals to variables. halo pane
+allow comments on if statement rows
+add option to ignore unrecognized syntax (an unexpected sequence of tokens like !db<({ or if(){{ will be ignored)
+
 make variablelexer a subclass of instructionlexer
+improve custom errors, erase error trace if not config.devmode
+use custom errors when throwing expected exceptions (things that COULD happen)
+
+extract components into separate reusable functions that return string list
+ - (a function like load_var_to_register(register, label))
+ - specifically component like compare_var_gt_literal(label, literal)
+    would for example return a series of instructions that would leave 0 or not0 or the A register maybe?
+    we can then use a simple JZ/JNZ
+
+merge the if_var_eq and if_var_literal_eq thanks to these components
+use these components, make the while lexer
