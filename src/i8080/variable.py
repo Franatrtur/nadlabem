@@ -1,4 +1,4 @@
-from ..tokenizer import Line, NameToken, DefineByteToken, NumberLiteralToken, match_token_pattern
+from ..tokenizer import Line, NameToken, NumberLiteralToken, match_token_pattern
 from ..config import TranslationConfig
 from ..lexer import Lexer
 from ..labeled import VariableLexer
@@ -7,7 +7,7 @@ class DefineByteLexer(VariableLexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return match_token_pattern(line, [NameToken, DefineByteToken, NumberLiteralToken])
+        return match_token_pattern(line, [NameToken, NameToken, NumberLiteralToken]) and line.tokens[1].lower() == "db"
 
     def register(self):
         self.command = "DB"

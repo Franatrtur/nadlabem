@@ -12,12 +12,11 @@ class DirectiveLexer(Lexer):
         self.registered = False
 
     def register(self) -> None:
-        """Signifies that the instruction is saturated completely.
+        """Attaches self to program. Signifies that the instruction is saturated completely.
         it is finished and no more changes will be made before translation"""
         if self.label and not self.registered:
             self.program.register(self)
             self.registered = True
-
 
     @classmethod
     def create(cls, parent: Lexer, command: str, arguments: list[str] = [], label: str | None = None, done: bool = True) -> "DirectiveLexer":
@@ -49,7 +48,7 @@ class DirectiveLexer(Lexer):
         
         spacing_length = self.program.config.tabspaces - len(self.label) if self.label else self.program.config.tabspaces
         if spacing_length <= 0:
-            raise NameError(f"Label \"{self.label}\" too long > {self.program.config.tabspaces} characters. {self}")
+            raise NameError(f"Label {self.label} is too long > {self.program.config.tabspaces} characters. {self}", self.start_line)
         
         spacing = " " * spacing_length
         comment = self.map_comment if mapping and self.synthetic else self.comment

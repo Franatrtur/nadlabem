@@ -1,13 +1,13 @@
 from ..lexer import Lexer
 from ..tokenizer import (Line, match_token_pattern, IfToken, OpenParenToken, NegationToken, ElseToken,
-                        NameToken, EqualsToken, CloseParenToken, CodeBlockBeginToken, CodeBlockEndToken)
+                        NameToken, IsEqualToken, IsNotEqualToken, CloseParenToken, CodeBlockBeginToken, CodeBlockEndToken)
 from .variable import DefineByteLexer
 from .ignore import AssemblyInstructionLexer
 from .shortcuts import jump_var1_eq_var2
 from ..errors import SyntaxError
 
-if_eq_pattern = [IfToken, OpenParenToken, NameToken, EqualsToken, EqualsToken, NameToken, CloseParenToken, CodeBlockBeginToken]
-if_neq_pattern = [IfToken, OpenParenToken, NameToken, NegationToken, EqualsToken, NameToken, CloseParenToken, CodeBlockBeginToken]
+if_eq_pattern = [IfToken, OpenParenToken, NameToken, IsEqualToken, NameToken, CloseParenToken, CodeBlockBeginToken]
+if_neq_pattern = [IfToken, OpenParenToken, NameToken, IsNotEqualToken, NameToken, CloseParenToken, CodeBlockBeginToken]
 
 else_pattern = [CodeBlockEndToken, ElseToken, CodeBlockBeginToken]
 
@@ -45,16 +45,16 @@ class IfVarEqLexer(Lexer):
 
         if self.stage == 0:
             self.var1_label = line.tokens[2].string
-            self.negation = NegationToken.match(line.tokens[3])
-            self.var2_label = line.tokens[5].string
+            self.negation = IsNotEqualToken.match(line.tokens[3])
+            self.var2_label = line.tokens[4].string
             self.stage = 1
 
         elif self.stage == 1:
 
-            if match_token_pattern(line, else_pattern, ignore_commented_tokens=False):
+            if match_token_pattern(line, else_pattern):
                 self.stage = 2
 
-            elif match_token_pattern(line, end_pattern, ignore_commented_tokens=False):
+            elif match_token_pattern(line, end_pattern):
                 stack.pop()
                 self.stage = 3 #done
                 return True
@@ -63,7 +63,7 @@ class IfVarEqLexer(Lexer):
                 return False
 
         elif self.stage == 2:
-            if match_token_pattern(line, end_pattern, ignore_commented_tokens=False):
+            if match_token_pattern(line, end_pattern):
                 stack.pop()
                 self.stage = 3 #done
                 return True
@@ -90,6 +90,7 @@ class IfVarEqLexer(Lexer):
         translated_if_branch: list[str] = []
         for child in self.if_branch:
             translated_if_branch.extend(child.translate())
+        
         translated_else_branch: list[str] = []
         for child in self.else_branch:
             translated_else_branch.extend(child.translate())

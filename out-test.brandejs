@@ -1,0 +1,1325 @@
+;Compiled by NadLabem:
+;A Python-powered, dependency-free brandejs-to-assembly transpiler for the i8080 processor.
+
+y       DB 0 ;y=x; (line 2)
+x       DB 0 ;x=1; (line 1)
+        MVI A,1 ;x=1; (line 1)
+        STA x
+        LDA x ;y=x; (line 2)
+        STA y
+        MVI A,5 ;x=5; (line 3)
+        STA x
+        LDA x ;y=x+4; (line 4)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 5)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 6)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 7)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 8)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 9)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 10)
+        STA x
+        LDA x ;y=x; (line 11)
+        STA y
+        MVI A,5 ;x=5; (line 12)
+        STA x
+        LDA x ;y=x+4; (line 13)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 14)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 15)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 16)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 17)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 18)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 19)
+        STA x
+        LDA x ;y=x; (line 20)
+        STA y
+        MVI A,5 ;x=5; (line 21)
+        STA x
+        LDA x ;y=x+4; (line 22)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 23)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 24)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 25)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 26)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 27)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 28)
+        STA x
+        LDA x ;y=x; (line 29)
+        STA y
+        MVI A,5 ;x=5; (line 30)
+        STA x
+        LDA x ;y=x+4; (line 31)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 32)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 33)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 34)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 35)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 36)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 37)
+        STA x
+        LDA x ;y=x; (line 38)
+        STA y
+        MVI A,5 ;x=5; (line 39)
+        STA x
+        LDA x ;y=x+4; (line 40)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 41)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 42)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 43)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 44)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 45)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 46)
+        STA x
+        LDA x ;y=x; (line 47)
+        STA y
+        MVI A,5 ;x=5; (line 48)
+        STA x
+        LDA x ;y=x+4; (line 49)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 50)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 51)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 52)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 53)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 54)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 55)
+        STA x
+        LDA x ;y=x; (line 56)
+        STA y
+        MVI A,5 ;x=5; (line 57)
+        STA x
+        LDA x ;y=x+4; (line 58)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 59)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 60)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 61)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 62)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 63)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 64)
+        STA x
+        LDA x ;y=x; (line 65)
+        STA y
+        MVI A,5 ;x=5; (line 66)
+        STA x
+        LDA x ;y=x+4; (line 67)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 68)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 69)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 70)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 71)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 72)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 73)
+        STA x
+        LDA x ;y=x; (line 74)
+        STA y
+        MVI A,5 ;x=5; (line 75)
+        STA x
+        LDA x ;y=x+4; (line 76)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 77)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 78)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 79)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 80)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 81)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 82)
+        STA x
+        LDA x ;y=x; (line 83)
+        STA y
+        MVI A,5 ;x=5; (line 84)
+        STA x
+        LDA x ;y=x+4; (line 85)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 86)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 87)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 88)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 89)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 90)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 91)
+        STA x
+        LDA x ;y=x; (line 92)
+        STA y
+        MVI A,5 ;x=5; (line 93)
+        STA x
+        LDA x ;y=x+4; (line 94)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 95)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 96)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 97)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 98)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 99)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 100)
+        STA x
+        LDA x ;y=x; (line 101)
+        STA y
+        MVI A,5 ;x=5; (line 102)
+        STA x
+        LDA x ;y=x+4; (line 103)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 104)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 105)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 106)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 107)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 108)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 109)
+        STA x
+        LDA x ;y=x; (line 110)
+        STA y
+        MVI A,5 ;x=5; (line 111)
+        STA x
+        LDA x ;y=x+4; (line 112)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 113)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 114)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 115)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 116)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 117)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 118)
+        STA x
+        LDA x ;y=x; (line 119)
+        STA y
+        MVI A,5 ;x=5; (line 120)
+        STA x
+        LDA x ;y=x+4; (line 121)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 122)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 123)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 124)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 125)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 126)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 127)
+        STA x
+        LDA x ;y=x; (line 128)
+        STA y
+        MVI A,5 ;x=5; (line 129)
+        STA x
+        LDA x ;y=x+4; (line 130)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 131)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 132)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 133)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 134)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 135)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 136)
+        STA x
+        LDA x ;y=x; (line 137)
+        STA y
+        MVI A,5 ;x=5; (line 138)
+        STA x
+        LDA x ;y=x+4; (line 139)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 140)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 141)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 142)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 143)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 144)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 145)
+        STA x
+        LDA x ;y=x; (line 146)
+        STA y
+        MVI A,5 ;x=5; (line 147)
+        STA x
+        LDA x ;y=x+4; (line 148)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 149)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 150)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 151)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 152)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 153)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 154)
+        STA x
+        LDA x ;y=x; (line 155)
+        STA y
+        MVI A,5 ;x=5; (line 156)
+        STA x
+        LDA x ;y=x+4; (line 157)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 158)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 159)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 160)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 161)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 162)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 163)
+        STA x
+        LDA x ;y=x; (line 164)
+        STA y
+        MVI A,5 ;x=5; (line 165)
+        STA x
+        LDA x ;y=x+4; (line 166)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 167)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 168)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 169)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 170)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 171)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 172)
+        STA x
+        LDA x ;y=x; (line 173)
+        STA y
+        MVI A,5 ;x=5; (line 174)
+        STA x
+        LDA x ;y=x+4; (line 175)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 176)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 177)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 178)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 179)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 180)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 181)
+        STA x
+        LDA x ;y=x; (line 182)
+        STA y
+        MVI A,5 ;x=5; (line 183)
+        STA x
+        LDA x ;y=x+4; (line 184)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 185)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 186)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 187)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 188)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 189)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 190)
+        STA x
+        LDA x ;y=x; (line 191)
+        STA y
+        MVI A,5 ;x=5; (line 192)
+        STA x
+        LDA x ;y=x+4; (line 193)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 194)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 195)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 196)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 197)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 198)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 199)
+        STA x
+        LDA x ;y=x; (line 200)
+        STA y
+        MVI A,5 ;x=5; (line 201)
+        STA x
+        LDA x ;y=x+4; (line 202)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 203)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 204)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 205)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 206)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 207)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 208)
+        STA x
+        LDA x ;y=x; (line 209)
+        STA y
+        MVI A,5 ;x=5; (line 210)
+        STA x
+        LDA x ;y=x+4; (line 211)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 212)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 213)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 214)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 215)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 216)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 217)
+        STA x
+        LDA x ;y=x; (line 218)
+        STA y
+        MVI A,5 ;x=5; (line 219)
+        STA x
+        LDA x ;y=x+4; (line 220)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 221)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 222)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 223)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 224)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 225)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 226)
+        STA x
+        LDA x ;y=x; (line 227)
+        STA y
+        MVI A,5 ;x=5; (line 228)
+        STA x
+        LDA x ;y=x+4; (line 229)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 230)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 231)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 232)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 233)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 234)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 235)
+        STA x
+        LDA x ;y=x; (line 236)
+        STA y
+        MVI A,5 ;x=5; (line 237)
+        STA x
+        LDA x ;y=x+4; (line 238)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 239)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 240)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 241)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 242)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 243)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 244)
+        STA x
+        LDA x ;y=x; (line 245)
+        STA y
+        MVI A,5 ;x=5; (line 246)
+        STA x
+        LDA x ;y=x+4; (line 247)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 248)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 249)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 250)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 251)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 252)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 253)
+        STA x
+        LDA x ;y=x; (line 254)
+        STA y
+        MVI A,5 ;x=5; (line 255)
+        STA x
+        LDA x ;y=x+4; (line 256)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 257)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 258)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 259)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 260)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 261)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 262)
+        STA x
+        LDA x ;y=x; (line 263)
+        STA y
+        MVI A,5 ;x=5; (line 264)
+        STA x
+        LDA x ;y=x+4; (line 265)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 266)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 267)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 268)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 269)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 270)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 271)
+        STA x
+        LDA x ;y=x; (line 272)
+        STA y
+        MVI A,5 ;x=5; (line 273)
+        STA x
+        LDA x ;y=x+4; (line 274)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 275)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 276)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 277)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 278)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 279)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 280)
+        STA x
+        LDA x ;y=x; (line 281)
+        STA y
+        MVI A,5 ;x=5; (line 282)
+        STA x
+        LDA x ;y=x+4; (line 283)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 284)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 285)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 286)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 287)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 288)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x
+        MVI A,1 ;x=1; (line 289)
+        STA x
+        LDA x ;y=x; (line 290)
+        STA y
+        MVI A,5 ;x=5; (line 291)
+        STA x
+        LDA x ;y=x+4; (line 292)
+        MVI B,4
+        ADD B
+        STA y
+        LDA y ;x=y-2; (line 293)
+        MOV B,A
+        MVI A,2
+        CMA
+        INR A
+        ADD B
+        STA x
+        LDA x ;y=x+4; (line 294)
+        MVI B,4
+        ADD B
+        STA y
+        LDA x ;x=x+y; (line 295)
+        MOV B,A
+        LDA y
+        ADD B
+        STA x
+        LDA x ;y=x-x; (line 296)
+        MOV B,A
+        LDA x
+        CMA
+        INR A
+        ADD B
+        STA y
+        LDA y ;x=y-8; (line 297)
+        MOV B,A
+        MVI A,8
+        CMA
+        INR A
+        ADD B
+        STA x

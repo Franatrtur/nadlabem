@@ -1,11 +1,11 @@
 from ..lexer import Lexer
 from ..tokenizer import (Line, match_token_pattern, IfToken, OpenParenToken, NegationToken, ElseToken, NumberLiteralToken,
-                        NameToken, EqualsToken, CloseParenToken, CodeBlockBeginToken, CodeBlockEndToken)
+                        NameToken, IsEqualToken, IsNotEqualToken, CloseParenToken, CodeBlockBeginToken, CodeBlockEndToken)
 from .variable import DefineByteLexer
 from ..errors import SyntaxError
 
-if_eq_pattern = [IfToken, OpenParenToken, NameToken, EqualsToken, EqualsToken, NumberLiteralToken, CloseParenToken, CodeBlockBeginToken]
-if_neq_pattern = [IfToken, OpenParenToken, NameToken, NegationToken, EqualsToken, NumberLiteralToken, CloseParenToken, CodeBlockBeginToken]
+if_eq_pattern = [IfToken, OpenParenToken, NameToken, IsEqualToken, NumberLiteralToken, CloseParenToken, CodeBlockBeginToken]
+if_neq_pattern = [IfToken, OpenParenToken, NameToken, IsNotEqualToken, NumberLiteralToken, CloseParenToken, CodeBlockBeginToken]
 
 else_pattern = [CodeBlockEndToken, ElseToken, CodeBlockBeginToken]
 
@@ -43,16 +43,16 @@ class IfVarLiteralEqLexer(Lexer):
 
         if self.stage == 0:
             self.var1_label = line.tokens[2].string
-            self.negation = NegationToken.match(line.tokens[3])
-            self.literal = line.tokens[5].string
+            self.negation = IsNotEqualToken.match(line.tokens[3])
+            self.literal = line.tokens[4].string
             self.stage = 1
 
         elif self.stage == 1:
 
-            if match_token_pattern(line, else_pattern, ignore_commented_tokens=False):
+            if match_token_pattern(line, else_pattern):
                 self.stage = 2
 
-            elif match_token_pattern(line, end_pattern, ignore_commented_tokens=False):
+            elif match_token_pattern(line, end_pattern):
                 stack.pop()
                 self.stage = 3 #done
                 return True
@@ -61,7 +61,7 @@ class IfVarLiteralEqLexer(Lexer):
                 return False
 
         elif self.stage == 2:
-            if match_token_pattern(line, end_pattern, ignore_commented_tokens=False):
+            if match_token_pattern(line, end_pattern):
                 stack.pop()
                 self.stage = 3 #done
                 return True

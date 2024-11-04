@@ -6,9 +6,10 @@ class NadLabemError(Exception):
         self.error_string = error_string
         self.line = line
         self.kwargs = kwargs
+        print()
 
     def __str__(self):
-        return f"{self.error_string} on {self.line}, {self.kwargs}"
+        return f"\n\n\33[41m {self.__class__.__name__} \033[0m {self.error_string} on {self.line}, {self.kwargs}"
 
 
 class NameError(NadLabemError):

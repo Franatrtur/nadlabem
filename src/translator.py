@@ -22,11 +22,11 @@ class NadLabemTranslator:
         #map string lines to semantic lines
         lines: list[tokenizer.Line] = []
         for number, line in enumerate(string_lines):
+
+            lines.append(tokenizer.tokenize(line, number+1))
             
             if self.config.verbose:
                 progress_bar("Tokenizing", number+1, len(string_lines))
-
-            lines.append(tokenizer.tokenize(line, number+1))
 
         self.lines = lines
 
@@ -54,10 +54,6 @@ class NadLabemTranslator:
         #remove comments
         if self.config.erase_comments:
             translated = list(map(lambda line_str: line_str.split(";")[0], translated))
-
-        #check hlt
-        if self.config.verbose and "hlt" not in translated[-1].lower():
-            print("\nWarning: missing HLT at the end of the program\n")
 
         #join lines
         return "\n".join(translated)

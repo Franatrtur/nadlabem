@@ -8,7 +8,7 @@ class Lexer(Tree):
         super().__init__(parent, root=parent.root if parent else None)
         self.program: "Program" = self.root
         self.start_line = line
-        self.comment = line.comment_token.string
+        self.comment = line.comment
 
     @staticmethod
     def detect(self, line: Line) -> bool:

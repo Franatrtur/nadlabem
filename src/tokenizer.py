@@ -1,6 +1,6 @@
 import re, ast
 from typing import Type
-from .errors import SyntaxError, ParsingError
+from .errors import SyntaxError, ParsingError, NadLabemError
 
 
 class Token:
@@ -36,17 +36,25 @@ class Token:
 class NumberLiteralToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
-        self.value = ast.literal_eval(string) if not string.lower().endswith("h") else int(string[0:-1], 16)
+        if string.lower().endswith("h"):
+            self.value = int(string[0:-1], 16)
+        else:
+            try:
+                self.value = ast.literal_eval(string)
+            except SyntaxError as e:
+                raise Exception("Invalid number literal")
     
     @staticmethod
     def detect(string: str) -> bool:
-        return string.isnumeric() or re.match(r"^[0-9a-fA-F]+h$", string) #hex numbers
-        #TODO: add regex for 0xffe numbers written like this
+        return string.isnumeric() or re.match(r"^[0-9a-fA-F]+h$", string) or re.match(r"^0x[0-9a-fA-F]+$", string)
 
 class StringLiteralToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
-        self.value = ast.literal_eval(x)
+        try:
+            self.value = ast.literal_eval(string)
+        except Exception as e:
+            raise Exception("Invalid string literal")
     
     @staticmethod
     def detect(string: str) -> bool:
@@ -57,9 +65,6 @@ class CommentToken(Token):
     def detect(string: str) -> bool:
         return string.startswith(";")
 
-
-DefineByteToken = Token.literal("db", "DefineByteToken")
-HaltToken = Token.literal("hlt", "HaltToken")
 
 IfToken = Token.literal("if", "IfToken")
 ThenToken = Token.literal("then", "ThenToken")
@@ -83,6 +88,7 @@ EqualsToken = Token.literal("=", "EqualsToken")
 NegationToken = Token.literal("!", "NegationToken")
 
 CommaToken = Token.literal(",", "CommaToken")
+ColonToken = Token.literal(":", "ColonToken")
 
 PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
@@ -108,15 +114,11 @@ TOKEN_DETECTORS = [
     StringLiteralToken,
     CommentToken,
 
-    DefineByteToken,
-    HaltToken,
-
     IfToken,
     ThenToken,
     WhileToken,
     ElseToken,
     ForToken,
-    EndToken,
 
     NameToken,
 
@@ -130,8 +132,8 @@ TOKEN_DETECTORS = [
     EqualsToken,
     NegationToken,
 
-    SemicolonToken,
     CommaToken,
+    ColonToken,
 
     PlusToken,
     MinusToken,
@@ -147,7 +149,7 @@ TOKEN_DETECTORS = [
 
 
 #Good-to-have token types
-KeywordToken = Token.any(IfToken, ElseToken, EndToken, ThenToken, WhileToken, ForToken, class_name="KeywordToken")
+KeywordToken = Token.any(IfToken, ElseToken, ThenToken, WhileToken, ForToken, class_name="KeywordToken")
 
 AlgebraicToken = Token.any(PlusToken, MinusToken, MultiplyToken, DivideToken, class_name="AlgebricToken")
 
@@ -159,11 +161,12 @@ class Line:
         self.string = string
         self.number = number
         self.tokens: list[Token] = []
+        self.comment: str = ""
 
-    def pushToken(self, token: Token):
+    def pushToken(self, token: Token) -> None:
         token.line = self
         if CommentToken.match(token):
-            self.comment_token = token
+            self.comment = token.string
         else:
             self.tokens.append(token)
 
@@ -176,7 +179,7 @@ class Line:
 
 def split_tokens(line_string: str) -> list[str]:
     # Regular expression to match words, numbers, and punctuation, newly also strings and comments
-    pattern = r""";.*|>=|==|!=|<=|"(\\"|[^"])*"|\'(\\'|[^\'])*\'|\b\w+\b|[^\w\s]"""
+    pattern = r""";.*|>=|==|!=|<=|"(?:\\"|[^"])*"|'(?:\\'|[^'])*'|\b\w+\b|[^\w\s]"""
     tokens = re.findall(pattern, line_string)
 
     return tokens
@@ -189,6 +192,8 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
     for token_string in token_strings:
 
         try:
+            token: Token = None
+
             for token_type in TOKEN_DETECTORS:
 
                 if token_type.detect(token_string):
@@ -196,35 +201,26 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
                     line.pushToken(token)
                     break
 
-            assert token
+            if not token:
+                raise SyntaxError(f"Unexpected {token_string}", f"Line {line_number}: \"{line_string}\"")
 
         except Exception as e:
-            raise SyntaxError(f"{str(e)}. Unexpected {token_string}", f"Line {line_number}: \"{line_string}\"")
+            if isinstance(e, NadLabemError):
+                raise e
+            else:
+                raise SyntaxError(f"{str(e)}. Unexpected {token_string}", f"Line {line_number}: \"{line_string}\"")
 
 
     return line
 
 
-def match_token_pattern(line: Line, token_types: list[Type[Token]]) -> bool:
+def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subsequent_tokens: bool = False) -> bool:
+
     # First check if we have enough tokens to match the pattern
     # Check if pattern matches for the required token types
-    pattern_match = len(line.tokens) == len(token_types) and all(
+    length_match = len(line.tokens) >= len(token_types) if ignore_subsequent_tokens else len(line.tokens) == len(token_types)
+
+    return len(line.tokens) == len(token_types) and all(
         token_types[i].match(line.tokens[i])
         for i in range(len(token_types))
     )
-
-    # if not pattern_match:
-    #     return False
-
-    # # If we don't need to check subsequent tokens, we're done
-    # if ignore_subsequent_tokens:
-    #     return True
-
-    # if ignore_commented_tokens:
-    #     # Check remaining tokens after pattern match
-    #     # Only return True if all remaining tokens are ignored tokens
-    #     remaining_tokens = line.tokens[len(token_types):]
-    #     return all(IgnoreToken.match(token) for token in remaining_tokens)
-
-    # # If we need exact match, verify no extra tokens
-    # return len(line.tokens) == len(token_types)

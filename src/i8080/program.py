@@ -24,13 +24,13 @@ class ProgramI8080(Program):
 
     def get_variable(self, label: str, traceback: Line) -> VariableLexer:
         if label not in self.variables:
-            raise NameError(f"Variable \"{label}\" is not defined", traceback)
+            raise NameError(f"Variable {label} is not defined", traceback)
         return self.variables[label]
 
     def register(self, instruction: DirectiveLexer) -> None:
         
         if instruction.label in self.labeled.keys():
-            raise NameError(f"Label \"{instruction.label}\" already exists.", instruction.start_line, other=self.labeled[instruction.label].start_line)
+            raise NameError(f"Label {instruction.label} already exists", instruction.start_line, other=self.labeled[instruction.label].start_line)
         
         self.labeled[instruction.label] = instruction
         
@@ -50,12 +50,17 @@ class ProgramI8080(Program):
         return VariableLexer.create(parent, label, init_value)
 
     def translate(self) -> list[str]:
+
         translated = []
         for i, child in enumerate(self.children):
             translated.extend(child.translate())
 
             if self.config.verbose:
                 progress_bar("Translating", i+1, len(self.children))
+
+        #check hlt
+        if self.config.verbose and "hlt" not in translated[-1].lower():
+            print("\n\33[41m", "Warning", '\033[0m', "missing HLT at the end of the program\n")
 
         return translated
 
