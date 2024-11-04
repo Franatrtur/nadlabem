@@ -63,9 +63,3 @@ class ProgramI8080(Program):
             print("\n\33[41m", "Warning", '\033[0m', "missing HLT at the end of the program\n")
 
         return translated
-
-    def justify_label(self, label: str, lexer: Lexer):
-        if len(label) >= self.config.tabspaces:
-            raise NameError(f"Label \"{label}\" too long > {self.config.tabspaces} characters", lexer.start_line)
-        spacing = " " * (self.config.tabspaces - len(label))
-        return label + spacing

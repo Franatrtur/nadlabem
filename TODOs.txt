@@ -1,10 +1,8 @@
-DONE - allow comments on if statement rows
-done - keep original comments on translated lines even if generate_mapping is false
-DONE - uppercase instructions
+while loop
 
-done - make variablelexer a subclass of instructionlexer
-done - improve custom errors, erase error trace if not config.devmode
-done - use custom errors when throwing expected exceptions (things that COULD happen)
+
+
+
 
 extract components into separate reusable functions that return string list
  - (a function like load_var_to_register(register, label))

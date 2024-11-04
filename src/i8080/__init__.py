@@ -17,6 +17,8 @@ from .sub_var_from_var import SubVarFromVarLexer
 from .if_var_eq import IfVarEqLexer
 from .if_var_literal_eq import IfVarLiteralEqLexer
 
+from .while_var_eq import WhileVarEqLexer
+
 
 #order matters as priority is used for detection
 LEXERS: list[Lexer] = [
@@ -34,6 +36,8 @@ LEXERS: list[Lexer] = [
 
     IfVarEqLexer,
     IfVarLiteralEqLexer,
+
+    WhileVarEqLexer,
 
     NoLexer
 ]

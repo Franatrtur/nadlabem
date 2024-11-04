@@ -43,7 +43,7 @@ class DirectiveLexer(Lexer):
     def process(self, line: Line, stack: [Lexer]) -> bool: #vrátí, jestli to spapal
         raise "Abstract class"
 
-    def translate(self, mapping: bool = True) -> list[str]:
+    def translate(self, mapping: bool = False) -> list[str]:
         arguments_string = ",".join(str(arg) for arg in self.arguments)
         
         spacing_length = self.program.config.tabspaces - len(self.label) if self.label else self.program.config.tabspaces
@@ -52,14 +52,14 @@ class DirectiveLexer(Lexer):
         
         spacing = " " * spacing_length
         comment = self.map_comment if mapping and self.synthetic else self.comment
-        return [f"{self.label if self.label else ''}{spacing}{self.command.upper()} {arguments_string} {comment}"]
+        translated = f"{self.label if self.label else ''}{spacing}{self.command.upper()} {arguments_string}"
+        comment_spacing = max(24 - len(translated), 1)
+        return [translated + " " * comment_spacing + comment]
+
 
 
 
 class VariableLexer(DirectiveLexer):
-
-    def __init__(self, line: Line, parent: Lexer):
-        super().__init__(line, parent)
 
     def register(self) -> None:
         super().register()

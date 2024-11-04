@@ -1,0 +1,8 @@
+xe94	db  0
+ycf1	db  0
+
+if(xe94 == ycf1){
+    INR D
+}
+
+konec86 hlt

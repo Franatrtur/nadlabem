@@ -7,7 +7,7 @@ class DefineByteLexer(VariableLexer):
 
     @staticmethod
     def detect(line: Line) -> bool:
-        return match_token_pattern(line, [NameToken, NameToken, NumberLiteralToken]) and line.tokens[1].lower() == "db"
+        return match_token_pattern(line, [NameToken, NameToken, NumberLiteralToken]) and line.tokens[1].string.lower() == "db"
 
     def register(self):
         self.command = "DB"

@@ -3,7 +3,7 @@ from ..tokenizer import (Line, match_token_pattern, IfToken, OpenParenToken, Neg
                         NameToken, IsEqualToken, IsNotEqualToken, CloseParenToken, CodeBlockBeginToken, CodeBlockEndToken)
 from .variable import DefineByteLexer
 from .ignore import AssemblyInstructionLexer
-from .shortcuts import jump_var1_eq_var2
+from .synthetic import jump_var1_eq_var2
 from ..errors import SyntaxError
 
 if_eq_pattern = [IfToken, OpenParenToken, NameToken, IsEqualToken, NameToken, CloseParenToken, CodeBlockBeginToken]
@@ -101,8 +101,7 @@ class IfVarEqLexer(Lexer):
         label_spacing = self.program.config.tabspaces - len(if_branch_target.label)
 
         translated_if_branch.append(out_target.translate()[0])
-        if self.else_branch:
-            translated_else_branch.append(f"{spacing}JMP {out_target.label}")
+        translated_else_branch.append(f"{spacing}JMP {out_target.label}")
 
         translated_if_branch.insert(0, if_branch_target.translate()[0])
 

@@ -38,3 +38,22 @@ class Lexer(Tree):
 
     def __repr__(self) -> str:
         return str(self)
+
+
+class SyntheticLexer(Lexer):
+
+    synthetic = True
+
+    @classmethod
+    def create(cls, parent: Lexer) -> Lexer:
+        return cls(parent.start_line, parent)
+
+    def translate(self, mapping: bool = False) -> list[str]:
+        translated = []
+        for child in self.children:
+            translated.extend(child.translate(
+                mapping = mapping and (
+                    child is self.children[0] #or isinstance(child, SyntheticLexer)
+                )
+            ))
+        return translated

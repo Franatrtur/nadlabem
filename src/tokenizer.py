@@ -75,7 +75,7 @@ ForToken = Token.literal("for", "ForToken")
 class NameToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
-        return string.isalpha()
+        return string[0].isalpha()
 
 IsEqualToken = Token.literal("==", "IsEqualToken")
 IsNotEqualToken = Token.literal("!=", "IsNotEqualToken")
@@ -150,10 +150,10 @@ TOKEN_DETECTORS = [
 
 #Good-to-have token types
 KeywordToken = Token.any(IfToken, ElseToken, ThenToken, WhileToken, ForToken, class_name="KeywordToken")
-
 AlgebraicToken = Token.any(PlusToken, MinusToken, MultiplyToken, DivideToken, class_name="AlgebricToken")
-
 ComparisonToken = Token.any(IsEqualToken, IsGtEqToken, IsLtEqToken, LessThanToken, GreaterThanToken, class_name="ComparisonToken")
+LiteralToken = Token.any(NumberLiteralToken, StringLiteralToken, class_name="LiteralToken")
+ValueToken = Token.any(NameToken, LiteralToken, class_name="ValueToken")
 
 
 class Line:
@@ -214,13 +214,16 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
     return line
 
 
-def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subsequent_tokens: bool = False) -> bool:
+def match_token_pattern(line: Line | list[Token], token_types: list[Type[Token]], ignore_subsequent_tokens: bool = False) -> bool:
+
+    if isinstance(line, Line):
+        line = line.tokens
 
     # First check if we have enough tokens to match the pattern
     # Check if pattern matches for the required token types
-    length_match = len(line.tokens) >= len(token_types) if ignore_subsequent_tokens else len(line.tokens) == len(token_types)
+    length_match = len(line) >= len(token_types) if ignore_subsequent_tokens else len(line) == len(token_types)
 
     return length_match and all(
-        token_types[i].match(line.tokens[i])
+        token_types[i].match(line[i])
         for i in range(len(token_types))
     )
