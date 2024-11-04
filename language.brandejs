@@ -21,8 +21,11 @@ x = y + 4;
 ;7) arithmetic sub of variables and literal
 x = y - 4;
 
-;8) if statement proposal:
-if(x == 0){
+;8) if statement equality:
+if(x == y){
+	...regular assembly code or brandejs code
+}
+if(x != 7){
 	...regular assembly code or brandejs code
 }
 if(x < 0){

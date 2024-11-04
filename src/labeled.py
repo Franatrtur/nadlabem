@@ -48,7 +48,7 @@ class DirectiveLexer(Lexer):
         
         spacing_length = self.program.config.tabspaces - len(self.label) if self.label else self.program.config.tabspaces
         if spacing_length <= 0:
-            raise NameError(f"Label {self.label} is too long > {self.program.config.tabspaces} characters. {self}", self.start_line)
+            raise NameError(f"Label \"{self.label}\" is too long > {self.program.config.tabspaces} characters. {self}", self.start_line)
         
         spacing = " " * spacing_length
         comment = self.map_comment if mapping and self.synthetic else self.comment

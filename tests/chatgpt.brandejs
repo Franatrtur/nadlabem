@@ -1,0 +1,25 @@
+; chatgpt tohle napsala a sečte to prvních <target> čísel
+; Initialize variables
+sum = 0          ; Accumulator for the total sum
+i = 0            ; Loop counter variable
+target = 12     ; Target value to count up to
+
+start NOP           ; No operation, just for structure
+
+    ; Check if i is equal to target
+    if (i == target) {
+        ; Exit the loop if i equals target
+        JMP end
+    } else {
+        ; Add i to sum
+        sum = sum + i
+    }
+
+    ; Increment i
+    i = i + 1
+
+    ; Jump back to start to continue the loop
+    JMP start
+
+end LDA sum
+    HLT ; Halt the program

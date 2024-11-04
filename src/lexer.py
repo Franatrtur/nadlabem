@@ -25,7 +25,7 @@ class Lexer(Tree):
     @property
     def mapping(self) -> str:
         return f"{self.start_line.string} (line {self.start_line.number})"
-        
+
     @property
     def map_comment(self):
         return f";{self.mapping}" if self.root.config.generate_mapping else self.comment

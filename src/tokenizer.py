@@ -202,13 +202,13 @@ def tokenize(line_string: str, line_number: int | None = None) -> Line:
                     break
 
             if not token:
-                raise SyntaxError(f"Unexpected {token_string}", f"Line {line_number}: \"{line_string}\"")
+                raise SyntaxError(f"Unexpected \"{token_string}\"", f"Line {line_number}: \"{line_string}\"")
 
         except Exception as e:
             if isinstance(e, NadLabemError):
                 raise e
             else:
-                raise SyntaxError(f"{str(e)}. Unexpected {token_string}", f"Line {line_number}: \"{line_string}\"")
+                raise SyntaxError(f"{str(e)}. Unexpected \"{token_string}\"", f"Line {line_number}: \"{line_string}\"")
 
 
     return line
@@ -220,7 +220,7 @@ def match_token_pattern(line: Line, token_types: list[Type[Token]], ignore_subse
     # Check if pattern matches for the required token types
     length_match = len(line.tokens) >= len(token_types) if ignore_subsequent_tokens else len(line.tokens) == len(token_types)
 
-    return len(line.tokens) == len(token_types) and all(
+    return length_match and all(
         token_types[i].match(line.tokens[i])
         for i in range(len(token_types))
     )

@@ -1,4 +1,4 @@
 x = 5
-; empty if clause, do we want to raise en error or nah?
-if(x==5){
-}
+; inline if clause ->throw error
+if(x==5){}
+y = 1

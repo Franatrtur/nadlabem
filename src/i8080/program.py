@@ -24,13 +24,13 @@ class ProgramI8080(Program):
 
     def get_variable(self, label: str, traceback: Line) -> VariableLexer:
         if label not in self.variables:
-            raise NameError(f"Variable {label} is not defined", traceback)
+            raise NameError(f"Variable \"{label}\" is not defined", traceback)
         return self.variables[label]
 
     def register(self, instruction: DirectiveLexer) -> None:
         
         if instruction.label in self.labeled.keys():
-            raise NameError(f"Label {instruction.label} already exists", instruction.start_line, other=self.labeled[instruction.label].start_line)
+            raise NameError(f"Label \"{instruction.label}\" already exists", instruction.start_line, other=self.labeled[instruction.label].start_line)
         
         self.labeled[instruction.label] = instruction
         
@@ -66,6 +66,6 @@ class ProgramI8080(Program):
 
     def justify_label(self, label: str, lexer: Lexer):
         if len(label) >= self.config.tabspaces:
-            raise NameError(f"Label {label} too long > {self.config.tabspaces} characters", lexer.start_line)
+            raise NameError(f"Label \"{label}\" too long > {self.config.tabspaces} characters", lexer.start_line)
         spacing = " " * (self.config.tabspaces - len(label))
         return label + spacing
