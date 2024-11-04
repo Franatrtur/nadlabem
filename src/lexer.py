@@ -8,6 +8,7 @@ class Lexer(Tree):
         super().__init__(parent, root=parent.root if parent else None)
         self.program: "Program" = self.root
         self.start_line = line
+        self.comment = line.comment_token.string
 
     @staticmethod
     def detect(self, line: Line) -> bool:
@@ -28,11 +29,6 @@ class Lexer(Tree):
     @property
     def map_comment(self):
         return f";{self.mapping}" if self.root.config.generate_mapping else self.comment
-        
-    @property
-    def comment(self):
-        orig_comment = ";".join(self.start_line.string.split(";")[1:])
-        return "" if not orig_comment else ";" + orig_comment
 
     def __str__(self) -> str:
         if self.children:
