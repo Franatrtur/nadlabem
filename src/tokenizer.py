@@ -75,7 +75,7 @@ ForToken = Token.literal("for", "ForToken")
 class NameToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
-        return string.isalpha()
+        return string[0].isalpha()
 
 IsEqualToken = Token.literal("==", "IsEqualToken")
 IsNotEqualToken = Token.literal("!=", "IsNotEqualToken")
