@@ -1,8 +1,0 @@
-x=5+y
- x = 5- 1 
-y = xor;
-if y <5
-{
-    aaaa =XX
-}
-$

@@ -1,12 +1,14 @@
 import re, ast
 from typing import Type
-from .errors import SyntaxError, ParsingError, NadLabemError
+from tree import Node
+from .errors import ParsingError, NadLabemError
 
 
 class Token:
 
-    def __init__(self, string: str):
+    def __init__(self, string: str, line: Line):
         self.string = string
+        self.line = line
 
     def __str__(self):
         return f"{self.__class__.__name__}(\"{self.string}\")"
@@ -24,7 +26,7 @@ class Token:
         return isinstance(token, cls)
 
     @staticmethod
-    def any(*classes: Type["Token"], class_name: str = "CombinedToken") -> Type["Token"]:
+    def any(*classes: list[Type["Token"]], class_name: str = "CombinedToken") -> Type["Token"]:
         # Define a new subclass of Token with a custom detect method
         return type(class_name, (Token,), {
             "detect": staticmethod(lambda s: any(cls.detect(s) for cls in classes)),
@@ -48,6 +50,7 @@ class NumberLiteralToken(Token):
     def detect(string: str) -> bool:
         return string.isnumeric() or re.match(r"^[0-9a-fA-F]+h$", string) or re.match(r"^0x[0-9a-fA-F]+$", string)
 
+
 class StringLiteralToken(Token):
     def __init__(self, string: str):
         super().__init__(string)
@@ -61,6 +64,9 @@ class StringLiteralToken(Token):
         return string.startswith("\"") or string.startswith("'")
 
 class CommentToken(Token):
+    def __init__(self, string: str):
+        super().__init__(string)
+        self.value = string[1:]
     @staticmethod
     def detect(string: str) -> bool:
         return string.startswith(";")
@@ -146,15 +152,6 @@ TOKEN_DETECTORS = [
     CodeBlockBeginToken,
     CodeBlockEndToken,
 ]
-
-
-#Good-to-have token types
-KeywordToken = Token.any(IfToken, ElseToken, ThenToken, WhileToken, ForToken, class_name="KeywordToken")
-
-AlgebraicToken = Token.any(PlusToken, MinusToken, MultiplyToken, DivideToken, class_name="AlgebricToken")
-
-ComparisonToken = Token.any(IsEqualToken, IsGtEqToken, IsLtEqToken, LessThanToken, GreaterThanToken, class_name="ComparisonToken")
-
 
 class Line:
     def __init__(self, string: str, number: int):

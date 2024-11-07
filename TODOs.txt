@@ -1,16 +1,13 @@
-DONE - allow comments on if statement rows
-done - keep original comments on translated lines even if generate_mapping is false
-DONE - uppercase instructions
-
-done - make variablelexer a subclass of instructionlexer
-done - improve custom errors, erase error trace if not config.devmode
-done - use custom errors when throwing expected exceptions (things that COULD happen)
-
-extract components into separate reusable functions that return string list
- - (a function like load_var_to_register(register, label))
- - specifically component like compare_var_gt_literal(label, literal)
-    would for example return a series of instructions that would leave 0 or not0 or the A register maybe?
-    we can then use a simple JZ/JNZ
-
-merge the if_var_eq and if_var_literal_eq thanks to these components
-use these components, make the while lexer
+STRUCTURE
+1) Tokenization
+  - class based as it is now
+  - 
+  - add line obj to each token instance for tracebacks
+  - line object will not have much other use, apart from remembering comments
+    + will refer strictly to the parsed source code lines (as is now)
+  - result = one big list of tokens for the whole source code, newline is also a token
+2) Parsing
+  - there will not be a stack based loop
+  - there will be a recursive approach instead
+  - origin = method called in the program object
+  - parser objects deriving from Node will parse their subtrees

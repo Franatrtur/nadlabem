@@ -1,4 +1,0 @@
-x   db  5
-y   db  5
-y=x+y;
-y=x-y;

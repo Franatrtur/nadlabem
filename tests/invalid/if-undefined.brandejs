@@ -1,4 +1,0 @@
-; x undefined, should throw an error
-if(x==5){
-    x=6
-}

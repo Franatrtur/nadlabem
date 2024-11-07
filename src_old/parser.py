@@ -1,6 +1,6 @@
 from typing import Type
 
-from .tree import Tree
+from .tree import Node
 from .tokenizer import Line
 from .lexer import Lexer
 from .program import Program

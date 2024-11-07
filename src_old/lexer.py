@@ -1,8 +1,8 @@
 from .tokenizer import Line
-from .tree import Tree
+from .tree import Node
 from .config import TranslationConfig
 
-class Lexer(Tree):
+class Lexer(Node):
 
     def __init__(self, line: Line, parent: "Lexer"):
         super().__init__(parent, root=parent.root if parent else None)
