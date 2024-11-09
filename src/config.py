@@ -2,7 +2,7 @@
 class CompilationConfig:
 
     def __init__(self,
-            target_cpu: str = "i8080",
+            target_cpu: str = "i8086",
             generate_mapping: bool = True,
             devmode: bool = False,
             erase_comments: bool = False,

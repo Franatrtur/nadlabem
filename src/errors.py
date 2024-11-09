@@ -18,5 +18,5 @@ class NameError(NadLabemError):
 class SyntaxError(NadLabemError):
     pass
 
-class ParsingError(NadLabemError):
+class SymbolError(NadLabemError):
     pass

@@ -1,9 +1,9 @@
 import json
 
-class :
+class Node:
     """Abstract syntax tree node"""
 
-    def __init__(self, parent: "Node" | None):
+    def __init__(self, parent: "Node"):
         self.parent: Node | None = parent
         self.root: Node = parent.root if parent is not None else self
         self.children: list["Node"] = []
