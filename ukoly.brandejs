@@ -1,0 +1,24 @@
+kolik81 db 0
+ mvi c, 0
+
+if(kolik81==0){ ;Pokud 'kolik81' obsahuje 0, pak se nesmí nastavit žádný obsah.
+    jmp konec7e
+}
+
+loop nop
+    kolik81 = kolik81 - 1
+
+    mvi m, 164
+
+    mov a, l ; pricteme jednicku k h a l
+    adi 1  ;will set carry flag on overflow
+    mov l,a
+
+    mov a,h ;carry over to high
+    adc c ;add with carry (add 0)
+    mov h,a
+
+if(kolik81!=0){
+    jmp loop
+}
+konec7e hlt
