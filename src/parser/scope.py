@@ -1,10 +1,11 @@
-from ..tree import Tree
+from ..tree import Node
 from ..tokenizer import Token, Line
 from ..errors import NameError
+from typing import Union
 
-class Context(Tree):
+class Context(Node):
 
-    def __init__(self, block: "Parser", parent: "Context" | None = None):
+    def __init__(self, block: "Parser", parent: Union["Context", None] = None):
         super().__init__(parent)
         self.block = block
         self.names: dict[str, "Name"] = {}
@@ -12,7 +13,7 @@ class Context(Tree):
     def register_name(self, name: "Name"):
         self.names[name.name] = name
 
-    def resolve_name(self, name: str) -> "Name":
+    def get_name(self, name: str) -> "Name":
         if name in self.names:
             return self.names[name]
         elif self.parent is not None:

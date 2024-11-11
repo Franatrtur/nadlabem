@@ -43,12 +43,22 @@ IfToken = Token.literal("if", "IfToken")
 ElseToken = Token.literal("else", "ElseToken")
 WhileToken = Token.literal("while", "WhileToken")
 ForToken = Token.literal("for", "ForToken")
+FunctionToken = Token.literal("function", "FunctionToken")
+ReturnToken = Token.literal("return", "ReturnToken")
+BreakToken = Token.literal("break", "BreakToken")
+ContinueToken = Token.literal("continue", "ContinueToken")
+
+LogicalAndToken = Token.literal("and", "LogicalAndToken")
+LogicalOrToken = Token.literal("or", "LogicalOrToken")
+LogicalNotToken = Token.literal("not", "LogicalNotToken")
 
 IntToken = Token.literal("int", "IntToken")
 UIntToken = Token.literal("uint", "UIntToken")
-FloatToken = Token.literal("float", "FloatToken")
 StringToken = Token.literal("string", "StringToken")
 BoolToken = Token.literal("bool", "BoolToken")
+ArrayToken = Token.literal("array", "ArrayToken")
+CharToken = Token.literal("char", "CharToken")
+
 
 class NameToken(Token):
     @staticmethod
@@ -68,6 +78,11 @@ NegationToken = Token.literal("!", "NegationToken")
 CommaToken = Token.literal(",", "CommaToken")
 ColonToken = Token.literal(":", "ColonToken")
 HashToken = Token.literal("#", "HashToken")
+
+BinaryAndToken = Token.literal("&", "BinaryAndToken")
+BinaryOrToken = Token.literal("|", "BinaryOrToken")
+BinaryXorToken = Token.literal("^", "BinaryXorToken")
+BinaryNotToken = Token.literal("~", "BinaryNotToken")
 
 PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
@@ -102,12 +117,21 @@ TOKEN_DETECTORS = [
     WhileToken,
     ElseToken,
     ForToken,
+    FunctionToken,
+    ReturnToken,
+    BreakToken,
+    ContinueToken,
+
+    LogicalAndToken,
+    LogicalOrToken,
+    LogicalNotToken,
 
     IntToken,
     UIntToken,
-    FloatToken,
     StringToken,
     BoolToken,
+    ArrayToken,
+    CharToken,
 
     NameToken,
 
@@ -125,6 +149,11 @@ TOKEN_DETECTORS = [
     ColonToken,
     HashToken,
 
+    BinaryAndToken,
+    BinaryOrToken,
+    BinaryXorToken,
+    BinaryNotToken,
+
     PlusToken,
     MinusToken,
     MultiplyToken,
@@ -139,3 +168,61 @@ TOKEN_DETECTORS = [
     ArrayBeginToken,
     ArrayEndToken,
 ]
+
+
+LogicalToken = Token.any(
+    LogicalAndToken,
+    LogicalOrToken,
+    LogicalNotToken,
+    class_name="LogicalToken"
+)
+
+ComparisonToken = Token.any(
+    IsEqualToken,
+    IsNotEqualToken,
+    IsGtEqToken,
+    IsLtEqToken,
+    GreaterThanToken,
+    LessThanToken,
+    class_name="ComparisonToken"
+)
+
+AdditiveToken = Token.any(
+    PlusToken,
+    MinusToken,
+    class_name="AdditiveToken"
+)
+
+MultiplicativeToken = Token.any(
+    MultiplyToken,
+    DivideToken,
+    class_name="MultiplicativeToken"
+)
+
+UnaryToken = Token.any(
+    NegationToken,
+    MinusToken,
+    MultiplyToken,
+    BinaryOrToken,
+    class_name="UnaryToken"
+)
+
+TypeToken = Token.any(
+    IntToken,
+    UIntToken,
+    StringToken,
+    BoolToken,
+    ArrayToken,
+    CharToken,
+    class_name="TypeToken"
+)
+
+LiteralToken = Token.any(
+    IntegerLiteralToken,
+    StringLiteralToken,
+    class_name="LiteralToken"
+)
+
+
+
+

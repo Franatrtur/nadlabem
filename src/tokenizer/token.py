@@ -17,6 +17,7 @@ class Token:
         # Define a new subclass of Token with a custom detect method, case insensitive
         return type(class_name, (Token,), {
             "detect": staticmethod(lambda s: s.lower() == string.lower()),
+            "literal_string": string
         })
 
     @classmethod
@@ -42,6 +43,9 @@ class Line:
         self.comment: str = ""
 
     def __str__(self):
-        return f"Line {self.number}: \"{self.string}\" [{','.join(map(str, self.tokens))}]"
+        tokens_string = ','.join(map(str, self.tokens[:min(8, len(self.tokens))]))
+        if len(self.tokens) > 8:
+            tokens_string += ' . . . '
+        return f"Line {self.number}: \"{self.string}\" [{tokens_string}]"
     def __repr__(self):
         return str(self)

@@ -20,3 +20,6 @@ class SyntaxError(NadLabemError):
 
 class SymbolError(NadLabemError):
     pass
+
+class TypeError(NadLabemError):
+    pass
