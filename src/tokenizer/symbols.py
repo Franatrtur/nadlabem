@@ -47,6 +47,7 @@ FunctionToken = Token.literal("function", "FunctionToken")
 ReturnToken = Token.literal("return", "ReturnToken")
 BreakToken = Token.literal("break", "BreakToken")
 ContinueToken = Token.literal("continue", "ContinueToken")
+PassToken = Token.literal("pass", "PassToken")
 
 LogicalAndToken = Token.literal("and", "LogicalAndToken")
 LogicalOrToken = Token.literal("or", "LogicalOrToken")
@@ -88,12 +89,14 @@ PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
 MultiplyToken = Token.literal("*", "MultiplyToken")
 DivideToken = Token.literal("/", "DivideToken")
+IntegerDivideToken = Token.literal("//", "IntegerDividToken")
+ModuloToken = Token.literal("%", "ModuloToken")
 
 OpenParenToken = Token.literal("(", "OpenParenToken")
 CloseParenToken = Token.literal(")", "CloseParenToken")
 
-CodeBlockBeginToken = Token.literal("{", "CodeBlockBeginToken")
-CodeBlockEndToken = Token.literal("}", "CodeBlockEndToken")
+OpenBraceToken = Token.literal("{", "OpenBraceToken")
+CloseBraceToken = Token.literal("}", "CloseBraceToken")
 
 ArrayBeginToken = Token.literal("[", "ArrayBeginToken")
 ArrayEndToken = Token.literal("]", "ArrayEndToken")
@@ -121,6 +124,7 @@ TOKEN_DETECTORS = [
     ReturnToken,
     BreakToken,
     ContinueToken,
+    PassToken,
 
     LogicalAndToken,
     LogicalOrToken,
@@ -158,17 +162,38 @@ TOKEN_DETECTORS = [
     MinusToken,
     MultiplyToken,
     DivideToken,
+    IntegerDivideToken,
+    ModuloToken,
 
     OpenParenToken,
     CloseParenToken,
 
-    CodeBlockBeginToken,
-    CodeBlockEndToken,
+    OpenBraceToken,
+    CloseBraceToken,
 
     ArrayBeginToken,
     ArrayEndToken,
 ]
 
+
+KeywordToken = Token.any(
+    IfToken,
+    WhileToken,
+    ElseToken,
+    ForToken,
+    FunctionToken,
+    ReturnToken,
+    BreakToken,
+    ContinueToken,
+    PassToken,
+    class_name="KeywordToken"
+)
+
+StatementBeginToken = Token.any(
+    KeywordToken,
+    HashToken,
+    class_name="StatementBeginToken"
+)
 
 LogicalToken = Token.any(
     LogicalAndToken,
@@ -187,6 +212,13 @@ ComparisonToken = Token.any(
     class_name="ComparisonToken"
 )
 
+BinaryToken = Token.any(
+    BinaryAndToken,
+    BinaryOrToken,
+    BinaryXorToken,
+    class_name="BinaryToken"
+)
+
 AdditiveToken = Token.any(
     PlusToken,
     MinusToken,
@@ -196,6 +228,8 @@ AdditiveToken = Token.any(
 MultiplicativeToken = Token.any(
     MultiplyToken,
     DivideToken,
+    IntegerDivideToken,
+    ModuloToken,
     class_name="MultiplicativeToken"
 )
 
@@ -203,7 +237,7 @@ UnaryToken = Token.any(
     NegationToken,
     MinusToken,
     MultiplyToken,
-    BinaryOrToken,
+    BinaryNotToken,
     class_name="UnaryToken"
 )
 
@@ -222,7 +256,5 @@ LiteralToken = Token.any(
     StringLiteralToken,
     class_name="LiteralToken"
 )
-
-
 
 

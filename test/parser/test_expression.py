@@ -17,6 +17,23 @@ class TestParser(unittest.TestCase):
     def test_parse(self):
         self.expression_parser = ExpressionParser(self.parser)
         tree = self.expression_parser.parse()
+        #print(tree)
+
+    def test_multiline_parse(self):
+        
+        msg = """a(
+            1,f[
+                2
+            ]
+            )
+            +
+            1
+        """
+        tokens = tokenize_line(msg).tokens
+        print(tokens[0].line)
+        parser = RecursiveDescentParser(tokens)
+        expression_parser = ExpressionParser(parser)
+        tree = expression_parser.parse()
         print(tree)
 
 

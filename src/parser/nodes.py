@@ -30,8 +30,8 @@ class AbstractSyntaxTreeNode(Node):
             for row_index, row in enumerate(child_rows):
                 bullet_point = "├─" if not is_last_child else "└─"
                 connector = bullet_point if row_index == 0 else "│ "
-                connector = connector if not (is_last_child and row_index > 0) else ""
-                self_str += f"\n    {connector}{row}"
+                connector = connector if not (is_last_child and row_index > 0) else "  "
+                self_str += f"\n  {connector}{row}"
         if len(self.children) > 2:
             self_str += "\n"
         return self_str
@@ -47,21 +47,19 @@ class ExpressionNode(AbstractSyntaxTreeNode):
 class FunctionCallNode(ExpressionNode):
     def __init__(self, token: Token, arguments: list[ASTNode], parser: "Parser"):
         super().__init__(token, arguments, parser)
-        self.arguments = arguments
-        self.function_name: str = token.string
 
 class BinaryOperationNode(ExpressionNode):
     def __init__(self, token: Token, left: ASTNode, right: ASTNode, parser: "Parser"):
         super().__init__(token, [left, right], parser)
-        self.left = left
-        self.operation: str = token.string
-        self.right = right
 
 class UnaryOperationNode(ExpressionNode):
     def __init__(self, token: Token, child: ASTNode, parser: "Parser"):
         super().__init__(token, [child], parser)
         self.child = child
         self.operation: str = token.string
+
+class BinaryNode(BinaryOperationNode):
+    pass
 
 class AdditiveNode(BinaryOperationNode):
     pass
@@ -83,6 +81,11 @@ class LiteralNode(ExpressionNode):
     def __init__(self, token: Token, parser: "Parser"):
         super().__init__(token, [], parser)
         self.type = LITERALS[token.__class__]
+
+class ArrayLiteralNode(ExpressionNode):
+    def __init__(self, token: Token, elements: list[ASTNode], parser: "Parser"):
+        super().__init__(token, elements, parser)
+        self.elements = elements
 
 class IndexRetrievalNode(UnaryOperationNode):
     def __init__(self, token: Token, child: ASTNode, parser: "Parser"):
@@ -135,10 +138,11 @@ class WhileNode(StatementNode):
         self.body = body
 
 class ForNode(StatementNode):
-    def __init__(self, token: Token, iterator: Token, iterable: ExpressionNode, body: BlockNode, parser: "Parser"):
-        super().__init__(token, [iterator, iterable, body], parser)
-        self.iterator = iterator
-        self.iterable = iterable
+    def __init__(self, token: Token, initialization: StatementNode, condition: ExpressionNode, increment: StatementNode, body: BlockNode, parser: "Parser"):
+        super().__init__(token, [initialization, condition, increment, body], parser)
+        self.initialization = initialization
+        self.condition = condition
+        self.increment = increment
         self.body = body
 
 class LoopStatementNode(StatementNode):
