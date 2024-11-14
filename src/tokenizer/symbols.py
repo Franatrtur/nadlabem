@@ -43,7 +43,6 @@ IfToken = Token.literal("if", "IfToken")
 ElseToken = Token.literal("else", "ElseToken")
 WhileToken = Token.literal("while", "WhileToken")
 ForToken = Token.literal("for", "ForToken")
-FunctionToken = Token.literal("function", "FunctionToken")
 ReturnToken = Token.literal("return", "ReturnToken")
 BreakToken = Token.literal("break", "BreakToken")
 ContinueToken = Token.literal("continue", "ContinueToken")
@@ -59,6 +58,7 @@ StringToken = Token.literal("string", "StringToken")
 BoolToken = Token.literal("bool", "BoolToken")
 ArrayToken = Token.literal("array", "ArrayToken")
 CharToken = Token.literal("char", "CharToken")
+VoidToken = Token.literal("void", "VoidToken")
 
 
 class NameToken(Token):
@@ -120,7 +120,6 @@ TOKEN_DETECTORS = [
     WhileToken,
     ElseToken,
     ForToken,
-    FunctionToken,
     ReturnToken,
     BreakToken,
     ContinueToken,
@@ -136,6 +135,7 @@ TOKEN_DETECTORS = [
     BoolToken,
     ArrayToken,
     CharToken,
+    VoidToken,
 
     NameToken,
 
@@ -181,11 +181,11 @@ KeywordToken = Token.any(
     WhileToken,
     ElseToken,
     ForToken,
-    FunctionToken,
     ReturnToken,
     BreakToken,
     ContinueToken,
     PassToken,
+    VoidToken,
     class_name="KeywordToken"
 )
 
@@ -248,6 +248,7 @@ TypeToken = Token.any(
     BoolToken,
     ArrayToken,
     CharToken,
+    VoidToken,
     class_name="TypeToken"
 )
 

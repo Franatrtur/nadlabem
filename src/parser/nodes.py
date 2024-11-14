@@ -2,7 +2,7 @@ from ..tree import Node
 from ..tokenizer import Token
 from .scope import Context
 from typing import Type
-from .types import ValueType, LITERALS
+from .types import ValueType, TYPES
 
 class AbstractSyntaxTreeNode(Node):
 
@@ -80,7 +80,6 @@ class VariableReferenceNode(ExpressionNode):
 class LiteralNode(ExpressionNode):
     def __init__(self, token: Token, parser: "Parser"):
         super().__init__(token, [], parser)
-        self.type = LITERALS[token.__class__]
 
 class ArrayLiteralNode(ExpressionNode):
     def __init__(self, token: Token, elements: list[ASTNode], parser: "Parser"):
@@ -95,7 +94,7 @@ class IndexRetrievalNode(UnaryOperationNode):
 class StatementNode(AbstractSyntaxTreeNode):
     pass
 
-class BlockNode(StatementNode):
+class CodeBlockNode(StatementNode):
     def __init__(self, token: Token, children: list[StatementNode], parser: "Parser"):
         super().__init__(token, children, parser)
         self.statements = children
@@ -113,11 +112,18 @@ class AssignmentNode(StatementNode):
         self.value = value
 
 class FunctionDeclarationNode(StatementNode):
-    def __init__(self, token: Token, arguments: list[Token], body: BlockNode, parser: "Parser"):
+    def __init__(self, token: Token, arguments: list[Token], body: CodeBlockNode, type: ValueType | None, parser: "Parser"):
         super().__init__(token, [body], parser)
         self.arguments = arguments
         self.body = body
         self.identifier = token.string
+        self.type = type
+
+class ArgumentDeclarationNode(StatementNode):
+    def __init__(self, token: Token, type: ValueType | None, parser: "Parser"):
+        super().__init__(token, [], parser)
+        self.identifier = token.string
+        self.type = type
 
 class ReturnNode(StatementNode):
     def __init__(self, token: Token, value: ExpressionNode | None, parser: "Parser"):
@@ -125,36 +131,35 @@ class ReturnNode(StatementNode):
         self.value = value
 
 class IfNode(StatementNode):
-    def __init__(self, token: Token, condition: ExpressionNode, body: BlockNode, else_body: BlockNode | None, parser: "Parser"):
+    def __init__(self, token: Token, condition: ExpressionNode, body: CodeBlockNode, else_body: CodeBlockNode | None, parser: "Parser"):
         super().__init__(token, [condition, body, else_body], parser)
         self.condition = condition
         self.body = body
         self.else_body = else_body
 
 class WhileNode(StatementNode):
-    def __init__(self, token: Token, condition: ExpressionNode, body: BlockNode, parser: "Parser"):
+    def __init__(self, token: Token, condition: ExpressionNode, body: CodeBlockNode, parser: "Parser"):
         super().__init__(token, [condition, body], parser)
         self.condition = condition
         self.body = body
 
 class ForNode(StatementNode):
-    def __init__(self, token: Token, initialization: StatementNode, condition: ExpressionNode, increment: StatementNode, body: BlockNode, parser: "Parser"):
+    def __init__(self, token: Token, initialization: StatementNode, condition: ExpressionNode, increment: StatementNode, body: CodeBlockNode, parser: "Parser"):
         super().__init__(token, [initialization, condition, increment, body], parser)
         self.initialization = initialization
         self.condition = condition
         self.increment = increment
         self.body = body
 
-class LoopStatementNode(StatementNode):
-    def __init__(self, token: Token, parser: "Parser"):
-        super().__init__(token, [], parser)
-
-class BreakNode(LoopStatementNode):
+class BreakNode(StatementNode):
     pass
 
-class ContinueNode(LoopStatementNode):
+class ContinueNode(StatementNode):
     pass
 
-class ProgramNode(BlockNode):
+class PassNode(StatementNode):
+    pass
+
+class ProgramNode(AbstractSyntaxTreeNode):
     pass
 

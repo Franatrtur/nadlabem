@@ -3,20 +3,20 @@ from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, Mu
                         UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken,
                         ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken)
 from typing import Type
-from .nodes import (ComparisonNode, AdditiveNode, MultiplicativeNode, VariableReferenceNode, LogicalNode, BinaryNode,
+from .nodes import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, VariableReferenceNode, LogicalNode, BinaryNode,
                     UnaryOperationNode, LiteralNode, FunctionCallNode, IndexRetrievalNode, AbstractSyntaxTreeNode, ArrayLiteralNode)
 from ..errors import SyntaxError
 
 
 class ExpressionParser(Parser):
 
-    def parse(self) -> AbstractSyntaxTreeNode:
+    def parse(self) -> ExpressionNode:
         return self.logical()
     
-    def expression(self) -> AbstractSyntaxTreeNode:
+    def expression(self) -> ExpressionNode:
         return self.logical()
 
-    def logical(self) -> AbstractSyntaxTreeNode:
+    def logical(self) -> ExpressionNode:
         left = self.comparison()
         
         while self.is_ahead(LogicalToken):
@@ -26,7 +26,7 @@ class ExpressionParser(Parser):
         
         return left
     
-    def comparison(self) -> AbstractSyntaxTreeNode:
+    def comparison(self) -> ExpressionNode:
         left = self.binary()
         
         while self.is_ahead(ComparisonToken):
@@ -36,7 +36,7 @@ class ExpressionParser(Parser):
 
         return left
 
-    def binary(self) -> AbstractSyntaxTreeNode:
+    def binary(self) -> ExpressionNode:
         left = self.additive()
         
         while self.is_ahead(BinaryToken):
@@ -46,7 +46,7 @@ class ExpressionParser(Parser):
         
         return left
 
-    def additive(self) -> AbstractSyntaxTreeNode:
+    def additive(self) -> ExpressionNode:
         left = self.multiplicative()
         
         while self.is_ahead(AdditiveToken):
@@ -56,7 +56,7 @@ class ExpressionParser(Parser):
         
         return left
     
-    def multiplicative(self) -> AbstractSyntaxTreeNode:
+    def multiplicative(self) -> ExpressionNode:
         left = self.unary()
         
         while self.is_ahead(MultiplicativeToken):
@@ -66,7 +66,7 @@ class ExpressionParser(Parser):
         
         return left
     
-    def unary(self) -> AbstractSyntaxTreeNode:
+    def unary(self) -> ExpressionNode:
         if self.is_ahead(UnaryToken):
             operator = self.devour(UnaryToken)
             operand = self.unary()
@@ -74,7 +74,7 @@ class ExpressionParser(Parser):
         
         return self.primary()
     
-    def primary(self) -> AbstractSyntaxTreeNode:
+    def primary(self) -> ExpressionNode:
 
         if self.is_ahead(LiteralToken):
             return LiteralNode(self.devour(LiteralToken), parser=self)

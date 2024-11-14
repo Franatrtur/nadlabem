@@ -11,6 +11,8 @@ class Token:
 
     def __str__(self):
         return f"{self.__class__.__name__}(\"{self.string}\")"
+    def __repr__(self):
+        return str(self)
 
     @staticmethod
     def literal(string: str, class_name: str) -> Type['Token']:

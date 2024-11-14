@@ -1,16 +1,13 @@
 from ..tokenizer import Token, Line, NewLineToken, CommaToken, NameToken, IntegerLiteralToken
 from ..errors import SyntaxError
 from ..tree import Node
-from typing import Union, Type
-from .parse import RecursiveDescentParser
+from typing import Type
 from .nodes import AbstractSyntaxTreeNode as ASTNode
 
 
 class Parser(Node):
 
-    token: Token
-
-    def __init__(self, parent: Union["Parser", RecursiveDescentParser]):
+    def __init__(self, parent: "Parser"):
         super().__init__(parent)
         self.context = self.parent.context
         self.root: RecursiveDescentParser
@@ -27,10 +24,6 @@ class Parser(Node):
     @property
     def is_done(self) -> bool:
         return self.root.is_done
-
-    @classmethod
-    def detect(cls, token: Token) -> bool:
-        return cls.token.match(token)
 
     def parse(self, expect_end: Type[Token] | None = None) -> ASTNode:
         pass

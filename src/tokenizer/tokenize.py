@@ -37,7 +37,8 @@ def tokenize_line(line_string: str, line_number: int | None = None) -> Line:
             raise SymbolError(f"Unknown symbol \"{token_string}\"", f"Line {line_number}: \"{line_string}\"")
 
 
-    line.tokens.append(NewLineToken("", line))
+    if len(line.tokens) > 0:
+        line.tokens.append(NewLineToken("", line))
 
     return line
 
@@ -48,7 +49,7 @@ def tokenize_source_code(source_code: str) -> list[Token]:
 
     for line in source_code.splitlines():
         line_tokens = tokenize_line(line, line_number)
-        tokens.extend(line_tokens)
+        tokens.extend(line_tokens.tokens)
         line_number += 1
 
     return tokens

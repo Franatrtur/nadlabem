@@ -1,7 +1,6 @@
 import json
 
 class Node:
-    """Abstract syntax tree node"""
 
     def __init__(self, parent: "Node"):
         self.parent: Node | None = parent

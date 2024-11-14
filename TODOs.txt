@@ -11,3 +11,5 @@ STRUCTURE
   - there will be a recursive approach instead
   - origin = method called in the program object
   - parser objects deriving from Node will parse their subtrees
+
+
