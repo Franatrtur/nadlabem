@@ -1,28 +1,25 @@
-from ..tokenizer import Token, Line, match_token_pattern, NewLineToken, OpenParenToken, CloseParenToken, ArrayBeginToken, ArrayEndToken
+from ..tokenizer import Token, NewLineToken, OpenParenToken, CloseParenToken, ArrayBeginToken, ArrayEndToken
 from ..errors import SyntaxError
-from ..tree import Node
 from ..ui import progress_bar
-from .scope import Context
 from typing import Type, Union
 from .parsing import Parser
 from .statement import CodeBlockParser
-from .nodes import ProgramNode
+from ..nodes.node import ProgramNode
 
-# will extend block class instead
+
 class ProgramParser(Parser):
 
     def __init__(self, tokens: list[Token], compiler: Union["Compiler", None] = None):
         self.tokens = tokens
         self.i: int = 0
-        self.root = self
+        self.root = self  # this is the top level parser
         self.parent = None
-        self.context = Context(self, parent=None)
         self.compiler = compiler
         self.nested: int = 0
 
-    def parse(self) -> Node:
-        statements = CodeBlockParser(parent=self, force_multiline=True).parse()
-        return ProgramNode(self.tokens[0] if self.tokens else None, [statements], parser=self)
+    def parse(self) -> ProgramNode:
+        program_block = CodeBlockParser(parent=self, force_multiline=True).parse()
+        return ProgramNode(program_block.children, parser=self)
 
     def devour(self, token_type: Type[Token]) -> Token:
         if self.is_done:

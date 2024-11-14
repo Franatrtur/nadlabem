@@ -1,14 +1,14 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
-                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken,
+                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, 
                         ReturnToken, BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, BinaryToken)
 from typing import Type
 from .expression import ExpressionParser
-from .nodes import (FunctionCallNode, AbstractSyntaxTreeNode as ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
-                    CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode,
+from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
+                    CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode,
                     WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDeclarationNode)
 
-from .types import TYPES
+from ..nodes.types import TYPES
 from ..errors import SyntaxError
 
 
@@ -26,7 +26,8 @@ class CodeBlockParser(Parser):
 
     def parse(self) -> StatementNode:
         if not self.force_multiline and not self.is_ahead(OpenBraceToken):
-            return StatementParser(self).parse()
+            statement = StatementParser(self).parse()
+            return CodeBlockNode(statement.token, [statement], parser=self)
 
         statements: list[StatementNode] = []
         self.braced = self.is_ahead(OpenBraceToken)
@@ -92,7 +93,7 @@ class AssignmentParser(Parser):
                     self.devour(CommaToken)
                     args.append(ExpressionParser(parent=self).parse())
             self.devour(CloseParenToken)
-            return FunctionCallNode(name_token, args, parser=self)
+            return FunctionCallStatementNode(name_token, args, parser=self)
         
         self.devour(EqualsToken)
         expression = ExpressionParser(parent=self).parse()
@@ -117,7 +118,7 @@ class DeclarationParser(Parser):
 
         elif self.is_ahead(OpenParenToken):
             self.devour(OpenParenToken)
-            params = []
+            params: list[ArgumentDeclarationNode] = []
                 
             if not self.is_ahead(CloseParenToken):
                 params.append(self._parse_param())
@@ -132,7 +133,28 @@ class DeclarationParser(Parser):
         else:
             raise SyntaxError("Declaration must assign a value or function", name_token.line)
 
-        
+
+class ReturnParser(Parser):
+
+    def parse(self) -> ReturnNode:
+        token = self.devour(ReturnToken)
+        expression = None
+        if not self.is_ahead(NewLineToken):
+            expression = ExpressionParser(parent=self).parse()
+        return ReturnNode(token, expression, parser=self)
+
+
+class ContinueParser(Parser):
+    def parse(self) -> ContinueNode:
+        return ContinueNode(self.devour(ContinueToken), parser=self)
+
+class BreakParser(Parser):
+    def parse(self) -> BreakNode:
+        return BreakNode(self.devour(BreakToken), parser=self)
+
+class PassParser(Parser):
+    def parse(self) -> PassNode:
+        return PassNode(self.devour(PassToken), parser=self)
 
 
 STATEMENTS: dict[Type[Token], Type[Parser]] = {
@@ -141,6 +163,10 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     WhileToken: WhileParser,
     NameToken: AssignmentParser,
     TypeToken: DeclarationParser,
+    ReturnToken: ReturnParser,
+    ContinueToken: ContinueParser,
+    BreakToken: BreakParser,
+    PassToken: PassParser
 }
 
 class StatementParser(Parser):

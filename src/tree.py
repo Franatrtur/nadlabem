@@ -7,17 +7,9 @@ class Node:
         self.root: Node = parent.root if parent is not None else self
         self.children: list["Node"] = []
 
-    def add_child(self, child: "Node"):
-        self.children.append(child)
-
-    def json(self) -> str:
-        return json.dumps({"children": self.children})
-
-    def translate(self) -> list[str]:
-        translated: list[str] = []
-        for branch in self.children:
-            translated.extend(branch.translate)
-        return translated
+    @property
+    def is_root(self) -> bool:
+        return self is self.root or self is self.parent or (self.parent is None and self.root is None)
 
     def __str__(self):
         return f"{self.__class__.__name__}(\"{[child.__str__() for child in self.children]}\")"

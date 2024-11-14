@@ -6,12 +6,8 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-int x = 4
-int fn(int a) return a+8
+string mystring = "ahoj jak se mas"
 
-{
-int y = 2
-}
 y=fn(x-y)"""
 
 if __name__ == "__main__":

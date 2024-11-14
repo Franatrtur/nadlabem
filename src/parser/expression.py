@@ -3,8 +3,8 @@ from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, Mu
                         UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken,
                         ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken)
 from typing import Type
-from .nodes import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, VariableReferenceNode, LogicalNode, BinaryNode,
-                    UnaryOperationNode, LiteralNode, FunctionCallNode, IndexRetrievalNode, AbstractSyntaxTreeNode, ArrayLiteralNode)
+from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, VariableReferenceNode, LogicalNode, BinaryNode,
+                    UnaryOperationNode, LiteralNode, FunctionCallNode, IndexRetrievalNode, ArrayLiteralNode)
 from ..errors import SyntaxError
 
 

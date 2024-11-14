@@ -1,6 +1,6 @@
 from .errors import NadLabemError
 from .config import CompilationConfig
-from .tokenizer import tokenize_source_code, Line, Token
+from .tokenizer import Tokenizer
 from .parser.program import ProgramParser
 
 class Compiler:
@@ -18,7 +18,7 @@ class Compiler:
         self.source_code = source_code
 
     def tokenize(self):
-        self.tokens = tokenize_source_code(self.source_code)
+        self.tokens = Tokenizer(compiler=self).tokenize(self.source_code)
 
     def parse(self):
         self.tree = ProgramParser(self.tokens, compiler=self).parse()
