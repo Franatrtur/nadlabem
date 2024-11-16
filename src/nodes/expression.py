@@ -2,7 +2,7 @@ from ..tree import Node
 from ..tokenizer import Token
 from .scope import Context, Symbol
 from typing import Type
-from .types import ValueType, TYPES
+from .types import ValueType, TYPES, Int, UInt, Char, String, Bool, Void, Array, Pointer
 from .node import AbstractSyntaxTreeNode as ASTNode
 
 class ExpressionNode(ASTNode):
@@ -15,8 +15,7 @@ class FunctionCallNode(ExpressionNode):
         super().__init__(token, arguments, parser)
 
     def register(self) -> None:
-        symbol = self.scope.resolve_symbol(self.token)
-        symbol.reference(self)
+        self.scope.resolve_symbol(self.token).reference(self)
         #TODO: check it is a function and not variable declaration
 
 class BinaryOperationNode(ExpressionNode):
@@ -61,6 +60,7 @@ class ArrayLiteralNode(ExpressionNode):
     def __init__(self, token: Token, elements: list[ExpressionNode], parser: "Parser"):
         super().__init__(token, elements, parser)
         self.elements = elements
+        self.type = Array(self.elements[0].type)
 
 class IndexRetrievalNode(UnaryOperationNode):
     def __init__(self, token: Token, child: ASTNode, parser: "Parser"):

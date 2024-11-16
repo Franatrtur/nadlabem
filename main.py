@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("file", help="The input file name")
 parser.add_argument("-p", "--processor", "--target", help="Choose Processor target (default=i8080)", default="i8080")
 
+parser.add_argument("-lax", "--forgive", action="store_true", help="Reduce strictness when verifying the program")
 parser.add_argument("-dev", "--devmode", action="store_true", help="Developper mode flag")
 parser.add_argument("-nomap", "--nomapping", action="store_true", help="Dont generate mapping comments flag")
 parser.add_argument("-nocom", "--nocomments", action="store_true", help="Erase all comments flag")
@@ -37,6 +38,7 @@ def main() -> None:
 
         config = TranslationConfig(
             target_cpu = args.processor,
+            strict = not args.forgive,
             generate_mapping = not args.nomapping,
             erase_comments = args.nocomments,
             devmode = args.devmode,

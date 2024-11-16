@@ -9,6 +9,7 @@ class Parser(Node):
 
     def __init__(self, parent: "Parser"):
         super().__init__(parent)
+        self.parent.children.append(self)
         self.root: RecursiveDescentParser
 
     def devour(self, token_type: Type[Token]) -> Token:
@@ -29,5 +30,5 @@ class Parser(Node):
         pass
 
     def __str__(self):
-        return f"{self.__class__.__name__}(\"{[child.__str__() for child in self.children]}\")"
+        return f"{self.__class__.__name__}({', '.join([child.__str__() for child in self.children])})"
 

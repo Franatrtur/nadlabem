@@ -48,7 +48,7 @@ BreakToken = Token.literal("break", "BreakToken")
 ContinueToken = Token.literal("continue", "ContinueToken")
 PassToken = Token.literal("pass", "PassToken")
 
-LogicalAndToken = Token.literal("and", "LogicalAndToken")
+AmpersandToken = Token.literal("and", "LogicalAndToken")
 LogicalOrToken = Token.literal("or", "LogicalOrToken")
 LogicalNotToken = Token.literal("not", "LogicalNotToken")
 
@@ -65,6 +65,12 @@ class NameToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
         return string[0].isalpha()
+
+BoolLiteralToken = Token.any(
+    Token.literal("true", "TrueToken"),
+    Token.literal("false", "FalseToken"),
+    class_name="BoolLiteralToken"
+)
 
 IsEqualToken = Token.literal("==", "IsEqualToken")
 IsNotEqualToken = Token.literal("!=", "IsNotEqualToken")
@@ -87,7 +93,7 @@ BinaryNotToken = Token.literal("~", "BinaryNotToken")
 
 PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
-MultiplyToken = Token.literal("*", "MultiplyToken")
+StarToken = Token.literal("*", "MultiplyToken")
 DivideToken = Token.literal("/", "DivideToken")
 IntegerDivideToken = Token.literal("//", "IntegerDividToken")
 ModuloToken = Token.literal("%", "ModuloToken")
@@ -116,6 +122,8 @@ TOKEN_DETECTORS = [
     StringLiteralToken,
     CommentToken,
 
+    BoolLiteralToken,
+
     IfToken,
     WhileToken,
     ElseToken,
@@ -125,7 +133,7 @@ TOKEN_DETECTORS = [
     ContinueToken,
     PassToken,
 
-    LogicalAndToken,
+    AmpersandToken,
     LogicalOrToken,
     LogicalNotToken,
 
@@ -160,7 +168,7 @@ TOKEN_DETECTORS = [
 
     PlusToken,
     MinusToken,
-    MultiplyToken,
+    StarToken,
     DivideToken,
     IntegerDivideToken,
     ModuloToken,
@@ -196,7 +204,7 @@ StatementBeginToken = Token.any(
 )
 
 LogicalToken = Token.any(
-    LogicalAndToken,
+    AmpersandToken,
     LogicalOrToken,
     LogicalNotToken,
     class_name="LogicalToken"
@@ -226,7 +234,7 @@ AdditiveToken = Token.any(
 )
 
 MultiplicativeToken = Token.any(
-    MultiplyToken,
+    StarToken,
     DivideToken,
     IntegerDivideToken,
     ModuloToken,
@@ -236,7 +244,7 @@ MultiplicativeToken = Token.any(
 UnaryToken = Token.any(
     NegationToken,
     MinusToken,
-    MultiplyToken,
+    StarToken,
     BinaryNotToken,
     class_name="UnaryToken"
 )
@@ -255,6 +263,7 @@ TypeToken = Token.any(
 LiteralToken = Token.any(
     IntegerLiteralToken,
     StringLiteralToken,
+    BoolLiteralToken,
     class_name="LiteralToken"
 )
 

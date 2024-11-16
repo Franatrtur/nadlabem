@@ -1,11 +1,11 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
-                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, 
+                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, HashToken,
                         ReturnToken, BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, BinaryToken)
 from typing import Type
 from .expression import ExpressionParser
 from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
-                    CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode,
+                    CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
                     WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDeclarationNode)
 
 from ..nodes.types import TYPES
@@ -30,7 +30,7 @@ class CodeBlockParser(Parser):
             return CodeBlockNode(statement.token, [statement], parser=self)
 
         statements: list[StatementNode] = []
-        self.braced = self.is_ahead(OpenBraceToken)
+        self.braced = self.is_ahead(OpenBraceToken) and not self.force_multiline
         
         if self.braced:
             self.devour(OpenBraceToken)
@@ -78,6 +78,21 @@ class WhileParser(Parser):
         return WhileNode(condition, body, parser=self)
 
 
+class ForParser(Parser):
+
+    def parse(self) -> ForNode:
+        tok = self.devour(ForToken)
+        self.devour(OpenParenToken)
+        initialization = StatementParser(parent=self).parse()
+        self.devour(CommaToken)
+        condition = ExpressionParser(parent=self).parse()
+        self.devour(CommaToken)
+        update = StatementParser(parent=self).parse()
+        self.devour(CloseParenToken)
+        body = CodeBlockParser(parent=self).parse()
+        return ForNode(tok, initialization, condition, update, body, parser=self)
+
+
 class AssignmentParser(Parser):
 
     def parse(self) -> AssignmentNode:
@@ -114,7 +129,7 @@ class DeclarationParser(Parser):
         if self.is_ahead(EqualsToken):
             self.devour(EqualsToken)
             expression = ExpressionParser(parent=self).parse()
-            return VariableDeclarationNode(name_token, expression, type=TYPES[type_token.__class__], parser=self)
+            return VariableDeclarationNode(name_token, expression, type_token, parser=self)
 
         elif self.is_ahead(OpenParenToken):
             self.devour(OpenParenToken)
@@ -128,7 +143,7 @@ class DeclarationParser(Parser):
             
             self.devour(CloseParenToken)
             body = CodeBlockParser(parent=self).parse()
-            return FunctionDeclarationNode(name_token, params, body, type=TYPES[type_token.__class__], parser=self)
+            return FunctionDeclarationNode(name_token, params, body, type_token, parser=self)
 
         else:
             raise SyntaxError("Declaration must assign a value or function", name_token.line)
@@ -156,6 +171,14 @@ class PassParser(Parser):
     def parse(self) -> PassNode:
         return PassNode(self.devour(PassToken), parser=self)
 
+class AssemblyParser(Parser):
+    def parse(self) -> AssemblyNode:
+        tok = self.devour(HashToken)
+        code: list[Token] = []
+        while not self.is_ahead(NewLineToken):
+            code.append(self.devour(Token))
+        return AssemblyNode(tok, code, parser=self)
+
 
 STATEMENTS: dict[Type[Token], Type[Parser]] = {
     OpenBraceToken: CodeBlockParser,
@@ -166,7 +189,8 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     ReturnToken: ReturnParser,
     ContinueToken: ContinueParser,
     BreakToken: BreakParser,
-    PassToken: PassParser
+    PassToken: PassParser,
+    HashToken: AssemblyParser,
 }
 
 class StatementParser(Parser):

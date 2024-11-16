@@ -16,6 +16,7 @@ class ProgramParser(Parser):
         self.parent = None
         self.compiler = compiler
         self.nested: int = 0
+        self.children = []
 
     def parse(self) -> ProgramNode:
         program_block = CodeBlockParser(parent=self, force_multiline=True).parse()

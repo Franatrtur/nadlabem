@@ -22,6 +22,7 @@ class Compiler:
 
     def parse(self):
         self.tree = ProgramParser(self.tokens, compiler=self).parse()
+        self.tree.validate()
 
     def translate(self):
         self.machine_code = self.tree.translate()

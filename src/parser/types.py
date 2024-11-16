@@ -1,22 +1,22 @@
 from .parsing import Parser
-from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken,
-                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken,
-                        ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken)
+from ..tokenizer import (Token, TypeToken, ArrayToken, StarToken, AmpersandToken)
 from typing import Type
-from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, VariableReferenceNode, LogicalNode, BinaryNode,
-                    UnaryOperationNode, LiteralNode, FunctionCallNode, IndexRetrievalNode, ArrayLiteralNode)
-from ..errors import SyntaxError
+from ..nodes.types import TYPES, Int, UInt, Char, String, Bool, Void, ValueType
+from ..errors import TypeError
 
+#TODO: implement everthing lol
+# not used at the moment
+# would have to decide on how structured types and syntax would work
 
-class ExpressionParser(Parser):
+class TypeParser(Parser):
 
-    def parse(self) -> ExpressionNode:
+    def parse(self) -> ValueType:
         return self.expression()
     
-    def expression(self) -> ExpressionNode:
+    def expression(self) -> ValueType:
         return self.logical()
 
-    def logical(self) -> ExpressionNode:
+    def logical(self) -> ValueType:
         left = self.comparison()
         
         while self.is_ahead(LogicalToken):
@@ -26,55 +26,7 @@ class ExpressionParser(Parser):
         
         return left
     
-    def comparison(self) -> ExpressionNode:
-        left = self.binary()
-        
-        while self.is_ahead(ComparisonToken):
-            operator = self.devour(ComparisonToken)
-            right = self.binary()
-            left = ComparisonNode(operator, left, right, parser=self)
-
-        return left
-
-    def binary(self) -> ExpressionNode:
-        left = self.additive()
-        
-        while self.is_ahead(BinaryToken):
-            operator = self.devour(BinaryToken)
-            right = self.additive()
-            left = BinaryNode(operator, left, right, parser=self)
-        
-        return left
-
-    def additive(self) -> ExpressionNode:
-        left = self.multiplicative()
-        
-        while self.is_ahead(AdditiveToken):
-            operator = self.devour(AdditiveToken)
-            right = self.multiplicative()
-            left = AdditiveNode(operator, left, right, parser=self)
-        
-        return left
-    
-    def multiplicative(self) -> ExpressionNode:
-        left = self.unary()
-        
-        while self.is_ahead(MultiplicativeToken):
-            operator = self.devour(MultiplicativeToken)
-            right = self.unary()
-            left = MultiplicativeNode(operator, left, right, parser=self)
-        
-        return left
-    
-    def unary(self) -> ExpressionNode:
-        if self.is_ahead(UnaryToken):
-            operator = self.devour(UnaryToken)
-            operand = self.unary()
-            return UnaryOperationNode(operator, operand, parser=self)
-        
-        return self.primary()
-    
-    def primary(self) -> ExpressionNode:
+    def primary(self) -> ValueType:
 
         if self.is_ahead(LiteralToken):
             return LiteralNode(self.devour(LiteralToken), parser=self)

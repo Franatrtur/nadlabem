@@ -17,19 +17,30 @@ class AbstractSyntaxTreeNode(Node):
     def link(self, parent: "AbstractSyntaxTreeNode"):
         self.parent: AbstractSyntaxTreeNode = parent
         self.scope: Context = parent.context
+
         if self.context is None:
             self.context = self.scope
+        else:
+            self.context.set_parent(self.scope)
+
         for child in self.children:
-            child.add_parent(self)
+            child.link(parent=self)
 
     def register(self):
+        pass
+
+    def register_children(self):
+        # do the whole layer before nested layers
         for child in self.children:
             child.register()
+        for child in self.children:
+            child.register_children()
 
     def verify(self):
         for child in self.children:
             child.verify()
 
+    #TODO: move this method to Node to be inherited by all node classes (src/tree.py/Node)
     def __str__(self):
         self_str = f"{self.__class__.__name__}(\"{self.token}\")"
         for index, child in enumerate(self.children):
@@ -57,5 +68,16 @@ class ProgramNode(AbstractSyntaxTreeNode):
     
     def validate(self):
         self.link(parent=self)
-        self.register()
+        self.register_children()
         self.verify()
+
+    def register_children(self):
+        # do the whole layer before nested layers, except blocks in blocks
+        for child in self.children:
+            child.register()
+            if child.__class__.__name__ == "CodeBlockNode":
+                child.register_children()
+
+        for child in self.children:
+            if child.__class__.__name__ != "CodeBlockNode":
+                child.register_children()

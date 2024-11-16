@@ -1,13 +1,3 @@
-import sys, os
-import unittest
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.compiler import Compiler
-from src.config import CompilationConfig
-
-PROGRAM = """
-
-
 int x = 2
 int* y = *x  ; y now references the same part of memory as x, as we defined it not by value, but by pointer
 int* x = 2  ; we load 2 as the pointer, but should throw errow when strict 
@@ -25,7 +15,8 @@ x = arr[5]  ; no telling what might happen, but should throw errow when strict ?
 
 ;two ways of doing the same thing:
 int a = arr[1]      ; we check that item type of arr is int when strict
-int a = &(*arr + 1) ; we just give up on type checking here, warn when strict
+int a = &(*arr + 2) ; we just give up on type checking here, warn when strict
+; + 2 because int has two bytes in 8086 -> platfrom dependent
 
 
 ;arguments by val vs by ref(pointer):
@@ -45,23 +36,3 @@ array[int] mixed_array = [*arr, *x, *y] ; array of ints - pointers to arr, to x,
 
 array[int]* arr_view = mixed_array[0] ; we view the pointer to arr as an array again (dereference)
 z = &mixed_array[1]                     ; set z to x
-
-
-
-{
-    int x = 2;
-    x=1
-}
-"""
-
-if __name__ == "__main__":
-    compiler = Compiler(CompilationConfig())
-    print(f"{compiler=}")
-    compiler.load(PROGRAM)
-    print(f"{compiler.source_code=}")
-    compiler.tokenize()
-    print(f"{compiler.tokens=}")
-    compiler.parse()
-    print(compiler.tree)
-    # compiler.translate()
-    # print(f"{compiler.machine_code=}")
