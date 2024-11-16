@@ -1,7 +1,7 @@
 from .parsing import Parser
 from ..tokenizer import (Token, TypeToken, ArrayToken, StarToken, AmpersandToken)
 from typing import Type
-from ..nodes.types import TYPES, Int, UInt, Char, String, Bool, Void, ValueType
+from ..nodes.types import TYPES, Int, Char, String, Bool, Void, ValueType
 from ..errors import TypeError
 
 #TODO: implement everthing lol

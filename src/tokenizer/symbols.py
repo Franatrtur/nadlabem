@@ -23,11 +23,29 @@ class StringLiteralToken(Token):
         try:
             self.value = ast.literal_eval(string)
         except Exception as e:
-            raise SymbolError("Invalid string literal")
+            raise SymbolError("Invalid string literal", line)
     
     @staticmethod
     def detect(string: str) -> bool:
-        return string.startswith("\"") or string.startswith("'")
+        return string.startswith("\"")
+    
+
+class CharLiteralToken(Token):
+    def __init__(self, string: str, line: Line):
+        super().__init__(string, line)
+        if len(string) != 3 or not string.endswith("'"):
+            raise SymbolError("Invalid char literal", line)
+        try:
+            val = bytes(string, 'latin1')[1]
+            if val > 256:
+                raise SymbolError("Invalid char literal", line)
+            self.value = val
+        except Exception as e:
+            raise SymbolError("Invalid char literal", line)
+    
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string.startswith("'")
 
 
 class CommentToken(Token):
@@ -53,7 +71,6 @@ LogicalOrToken = Token.literal("or", "LogicalOrToken")
 LogicalNotToken = Token.literal("not", "LogicalNotToken")
 
 IntToken = Token.literal("int", "IntToken")
-UIntToken = Token.literal("uint", "UIntToken")
 StringToken = Token.literal("string", "StringToken")
 BoolToken = Token.literal("bool", "BoolToken")
 ArrayToken = Token.literal("array", "ArrayToken")
@@ -93,7 +110,7 @@ BinaryNotToken = Token.literal("~", "BinaryNotToken")
 
 PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
-StarToken = Token.literal("*", "MultiplyToken")
+StarToken = Token.literal("*", "StarToken")
 DivideToken = Token.literal("/", "DivideToken")
 IntegerDivideToken = Token.literal("//", "IntegerDividToken")
 ModuloToken = Token.literal("%", "ModuloToken")
@@ -120,6 +137,7 @@ class NewLineToken(Token):
 TOKEN_DETECTORS = [
     IntegerLiteralToken,
     StringLiteralToken,
+    CharLiteralToken,
     CommentToken,
 
     BoolLiteralToken,
@@ -138,7 +156,6 @@ TOKEN_DETECTORS = [
     LogicalNotToken,
 
     IntToken,
-    UIntToken,
     StringToken,
     BoolToken,
     ArrayToken,
@@ -251,7 +268,6 @@ UnaryToken = Token.any(
 
 TypeToken = Token.any(
     IntToken,
-    UIntToken,
     StringToken,
     BoolToken,
     ArrayToken,
@@ -263,6 +279,7 @@ TypeToken = Token.any(
 LiteralToken = Token.any(
     IntegerLiteralToken,
     StringLiteralToken,
+    CharLiteralToken,
     BoolLiteralToken,
     class_name="LiteralToken"
 )

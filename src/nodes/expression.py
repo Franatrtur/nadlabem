@@ -2,7 +2,7 @@ from ..tree import Node
 from ..tokenizer import Token
 from .scope import Context, Symbol
 from typing import Type
-from .types import ValueType, TYPES, Int, UInt, Char, String, Bool, Void, Array, Pointer
+from .types import ValueType, TYPES, Int, Char, String, Bool, Void, Array
 from .node import AbstractSyntaxTreeNode as ASTNode
 
 class ExpressionNode(ASTNode):
