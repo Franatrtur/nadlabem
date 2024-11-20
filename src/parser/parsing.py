@@ -1,4 +1,4 @@
-from ..tokenizer import Token, Line, NewLineToken, CommaToken, NameToken, IntegerLiteralToken
+from ..tokenizer import Token, Line, NewLineToken, CommaToken, NameToken, NumberToken
 from ..errors import SyntaxError
 from ..tree import Node
 from typing import Type
@@ -10,11 +10,11 @@ class Parser(Node):
     def __init__(self, parent: "Parser"):
         super().__init__(parent)
         self.parent.children.append(self)
-        self.root: RecursiveDescentParser
+        self.root: "ProgramParser"
 
     def devour(self, token_type: Type[Token]) -> Token:
         """Eats desired token type, returns eaten token, throws proper SyntaxError if not found"""
-        return self.root.devour(token_type)
+        return self.root.devour(token_type, parser=self)
 
     def look_ahead(self) -> Token:
         return self.root.look_ahead()

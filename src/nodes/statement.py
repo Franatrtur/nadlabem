@@ -28,11 +28,11 @@ class CodeBlockNode(StatementNode):
                 child.register_children()
 
 class VariableDeclarationNode(StatementNode):
-    def __init__(self, name: Token, value: ExpressionNode, type_token: TypeToken, parser: "Parser"):
+    def __init__(self, name: Token, value: ExpressionNode, val_type: ValueType, parser: "Parser"):
         super().__init__(name, [value], parser)
         self.value = value
         self.name_token = name
-        self.type_token = type_token
+        self.val_type: ValueType = val_type
 
     def register(self) -> None:
         symbol = Symbol(self.name_token, node=self)
@@ -47,22 +47,22 @@ class AssignmentNode(StatementNode):
         self.scope.resolve_symbol(self.token).reference(self)
 
 class ArgumentDeclarationNode(StatementNode):
-    def __init__(self, name_token: Token, type_token: TypeToken, parser: "Parser"):
+    def __init__(self, name_token: Token, val_type: ValueType, parser: "Parser"):
         super().__init__(name_token, [], parser)
         self.name_token = name_token
-        self.type_token = type_token
+        self.val_type: ValueType = val_type
 
     def register(self) -> None:
         symbol = Symbol(self.name_token, node=self)
         self.context.register_symbol(symbol)
 
 class FunctionDeclarationNode(StatementNode):
-    def __init__(self, token: Token, arguments: list[ArgumentDeclarationNode], body: CodeBlockNode, type_token: TypeToken, parser: "Parser"):
+    def __init__(self, token: Token, arguments: list[ArgumentDeclarationNode], body: CodeBlockNode, val_type: ValueType, parser: "Parser"):
         super().__init__(token, [*arguments, body], parser)
         self.arguments = arguments
         self.body = body
         self.identifier = token.string
-        self.type_token = type_token
+        self.val_type: ValueType = val_type
 
 class ReturnNode(StatementNode):
     def __init__(self, token: Token, value: ExpressionNode | None, parser: "Parser"):

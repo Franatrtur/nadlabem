@@ -1,4 +1,5 @@
 import json
+from .config import CompilationConfig
 
 class Node:
 
@@ -6,10 +7,12 @@ class Node:
         self.parent: Node | None = parent
         self.root: Node = parent.root if parent is not None else self
         self.children: list["Node"] = []
+        self.config: CompilationConfig = parent.config if parent is not None else None
 
     def set_parent(self, parent: "Node"):
         self.parent = parent
         self.root = parent.root
+        self.config = parent.config
 
     def add_child(self, child: "Node"):
         self.children.append(child)

@@ -8,7 +8,7 @@ from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, State
                     CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
                     WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDeclarationNode)
 
-from ..nodes.types import TYPES
+from .types import TypeParser
 from ..errors import SyntaxError
 
 
@@ -118,18 +118,18 @@ class AssignmentParser(Parser):
 class DeclarationParser(Parser):
 
     def _parse_param(self) -> ArgumentDeclarationNode:
-        type_token = self.devour(TypeToken)
+        val_type = TypeParser(parent=self).parse()
         name_token = self.devour(NameToken)
-        return ArgumentDeclarationNode(type_token, name_token, parser=self)
+        return ArgumentDeclarationNode(name_token, val_type, parser=self)
 
     def parse(self) -> VariableDeclarationNode | FunctionDeclarationNode:
-        type_token = self.devour(TypeToken)
+        val_type = TypeParser(parent=self).parse()
         name_token = self.devour(NameToken)
         
         if self.is_ahead(EqualsToken):
             self.devour(EqualsToken)
             expression = ExpressionParser(parent=self).parse()
-            return VariableDeclarationNode(name_token, expression, type_token, parser=self)
+            return VariableDeclarationNode(name_token, expression, val_type, parser=self)
 
         elif self.is_ahead(OpenParenToken):
             self.devour(OpenParenToken)
@@ -143,7 +143,7 @@ class DeclarationParser(Parser):
             
             self.devour(CloseParenToken)
             body = CodeBlockParser(parent=self).parse()
-            return FunctionDeclarationNode(name_token, params, body, type_token, parser=self)
+            return FunctionDeclarationNode(name_token, params, body, val_type, parser=self)
 
         else:
             raise SyntaxError("Declaration must assign a value or function", name_token.line)

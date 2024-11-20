@@ -2,7 +2,6 @@ from ..tree import Node
 from ..tokenizer import Token
 from .scope import Context
 from typing import Type
-from .types import ValueType, TYPES
 
 class AbstractSyntaxTreeNode(Node):
 
@@ -13,6 +12,8 @@ class AbstractSyntaxTreeNode(Node):
         self.parser = parser
         self.context: Context = None
         self.scope: Context = None
+        self.config = parser.config
+        self.val_type = None
         
     def link(self, parent: "AbstractSyntaxTreeNode"):
         self.parent: AbstractSyntaxTreeNode = parent
@@ -42,7 +43,7 @@ class AbstractSyntaxTreeNode(Node):
 
     #TODO: move this method to Node to be inherited by all node classes (src/tree.py/Node)
     def __str__(self):
-        self_str = f"{self.__class__.__name__}(\"{self.token}\")"
+        self_str = f"{self.__class__.__name__}(\"{self.token}\")" + (" - "+ str(self.val_type) if self.val_type is not None else "")
         for index, child in enumerate(self.children):
             is_last_child = (index == len(self.children) - 1)
             child_str = str(child)

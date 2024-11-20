@@ -4,17 +4,36 @@ from .token import Token, Line
 from ..errors import SymbolError
 
 
-class IntegerLiteralToken(Token):
+class NumberToken(Token):
+    """Also represents one char"""
     def __init__(self, string: str, line: Line):
         super().__init__(string, line)
+        if string.startswith("'"):
+            self._lex_char(string, line)
+        else:
+            try:
+                self.value = ast.literal_eval(string)
+            except SyntaxError as e:
+                raise SymbolError("Invalid integer literal")
+
+    def _lex_char(self, string: str, line: Line) -> None:
+
         try:
-            self.value = ast.literal_eval(string)
-        except SyntaxError as e:
-            raise SymbolError("Invalid integer literal")
+            evaled = ast.literal_eval(string)
+        except Exception as e:
+            raise SymbolError("Invalid char literal", line)
+
+        if len(evaled) != 1:
+            raise SymbolError("Char literal must be exactly one character", line)
+        byte = bytes(evaled, encoding='utf8')
+        if len(byte) != 1:
+            raise SymbolError("Invalid ASCII character in char literal", line)
+        self.value = int(byte[0])
+        print(self.value)
     
     @staticmethod
     def detect(string: str) -> bool:
-        return string.isnumeric() or re.match(r"^0x[0-9a-fA-F]+$", string)
+        return string.isnumeric() or re.match(r"^0x[0-9a-fA-F]+$", string) or string.startswith("'")
 
 
 class StringLiteralToken(Token):
@@ -27,25 +46,7 @@ class StringLiteralToken(Token):
     
     @staticmethod
     def detect(string: str) -> bool:
-        return string.startswith("\"")
-    
-
-class CharLiteralToken(Token):
-    def __init__(self, string: str, line: Line):
-        super().__init__(string, line)
-        if len(string) != 3 or not string.endswith("'"):
-            raise SymbolError("Invalid char literal", line)
-        try:
-            val = bytes(string, 'latin1')[1]
-            if val > 256:
-                raise SymbolError("Invalid char literal", line)
-            self.value = val
-        except Exception as e:
-            raise SymbolError("Invalid char literal", line)
-    
-    @staticmethod
-    def detect(string: str) -> bool:
-        return string.startswith("'")
+        return
 
 
 class CommentToken(Token):
@@ -66,14 +67,12 @@ BreakToken = Token.literal("break", "BreakToken")
 ContinueToken = Token.literal("continue", "ContinueToken")
 PassToken = Token.literal("pass", "PassToken")
 
-AmpersandToken = Token.literal("and", "LogicalAndToken")
+LogicalAndToken = Token.literal("and", "LogicalAndToken")
 LogicalOrToken = Token.literal("or", "LogicalOrToken")
 LogicalNotToken = Token.literal("not", "LogicalNotToken")
 
 IntToken = Token.literal("int", "IntToken")
-StringToken = Token.literal("string", "StringToken")
 BoolToken = Token.literal("bool", "BoolToken")
-ArrayToken = Token.literal("array", "ArrayToken")
 CharToken = Token.literal("char", "CharToken")
 VoidToken = Token.literal("void", "VoidToken")
 
@@ -103,7 +102,7 @@ CommaToken = Token.literal(",", "CommaToken")
 ColonToken = Token.literal(":", "ColonToken")
 HashToken = Token.literal("#", "HashToken")
 
-BinaryAndToken = Token.literal("&", "BinaryAndToken")
+AmpersandToken = Token.literal("&", "AmpersandToken")
 BinaryOrToken = Token.literal("|", "BinaryOrToken")
 BinaryXorToken = Token.literal("^", "BinaryXorToken")
 BinaryNotToken = Token.literal("~", "BinaryNotToken")
@@ -112,7 +111,7 @@ PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
 StarToken = Token.literal("*", "StarToken")
 DivideToken = Token.literal("/", "DivideToken")
-IntegerDivideToken = Token.literal("//", "IntegerDividToken")
+IntegerDivideToken = Token.literal("//", "IntegerDivideToken")
 ModuloToken = Token.literal("%", "ModuloToken")
 
 OpenParenToken = Token.literal("(", "OpenParenToken")
@@ -135,9 +134,8 @@ class NewLineToken(Token):
 
 #order matters as priority is used for detection
 TOKEN_DETECTORS = [
-    IntegerLiteralToken,
+    NumberToken,
     StringLiteralToken,
-    CharLiteralToken,
     CommentToken,
 
     BoolLiteralToken,
@@ -151,14 +149,12 @@ TOKEN_DETECTORS = [
     ContinueToken,
     PassToken,
 
-    AmpersandToken,
+    LogicalAndToken,
     LogicalOrToken,
     LogicalNotToken,
 
     IntToken,
-    StringToken,
     BoolToken,
-    ArrayToken,
     CharToken,
     VoidToken,
 
@@ -178,7 +174,7 @@ TOKEN_DETECTORS = [
     ColonToken,
     HashToken,
 
-    BinaryAndToken,
+    AmpersandToken,
     BinaryOrToken,
     BinaryXorToken,
     BinaryNotToken,
@@ -221,7 +217,7 @@ StatementBeginToken = Token.any(
 )
 
 LogicalToken = Token.any(
-    AmpersandToken,
+    LogicalAndToken,
     LogicalOrToken,
     LogicalNotToken,
     class_name="LogicalToken"
@@ -238,7 +234,7 @@ ComparisonToken = Token.any(
 )
 
 BinaryToken = Token.any(
-    BinaryAndToken,
+    AmpersandToken,
     BinaryOrToken,
     BinaryXorToken,
     class_name="BinaryToken"
@@ -263,23 +259,21 @@ UnaryToken = Token.any(
     MinusToken,
     StarToken,
     BinaryNotToken,
+    AmpersandToken,
     class_name="UnaryToken"
 )
 
 TypeToken = Token.any(
     IntToken,
-    StringToken,
     BoolToken,
-    ArrayToken,
     CharToken,
     VoidToken,
     class_name="TypeToken"
 )
 
 LiteralToken = Token.any(
-    IntegerLiteralToken,
+    NumberToken,
     StringLiteralToken,
-    CharLiteralToken,
     BoolLiteralToken,
     class_name="LiteralToken"
 )

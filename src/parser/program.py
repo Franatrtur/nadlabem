@@ -17,24 +17,26 @@ class ProgramParser(Parser):
         self.compiler = compiler
         self.nested: int = 0
         self.children = []
+        self.config = compiler.config
 
     def parse(self) -> ProgramNode:
         program_block = CodeBlockParser(parent=self, force_multiline=True).parse()
         return ProgramNode(program_block.children, parser=self)
 
-    def devour(self, token_type: Type[Token]) -> Token:
+    def devour(self, token_type: Type[Token], parser: Parser | None) -> Token:
         if self.is_done:
-            raise SyntaxError("Unexpected end of input", line=self.tokens[self.i].line)
+            raise SyntaxError(f"Unexpected end of input, expected {token_type.__name__} but got nothing", line=self.tokens[self.i].line, parser=parser)
 
         skip_newline = self.nested > 0
 
         while skip_newline and NewLineToken.match(self.tokens[self.i]):
             self.i += 1
             if self.is_done:
-                raise SyntaxError("Unexpected end of multiline input", line=self.tokens[self.i - 1].line)
+                raise SyntaxError(f"Unexpected end of multiline input, expected {token_type.__name__} but got nothing", line=self.tokens[self.i - 1].line, parser=parser)
 
         token = self.tokens[self.i]
-        
+        token.parsed_by = parser
+
         if Token.any(OpenParenToken, ArrayBeginToken).match(token):
             self.nested += 1
         elif Token.any(CloseParenToken, ArrayEndToken).match(token):
@@ -46,10 +48,10 @@ class ProgramParser(Parser):
             if self.compiler is not None and self.compiler.config.verbose:
                 progress_bar("Parsing", self.i, len(self.tokens))
 
-            return self.tokens[self.i - 1]
+            return token
             
         else:
-            raise SyntaxError(f"Expected {token_type.__name__}, but got {self.tokens[self.i]} instead", line=self.tokens[self.i].line)
+            raise SyntaxError(f"Expected {token_type.__name__}, but got {self.tokens[self.i]} instead", line=self.tokens[self.i].line, parser=parser)
 
     def look_ahead(self) -> Token:
 
