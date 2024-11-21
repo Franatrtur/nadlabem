@@ -5,7 +5,7 @@ from typing import Type, Union
 from .parsing import Parser
 from .statement import CodeBlockParser
 from ..nodes.node import ProgramNode
-
+from .suggestions import find_suggestion
 
 class ProgramParser(Parser):
 
@@ -51,7 +51,7 @@ class ProgramParser(Parser):
             return token
             
         else:
-            raise SyntaxError(f"Expected {token_type.__name__}, but got {self.tokens[self.i]} instead", line=self.tokens[self.i].line, parser=parser)
+            raise SyntaxError(f"Expected {token_type.__name__}, but got {self.tokens[self.i]} instead", line=self.tokens[self.i].line, suggestion=find_suggestion(token_type, self.tokens[self.i]))
 
     def look_ahead(self) -> Token:
 

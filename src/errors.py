@@ -11,8 +11,8 @@ class NadLabemError(Exception):
 
     def __str__(self):
         if self.warning:
-            label = self.__class__.__name__[:-5] + " Warning"
-            color = "\033[33m "
+            label = self.__class__.__name__[:-5] + " Warning:"
+            color = "\033[33m"
         else:
             label = self.__class__.__name__
             color = "\033[41m "

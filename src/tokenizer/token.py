@@ -4,13 +4,13 @@ from ..errors import SymbolError, NadLabemError
 
 
 class Token:
-
     def __init__(self, string: str, line: "Line"):
         self.string = string
         self.line = line
 
     def __str__(self):
         return f"{self.__class__.__name__}(\"{self.string}\")"
+    
     def __repr__(self):
         return str(self)
 
@@ -32,8 +32,35 @@ class Token:
         # Define a new subclass of Token with a custom detect method
         return type(class_name, (Token,), {
             "detect": staticmethod(lambda s: any(cls.detect(s) for cls in classes)),
-            "match": classmethod(lambda cls, token: any(cls.match(token) for cls in classes))
+            "match": classmethod(lambda cls, token: any(cls.match(token) for cls in classes)),
+            "_component_classes": classes  # Store component classes for subclass detection
         })
+
+    @classmethod
+    def detects_subclass(cls, other_cls: Type['Token']) -> bool:
+        """
+        Check if this token class can detect instances of the other token class.
+        Works with classes generated through Token.any().
+        
+        Args:
+            other_cls: The token class to check against
+            
+        Returns:
+            bool: True if this class can detect instances of other_cls
+        """
+        # If this is a combined token (created by any()), check component classes
+        if hasattr(cls, '_component_classes'):
+            return any(c.detects_subclass(other_cls) for c in cls._component_classes)
+            
+        # For literal tokens or regular subclasses, check if detect() works on the other class's literal
+        if hasattr(other_cls, 'literal_string'):
+            return cls.detect(other_cls.literal_string)
+            
+        # For other cases, try to determine relationship through direct method comparison
+        return (cls.detect == other_cls.detect) or (
+            hasattr(other_cls, 'detect') and 
+            all(cls.detect(s) for s in ['test_string'] if other_cls.detect(s))
+        )
 
 
 class Line:

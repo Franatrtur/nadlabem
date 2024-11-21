@@ -16,16 +16,19 @@ class VariableTypeParser(Parser):
                 expr_type = value_type
                 break  # Exit the loop if a match is found, break will skip the following else:
         else:
-            allowed = ", ".join(t.__name__ for t in VALUE_TYPES.keys())
+            allowed = ", ".join(str(t) for t in VALUE_TYPES.values())
             raise TypeError(
-                f"Cannot assign to type {type_token}, expected a value type", type_token.line,
-                value_types=allowed
+                f"Cannot assign to type {type_token.string}, expected a value type", type_token.line,
+                value_types=allowed, suggestion="Did you forget \"def\" to define a void function?"
             )
 
         while self.is_ahead(ArrayBeginToken):
             self.devour(ArrayBeginToken)
-            array_length: int = self.devour(NumberToken).value
-            # now we only support sized arrays
+            
+            array_length = None
+            if not self.is_ahead(ArrayEndToken):
+                array_length = self.devour(NumberToken).value
+
             self.devour(ArrayEndToken)
             expr_type = Array(expr_type, size=array_length)
 

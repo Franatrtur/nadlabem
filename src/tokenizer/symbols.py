@@ -73,7 +73,7 @@ DefinitionToken = Token.literal("def", "DefinitionToken")
 
 LogicalAndToken = Token.literal("and", "LogicalAndToken")
 LogicalOrToken = Token.literal("or", "LogicalOrToken")
-LogicalNotToken = Token.literal("not", "LogicalNotToken")
+NegationToken = Token.literal("not", "LogicalNotToken")
 
 IntToken = Token.literal("int", "IntToken")
 BoolToken = Token.literal("bool", "BoolToken")
@@ -84,7 +84,8 @@ VoidToken = Token.literal("void", "VoidToken")
 class NameToken(Token):
     @staticmethod
     def detect(string: str) -> bool:
-        return string[0].isalpha()
+        return string[0].isalpha() or string[0] == "_"
+
 
 class BoolLiteralToken(Token):
     def __init__(self, string: str, line: Line):
@@ -109,7 +110,7 @@ CommaToken = Token.literal(",", "CommaToken")
 ColonToken = Token.literal(":", "ColonToken")
 HashToken = Token.literal("#", "HashToken")
 
-AmpersandToken = Token.literal("&", "AmpersandToken")
+BinaryAndToken = Token.literal("&", "BinaryAndToken")
 BinaryOrToken = Token.literal("|", "BinaryOrToken")
 BinaryXorToken = Token.literal("^", "BinaryXorToken")
 BinaryNotToken = Token.literal("~", "BinaryNotToken")
@@ -160,7 +161,7 @@ TOKEN_DETECTORS = [
 
     LogicalAndToken,
     LogicalOrToken,
-    LogicalNotToken,
+    NegationToken,
 
     IntToken,
     BoolToken,
@@ -183,7 +184,7 @@ TOKEN_DETECTORS = [
     ColonToken,
     HashToken,
 
-    AmpersandToken,
+    BinaryAndToken,
     BinaryOrToken,
     BinaryXorToken,
     BinaryNotToken,
@@ -237,7 +238,7 @@ StatementBeginToken = Token.any(
 LogicalToken = Token.any(
     LogicalAndToken,
     LogicalOrToken,
-    LogicalNotToken,
+    NegationToken,
     class_name="LogicalToken"
 )
 
@@ -252,7 +253,7 @@ ComparisonToken = Token.any(
 )
 
 BinaryToken = Token.any(
-    AmpersandToken,
+    BinaryAndToken,
     BinaryOrToken,
     BinaryXorToken,
     class_name="BinaryToken"
@@ -277,7 +278,6 @@ UnaryToken = Token.any(
     MinusToken,
     StarToken,
     BinaryNotToken,
-    AmpersandToken,
     class_name="UnaryToken"
 )
 

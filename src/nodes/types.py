@@ -5,7 +5,7 @@ from ..errors import TypeError
 from ..tree import Node
 
 class ExpressionType:
-    def matches(self, other: "ExpressionType") -> bool:
+    def matches(self, other: "ExpressionType", strict: bool = False) -> bool:
         pass
     @classmethod
     def match(cls, other: "ExpressionType") -> bool:
@@ -29,9 +29,6 @@ class ExpressionType:
 class NoType(ExpressionType):
     def __init__(self, name: int):
         self.name = name
-
-    def matches(self, other: ExpressionType) -> bool:
-        return isinstance(other, self.__class__)
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name})"
     def __str__(self):
@@ -43,8 +40,8 @@ class ValueType(ExpressionType):
     def __init__(self, name: int):
         self.name = name
 
-    def matches(self, other: ExpressionType) -> bool:
-        return isinstance(other, self.__class__)
+    def matches(self, other: ExpressionType, strict: bool = False) -> bool:
+        return isinstance(other, self.__class__) if not strict else other == self
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name})"
     def __str__(self):
@@ -55,18 +52,20 @@ Bool = ValueType(BoolToken.literal_string)
 Char = ValueType(CharToken.literal_string)
 
 class Array(ExpressionType):
-    def __init__(self, base_type: ExpressionType, size: int | None):
-        self.base_type: ExpressionType = base_type
+    def __init__(self, element_type: ExpressionType, size: int | None):
+        self.element_type: ExpressionType = element_type
         self.size: int | None = size
 
-    def matches(self, other: ExpressionType) -> bool:
-        return isinstance(other, Array) and self.base_type.matches(other.base_type) and (self.size == other.size or self.size is None or other.size is None)
+    def matches(self, other: ExpressionType, strict: bool = False) -> bool:
+        if self.size is None and other.size is not None:
+            self.size = other.size
+        return isinstance(other, Array) and self.element_type.matches(other.element_type, strict=strict) and (self.size == other.size)
         
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.base_type)}, size={self.size})"
+        return f"{self.__class__.__name__}({repr(self.element_type)}, size={self.size})"
     def __str__(self):
         size = f"{self.size}" if self.size is not None else ""
-        return f"{str(self.base_type)}[{size}]"
+        return f"{str(self.element_type)}[{size}]"
 
 
 ######################################################
@@ -80,6 +79,11 @@ class VariableType(DeclarationType):
     def __init__(self, expression_type: ExpressionType, is_reference: bool):
         self.expression_type: ExpressionType = expression_type
         self.is_reference: bool = is_reference
+
+    def matches(self, expression_type: ExpressionType) -> bool:
+        if self.is_reference:
+            return expression_type == Int
+        return self.expression_type.matches(expression_type)
     
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.expression_type)}, is_reference={self.is_reference})"
@@ -91,6 +95,14 @@ class FunctionType(DeclarationType):
     def __init__(self, return_type: ValueType | NoType, parameters: list[VariableType]):
         self.return_type: ValueType | NoType = return_type
         self.parameters: list[VariableType] = parameters
+
+    def match_params(self, parameters: list[ExpressionType]) -> bool:
+        if len(self.parameters) != len(parameters):
+            return False
+        for i in range(len(self.parameters)):
+            if not self.parameters[i].matches(parameters[i]):
+                return False
+        return True
 
     def __repr__(self):
         parameters = ", ".join(repr(parameter) for parameter in self.parameters)

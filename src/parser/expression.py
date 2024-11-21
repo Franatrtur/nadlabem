@@ -93,11 +93,11 @@ class ExpressionParser(Parser):
 
         elif self.is_ahead(ArrayBeginToken):
             begin = self.devour(ArrayBeginToken)
-            elements = []
+            elements: list[ExpressionNode] = []
 
             if not self.is_ahead(ArrayEndToken):
 
-                elements = [self.expression()]
+                elements.append(self.expression())
 
                 while self.is_ahead(CommaToken):
                     self.devour(CommaToken)

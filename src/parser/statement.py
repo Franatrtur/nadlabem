@@ -189,6 +189,7 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     OpenBraceToken: CodeBlockParser,
     IfToken: IfParser,
     WhileToken: WhileParser,
+    ForToken: ForParser,
     NameToken: AssignmentParser,
     TypeToken: DeclarationParser,
     ReturnToken: ReturnParser,
@@ -202,6 +203,9 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
 class StatementParser(Parser):
 
     def parse(self) -> StatementNode:
+        if self.is_done:
+            raise SyntaxError("Unexpected end of input, expected a statement after the statement", self.root.tokens[-1].line)
+        
         if not self.is_ahead(Token.any(*STATEMENTS.keys())):
             actual = self.look_ahead()
             raise SyntaxError(f"Expected a statement, but found {actual} instead", actual.line)
