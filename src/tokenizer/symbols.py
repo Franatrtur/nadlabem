@@ -8,16 +8,19 @@ class NumberToken(Token):
     """Also represents one char"""
     def __init__(self, string: str, line: Line):
         super().__init__(string, line)
-        if string.startswith("'"):
-            self._lex_char(string, line)
-        else:
-            try:
-                self.value = ast.literal_eval(string)
-            except SyntaxError as e:
-                raise SymbolError("Invalid integer literal")
+        try:
+            self.value: int = ast.literal_eval(string)
+        except SyntaxError as e:
+            raise SymbolError("Invalid integer literal")
 
-    def _lex_char(self, string: str, line: Line) -> None:
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string.isnumeric() or re.match(r"^0(x[0-9a-fA-F]+|o[0-7]+|b[01]+)$", string)
 
+
+class CharLiteralToken(Token):
+    def __init__(self, string: str, line: Line):
+        super().__init__(string, line)
         try:
             evaled = ast.literal_eval(string)
         except Exception as e:
@@ -29,11 +32,10 @@ class NumberToken(Token):
         if len(byte) != 1:
             raise SymbolError("Invalid ASCII character in char literal", line)
         self.value = int(byte[0])
-        print(self.value)
-    
+
     @staticmethod
     def detect(string: str) -> bool:
-        return string.isnumeric() or re.match(r"^0x[0-9a-fA-F]+$", string) or string.startswith("'")
+        return string.startswith("'")
 
 
 class StringLiteralToken(Token):
@@ -43,10 +45,11 @@ class StringLiteralToken(Token):
             self.value = ast.literal_eval(string)
         except Exception as e:
             raise SymbolError("Invalid string literal", line)
+        self.bytes: bytes = bytes(self.value, encoding='utf8')
     
     @staticmethod
     def detect(string: str) -> bool:
-        return
+        return string.startswith('"')
 
 
 class CommentToken(Token):
@@ -66,6 +69,7 @@ ReturnToken = Token.literal("return", "ReturnToken")
 BreakToken = Token.literal("break", "BreakToken")
 ContinueToken = Token.literal("continue", "ContinueToken")
 PassToken = Token.literal("pass", "PassToken")
+DefinitionToken = Token.literal("def", "DefinitionToken")
 
 LogicalAndToken = Token.literal("and", "LogicalAndToken")
 LogicalOrToken = Token.literal("or", "LogicalOrToken")
@@ -82,11 +86,14 @@ class NameToken(Token):
     def detect(string: str) -> bool:
         return string[0].isalpha()
 
-BoolLiteralToken = Token.any(
-    Token.literal("true", "TrueToken"),
-    Token.literal("false", "FalseToken"),
-    class_name="BoolLiteralToken"
-)
+class BoolLiteralToken(Token):
+    def __init__(self, string: str, line: Line):
+        super().__init__(string, line)
+        self.value = True if string.lower() == "true" else False
+
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string.lower() in ["true", "false"]
 
 IsEqualToken = Token.literal("==", "IsEqualToken")
 IsNotEqualToken = Token.literal("!=", "IsNotEqualToken")
@@ -135,6 +142,7 @@ class NewLineToken(Token):
 #order matters as priority is used for detection
 TOKEN_DETECTORS = [
     NumberToken,
+    CharLiteralToken,
     StringLiteralToken,
     CommentToken,
 
@@ -148,6 +156,7 @@ TOKEN_DETECTORS = [
     BreakToken,
     ContinueToken,
     PassToken,
+    DefinitionToken,
 
     LogicalAndToken,
     LogicalOrToken,
@@ -197,6 +206,14 @@ TOKEN_DETECTORS = [
 ]
 
 
+TypeToken = Token.any(
+    IntToken,
+    BoolToken,
+    CharToken,
+    VoidToken,
+    class_name="TypeToken"
+)
+
 KeywordToken = Token.any(
     IfToken,
     WhileToken,
@@ -206,13 +223,14 @@ KeywordToken = Token.any(
     BreakToken,
     ContinueToken,
     PassToken,
-    VoidToken,
+    DefinitionToken,
     class_name="KeywordToken"
 )
 
 StatementBeginToken = Token.any(
     KeywordToken,
     HashToken,
+    TypeToken,
     class_name="StatementBeginToken"
 )
 
@@ -263,16 +281,9 @@ UnaryToken = Token.any(
     class_name="UnaryToken"
 )
 
-TypeToken = Token.any(
-    IntToken,
-    BoolToken,
-    CharToken,
-    VoidToken,
-    class_name="TypeToken"
-)
-
 LiteralToken = Token.any(
     NumberToken,
+    CharLiteralToken,
     StringLiteralToken,
     BoolLiteralToken,
     class_name="LiteralToken"

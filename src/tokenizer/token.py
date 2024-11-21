@@ -45,7 +45,7 @@ class Line:
         self.comment: str = ""
 
     def __str__(self):
-        return f"Line {self.number}: \n\"{self.string}\" ({len(self.tokens)} tokens)\n"
+        return f"Line {self.number}: \n\"{self.string}\" ({len(self.tokens)} tokens)"
     def __repr__(self):
         tokens_string = ','.join(map(str, self.tokens))
         return f"Line {self.number}: \"{self.string}\""# [{tokens_string}]"

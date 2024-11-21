@@ -1,14 +1,14 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
-                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, HashToken,
+                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, HashToken, DefinitionToken,
                         ReturnToken, BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, BinaryToken)
 from typing import Type
 from .expression import ExpressionParser
 from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
                     CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
-                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDeclarationNode)
+                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode)
 
-from .types import TypeParser
+from .types import VariableTypeParser, ReturnTypeParser
 from ..errors import SyntaxError
 
 
@@ -31,12 +31,11 @@ class CodeBlockParser(Parser):
 
         statements: list[StatementNode] = []
         self.braced = self.is_ahead(OpenBraceToken) and not self.force_multiline
-        
+
         if self.braced:
             self.devour(OpenBraceToken)
-            #TODO: add an optional name token here to name nested loops
             self.devour(NewLineToken)
-        
+
         while not self._multiline_stop():
             statement = StatementParser(parent=self).parse()
             statements.append(statement)
@@ -52,7 +51,7 @@ class CodeBlockParser(Parser):
 class IfParser(Parser):
 
     def parse(self) -> IfNode:
-        self.devour(IfToken)
+        token = self.devour(IfToken)
 
         self.devour(OpenParenToken)
         condition = ExpressionParser(parent=self).parse()
@@ -60,11 +59,11 @@ class IfParser(Parser):
         body = CodeBlockParser(parent=self).parse()
 
         if not self.is_ahead(ElseToken):
-            return IfNode(condition, body, parser=self)
+            return IfNode(token, condition, body, else_body=None, parser=self)
 
         self.devour(ElseToken)
         else_body = CodeBlockParser(parent=self).parse()
-        return IfNode(condition, body, else_body, parser=self)
+        return IfNode(token, condition, body, else_body, parser=self)
 
 
 class WhileParser(Parser):
@@ -117,36 +116,42 @@ class AssignmentParser(Parser):
 
 class DeclarationParser(Parser):
 
+    def parse(self) -> VariableDeclarationNode | FunctionDefinitonNode:
+        val_type = VariableTypeParser(parent=self).parse()
+        name_token = self.devour(NameToken)
+
+        if not self.is_ahead(EqualsToken):
+            raise SyntaxError("Declaration must assign a value", name_token.line)
+        
+        self.devour(EqualsToken)
+        expression = ExpressionParser(parent=self).parse()
+        return VariableDeclarationNode(name_token, expression, val_type, parser=self)
+
+
+class FunctionDefinitionParser(Parser):
+
     def _parse_param(self) -> ArgumentDeclarationNode:
-        val_type = TypeParser(parent=self).parse()
+        val_type = VariableTypeParser(parent=self).parse()
         name_token = self.devour(NameToken)
         return ArgumentDeclarationNode(name_token, val_type, parser=self)
 
-    def parse(self) -> VariableDeclarationNode | FunctionDeclarationNode:
-        val_type = TypeParser(parent=self).parse()
+    def parse(self) -> FunctionDefinitonNode:
+        self.devour(DefinitionToken)
+        return_type = ReturnTypeParser(parent=self).parse()
         name_token = self.devour(NameToken)
-        
-        if self.is_ahead(EqualsToken):
-            self.devour(EqualsToken)
-            expression = ExpressionParser(parent=self).parse()
-            return VariableDeclarationNode(name_token, expression, val_type, parser=self)
 
-        elif self.is_ahead(OpenParenToken):
-            self.devour(OpenParenToken)
-            params: list[ArgumentDeclarationNode] = []
-                
-            if not self.is_ahead(CloseParenToken):
-                params.append(self._parse_param())
-                while self.is_ahead(CommaToken):
-                    self.devour(CommaToken)
-                    params.append(self._parse_param())
+        self.devour(OpenParenToken)
+        params: list[ArgumentDeclarationNode] = []
             
-            self.devour(CloseParenToken)
-            body = CodeBlockParser(parent=self).parse()
-            return FunctionDeclarationNode(name_token, params, body, val_type, parser=self)
-
-        else:
-            raise SyntaxError("Declaration must assign a value or function", name_token.line)
+        if not self.is_ahead(CloseParenToken):
+            params.append(self._parse_param())
+            while self.is_ahead(CommaToken):
+                self.devour(CommaToken)
+                params.append(self._parse_param())
+        
+        self.devour(CloseParenToken)
+        body = CodeBlockParser(parent=self).parse()
+        return FunctionDefinitonNode(name_token, params, body, return_type, parser=self)
 
 
 class ReturnParser(Parser):
@@ -191,6 +196,7 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     BreakToken: BreakParser,
     PassToken: PassParser,
     HashToken: AssemblyParser,
+    DefinitionToken: FunctionDefinitionParser
 }
 
 class StatementParser(Parser):

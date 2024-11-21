@@ -6,7 +6,10 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-int[2][2]* a = [[1, 2],[3, 4]]
+int* x= 1
+if (x()){
+    # fgfg
+}
 """
 
 if __name__ == "__main__":

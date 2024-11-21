@@ -2,9 +2,11 @@
 
 from ..nodes.types import Int, Char, S
 
-TYPES: dict[Type[Token], Type[ValueType]] = {
-    IntToken: Int,
-    CharToken: Char,
-    BoolToken: Bool,
-    VoidToken: Void,
+SIZE: dict[Type[Token], int] = {
+    IntToken: 2,
+    CharToken: 1,
+    BoolToken: 1,
+    VoidToken: 0,
 }
+
+def sizeof()

@@ -6,10 +6,17 @@ class NadLabemError(Exception):
         self.error_string = error_string
         self.line = line
         self.kwargs = kwargs
+        self.warning: bool = False
         print()
 
     def __str__(self):
-        return f"\n\n\33[41m {self.__class__.__name__} \033[0m {self.error_string} on {self.line}, {self.kwargs}"
+        if self.warning:
+            label = self.__class__.__name__[:-5] + " Warning"
+            color = "\033[33m "
+        else:
+            label = self.__class__.__name__
+            color = "\033[41m "
+        return f"\n\n{color}{label} \033[0m {self.error_string} on {self.line}\nAdditional info: {self.kwargs}"
 
 
 class NameError(NadLabemError):

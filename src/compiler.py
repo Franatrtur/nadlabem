@@ -7,6 +7,8 @@ class Compiler:
 
     def __init__(self, config: CompilationConfig):
         self.config = config
+        self.config.compiler = self
+        self.warnings: list[NadLabemError] = []
 
     def compile(self, source_code: str):
         self.load(source_code)

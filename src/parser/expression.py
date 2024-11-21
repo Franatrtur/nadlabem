@@ -72,7 +72,19 @@ class ExpressionParser(Parser):
             operand = self.unary()
             return UnaryOperationNode(operator, operand, parser=self)
         
-        return self.primary()
+        primary = self.primary()
+
+        if self.is_ahead(ArrayBeginToken):
+            #index retrieval
+            token = self.devour(ArrayBeginToken)
+
+            index = self.expression()
+
+            self.devour(ArrayEndToken)
+            
+            return IndexRetrievalNode(token, primary, index, parser=self)
+        
+        return primary
     
     def primary(self) -> ExpressionNode:
 
@@ -113,16 +125,6 @@ class ExpressionParser(Parser):
                 self.devour(CloseParenToken)
 
                 return FunctionCallNode(name_token, arguments, parser=self)
-
-            elif self.is_ahead(ArrayBeginToken):
-                #index retrieval
-                self.devour(ArrayBeginToken)
-
-                index = self.expression()
-
-                self.devour(ArrayEndToken)
-                
-                return IndexRetrievalNode(name_token, index, parser=self)
             
             return VariableReferenceNode(name_token, parser=self)
 

@@ -1,6 +1,6 @@
 # cpu 8086
 
-void syscall_print(){
+def void syscall_print(){
     # mov ah, 9  ; os service code for printing to output
     # int 0x21
 }

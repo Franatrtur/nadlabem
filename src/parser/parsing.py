@@ -31,4 +31,6 @@ class Parser(Node):
 
     def __str__(self):
         return f"{self.__class__.__name__}({', '.join([child.__str__() for child in self.children])})"
+    def __repr__(self):
+        return str(self)
 

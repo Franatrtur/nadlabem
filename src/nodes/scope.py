@@ -11,10 +11,10 @@ class Context(Node):
         self.block = block
         self.symbols: dict[str, "Symbol"] = {}
 
-    def register_symbol(self, symbol: "Symbol"):
+    def register_symbol(self, symbol: "Symbol", local: bool = True):
         #TODO: set bubble up to false when not strict config
         #this would allow local variables to override globals when not in strict mode
-        found = self.has_name(symbol.name, bubble_up=True)
+        found = self.has_name(symbol.name, bubble_up= not local)
         if found is not None:
             raise NameError(f"Cannot redefine name '{symbol.name}'", symbol.node.token.line, defined_at=found.node.token.line)
         symbol.scope = self

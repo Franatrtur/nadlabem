@@ -1,31 +1,54 @@
 from .parsing import Parser
 from ..tokenizer import (Token, TypeToken, StarToken, ArrayBeginToken, ArrayEndToken, NumberToken)
 from typing import Type
-from ..nodes.types import TYPES, Int, Char, Bool, Void, ValueType, Array
+from ..nodes.types import VALUE_TYPES, RETURNABLE_TYPES, Int, Char, Bool, Void, Array, VariableType, ExpressionType
 from ..errors import TypeError
 
-class TypeParser(Parser):
+class VariableTypeParser(Parser):
 
-    def parse(self) -> ValueType:
+    def parse(self) -> VariableType:
 
         type_token = self.devour(TypeToken)
-        result_type: ValueType
-        
-        for token_type, value_type in TYPES.items():
+        expr_type: ExpressionType
+
+        for token_type, value_type in VALUE_TYPES.items():
             if token_type.match(type_token):
-                result_type = value_type()
+                expr_type = value_type
                 break  # Exit the loop if a match is found, break will skip the following else:
         else:
-            raise TypeError(f"Unsupported type {type_token.string}", type_token.line)
-        
+            allowed = ", ".join(t.__name__ for t in VALUE_TYPES.keys())
+            raise TypeError(
+                f"Cannot assign to type {type_token}, expected a value type", type_token.line,
+                value_types=allowed
+            )
+
         while self.is_ahead(ArrayBeginToken):
             self.devour(ArrayBeginToken)
             array_length: int = self.devour(NumberToken).value
+            # now we only support sized arrays
             self.devour(ArrayEndToken)
-            result_type = Array(result_type, size=array_length)
+            expr_type = Array(expr_type, size=array_length)
 
+        is_reference: bool = False
         if self.is_ahead(StarToken):
             self.devour(StarToken)
-            result_type.is_reference = True
+            is_reference = True
 
-        return result_type
+        return VariableType(expr_type, is_reference)
+
+
+class ReturnTypeParser(Parser):
+
+    def parse(self) -> ExpressionType:
+
+        type_token = self.devour(TypeToken)
+
+        for token_type, value_type in RETURNABLE_TYPES.items():
+            if token_type.match(type_token):
+                return value_type
+        else:
+            allowed = ", ".join(t.__name__ for t in RETURNABLE_TYPES.keys())
+            raise TypeError(
+                f"Cannot return type {type_token}", type_token.line,
+                returnable_types=allowed
+            )

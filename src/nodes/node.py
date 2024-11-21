@@ -2,6 +2,9 @@ from ..tree import Node
 from ..tokenizer import Token
 from .scope import Context
 from typing import Type
+from ..config import CompilationConfig
+
+#TODO: implement closest_parent( of type) for break and continuenodes to find their relevant parents
 
 class AbstractSyntaxTreeNode(Node):
 
@@ -12,8 +15,8 @@ class AbstractSyntaxTreeNode(Node):
         self.parser = parser
         self.context: Context = None
         self.scope: Context = None
-        self.config = parser.config
-        self.val_type = None
+        self.config: CompilationConfig = parser.config
+        self.node_type = None
         
     def link(self, parent: "AbstractSyntaxTreeNode"):
         self.parent: AbstractSyntaxTreeNode = parent
@@ -27,23 +30,31 @@ class AbstractSyntaxTreeNode(Node):
         for child in self.children:
             child.link(parent=self)
 
-    def register(self):
+    def closest_parent(parent_type: Type["AbstractSyntaxTreeNode"]):
+        if self.parent is None:
+            return None
+        if isinstance(self.parent, parent_type):
+            return self.parent
+        return self.parent.closest_parent(parent_type)
+
+    def register(self) -> None:
         pass
 
-    def register_children(self):
-        # do the whole layer before nested layers
+    def register_children(self) -> None:
+        # do nested layers before current layer
+        # postorder traversal style
+        for child in self.children:
+            child.register_children()
         for child in self.children:
             child.register()
         for child in self.children:
-            child.register_children()
-
-    def verify(self):
-        for child in self.children:
             child.verify()
 
-    #TODO: move this method to Node to be inherited by all node classes (src/tree.py/Node)
+    def verify(self) -> None:
+        pass
+
     def __str__(self):
-        self_str = f"{self.__class__.__name__}(\"{self.token}\")" + (" - "+ str(self.val_type) if self.val_type is not None else "")
+        self_str = f"{self.__class__.__name__}({self.token})" + (" - "+ str(self.node_type) if self.node_type is not None else "")
         for index, child in enumerate(self.children):
             is_last_child = (index == len(self.children) - 1)
             child_str = str(child)
