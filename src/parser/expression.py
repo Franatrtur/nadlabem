@@ -74,7 +74,7 @@ class ExpressionParser(Parser):
         
         primary = self.primary()
 
-        if self.is_ahead(ArrayBeginToken):
+        while self.is_ahead(ArrayBeginToken):
             #index retrieval
             token = self.devour(ArrayBeginToken)
 
@@ -82,7 +82,7 @@ class ExpressionParser(Parser):
 
             self.devour(ArrayEndToken)
             
-            return IndexRetrievalNode(token, primary, index, parser=self)
+            primary = IndexRetrievalNode(token, primary, index, parser=self)
         
         return primary
     

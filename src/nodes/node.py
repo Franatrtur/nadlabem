@@ -43,10 +43,19 @@ class AbstractSyntaxTreeNode(Node):
     def register_children(self) -> None:
         # do nested layers before current layer
         # postorder traversal style
+        # however, we have to make sure that functions
+        # (nodes with their own context) have been registered first
         for child in self.children:
-            child.register_children()
+            if child.scope != child.context:
+                child.register()
         for child in self.children:
-            child.register()
+            if child.scope == child.context:
+                child.register_children()
+                child.register()
+        for child in self.children:
+            if child.scope != child.context:
+                child.register_children()
+
         for child in self.children:
             child.verify()
 
@@ -83,23 +92,3 @@ class ProgramNode(AbstractSyntaxTreeNode):
         self.link(parent=self)
         self.register_children()
         self.verify()
-
-    def register_children(self):
-        
-        # do the whole layer before nested layers, except blocks in blocks
-        for child in self.children:
-            child.register()
-        for child in self.children:
-            child.register_children()
-        for child in self.children:
-            child.verify()
-
-        # # do the whole layer before nested layers, except blocks in blocks
-        # for child in self.children:
-        #     child.register()
-        #     if child.__class__.__name__ == "CodeBlockNode":
-        #         child.register_children()
-
-        # for child in self.children:
-        #     if child.__class__.__name__ != "CodeBlockNode":
-        #         child.register_children()

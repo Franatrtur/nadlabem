@@ -6,17 +6,26 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-int pointer_to_x = *x   ;#0x3e4f
-; same thing:
-int* y = *x  ; y now references the same part of memory as x, as we defined it not by value, but by pointer
+char[16][1]* acu = 0+["aa", "aaa"][0][0]
+char[] mystring = "Hello World!"; comment
 
-def void print_number(int _) pass
+def bool compare(int* a, int b) return a + 1 >= b % 1000
 
-print_number(y) ; print 2
-int* x = 2  ; we load 2 as the pointer, but should throw errow when strict 
+def int main(){
+    if(compare(*mystring, 5)){
+        return 0+mystring[len(mystring) - 1];
+    } else {
+        return fib(5);
+    }
+}
 
-y = y + 1     ; x is also now 3
-print_number(x) ; prints 3
+def int fib(int i){
+    if(i < 2){
+        return i;
+    } else {
+        return fib(i - 1) + fib(i - 2);
+    }
+}
 """
 
 if __name__ == "__main__":

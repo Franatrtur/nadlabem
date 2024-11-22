@@ -15,8 +15,18 @@ class FunctionCallNode(ExpressionNode):
     def __init__(self, name_token: Token, arguments: list[ASTNode], parser: "Parser"):
         super().__init__(name_token, arguments, parser)
         self.arguments = arguments
+        self.simulated: bool = False
 
     def register(self) -> None:
+        if self.token.string == "len":
+            if len(self.arguments) != 1:
+                raise TypeError(f"Expected 1 argument for array len, got {len(self.arguments)} arguments", self.token.line)
+            if not isinstance(self.arguments[0].node_type, Array):
+                raise TypeError(f"Cannot call array len on type {self.arguments[0].node_type}", self.token.line)
+            self.node_type = Int
+            self.simulated = True
+            return
+
         symbol = self.scope.resolve_symbol(self.token)
         symbol.reference(self)
         definition = symbol.node
@@ -64,19 +74,21 @@ class UnaryOperationNode(ExpressionNode):
         self.operation: str = token.string
     
     def register(self) -> None:
-        assert_value_type(self.child, self)
 
         if MinusToken.match(self.token):
+            assert_value_type(self.child, self)
             self.node_type = Int
             if Int != self.child.node_type:
                 self.config.warn(TypeError(f"Expected minus ({self.token.string}) application on ints, but applied on type {self.child.node_type}", self.token.line))
 
         elif NegationToken.match(self.token):
+            assert_value_type(self.child, self)
             self.node_type = Bool
             if Bool != self.child.node_type:
                 self.config.warn(TypeError(f"Expected logical not ({self.token.string}) application on bools, but applied on type {self.child.node_type}", self.token.line))
         
         elif BinaryNotToken.match(self.token):
+            assert_value_type(self.child, self)
             self.node_type = Int
             if Int != self.child.node_type:
                 self.config.warn(TypeError(f"Expected binary not ({self.token.string}) application on ints, but applied on type {self.child.node_type}", self.token.line))
@@ -145,7 +157,7 @@ class ArrayLiteralNode(ExpressionNode):
         for element in self.elements:
             if not element.node_type.match(self.node_type.element_type):
                 raise TypeError(f"Cannot add element of type {element.node_type} to array of type {self.node_type}", self.token.line)
-            elif not element.node_type.matches(self.node_type.element_type, strict=True):
+            elif not element.node_type.matches(self.node_type.element_type, strict=False):
                 self.config.warn(TypeError(f"Mixed types in array literal, adding element of type {element.node_type} to array of type {self.node_type}", self.token.line))
 
 class IndexRetrievalNode(ExpressionNode):
@@ -156,6 +168,6 @@ class IndexRetrievalNode(ExpressionNode):
         #TODO: check array is an array
 
     def verify(self) -> None:
-        if not Array.match(self.array_node.node_type):
+        if not isinstance(self.array_node.node_type, Array):
             raise TypeError(f"Cannot index \"{self.token.string}\" of type {self.array_node.node_type} as an array", self.token.line, defined_at=self.array_node.token.line)
         self.node_type: ExpressionType = self.array_node.node_type.element_type

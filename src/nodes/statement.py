@@ -14,7 +14,6 @@ class CodeBlockNode(StatementNode):
     def __init__(self, token: Token, children: list[StatementNode], parser: "Parser"):
         super().__init__(token, children, parser)
         self.statements = children
-        self.context = Context(block=self, parent=self.scope)
 
     def register_children(self):
         
@@ -39,8 +38,8 @@ class VariableDeclarationNode(StatementNode):
 
     def verify(self) -> None:
         value_type: ExpressionType = self.value.node_type
-        if not self.node_type.matches(value_type):
-            pointed = "by pointer" if self.node_type.is_pointer else "by value"
+        if not self.node_type.matches(value_type, strict=isinstance(self.node_type.expression_type, Array)):
+            pointed = "by pointer" if self.node_type.is_reference else "by value"
             raise TypeError(f"Cannot assign type {value_type} to type {self.node_type} {pointed}", self.token.line)
 
 class AssignmentNode(StatementNode):
@@ -141,14 +140,6 @@ class ForNode(StatementNode):
         self.condition = condition
         self.increment = increment
         self.body = body
-
-    def register_children(self) -> None:
-        # mixed expressions and statements mean we have to adjust tree traversal
-        for child in self.children:
-            child.register_children()
-            child.register()
-        for child in self.children:
-            child.verify()
 
     def verify(self) -> None:
         verify_condition(self.condition)

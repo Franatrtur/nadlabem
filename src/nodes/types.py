@@ -59,7 +59,9 @@ class Array(ExpressionType):
     def matches(self, other: ExpressionType, strict: bool = False) -> bool:
         if self.size is None and other.size is not None:
             self.size = other.size
-        return isinstance(other, Array) and self.element_type.matches(other.element_type, strict=strict) and (self.size == other.size)
+        if not strict:
+            self.size = other.size = max(self.size, other.size)
+        return isinstance(other, Array) and self.element_type.matches(other.element_type, strict=strict) and (self.size >= other.size)
         
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.element_type)}, size={self.size})"
@@ -80,10 +82,10 @@ class VariableType(DeclarationType):
         self.expression_type: ExpressionType = expression_type
         self.is_reference: bool = is_reference
 
-    def matches(self, expression_type: ExpressionType) -> bool:
+    def matches(self, expression_type: ExpressionType, strict: bool = False) -> bool:
         if self.is_reference:
             return expression_type == Int
-        return self.expression_type.matches(expression_type)
+        return self.expression_type.matches(expression_type, strict=strict)
     
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.expression_type)}, is_reference={self.is_reference})"

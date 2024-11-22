@@ -39,7 +39,7 @@ def tokenize_line(line_string: str, line_number: int | None = None) -> Line:
 
 
     if len(line.tokens) > 0:
-        line.tokens.append(NewLineToken("", line))
+        line.tokens.append(NewLineToken("\n", line))
 
     return line
 

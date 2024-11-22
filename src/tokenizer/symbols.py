@@ -137,7 +137,10 @@ class IgnoreToken(Token):
         return True
 
 class NewLineToken(Token):
-    pass
+    #dummy method
+    @staticmethod
+    def detect(string: str) -> bool:
+        return string == "\n"
 
 
 #order matters as priority is used for detection
