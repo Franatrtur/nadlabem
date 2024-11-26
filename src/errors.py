@@ -30,3 +30,6 @@ class SymbolError(NadLabemError):
 
 class TypeError(NadLabemError):
     pass
+
+class NotImplementedError(NadLabemError):
+    pass

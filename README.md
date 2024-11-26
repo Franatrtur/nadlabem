@@ -1,22 +1,34 @@
-# NadLabem Assembly transpiler
-Our Brandejs language is a superset of assembly that targets the 8bit i8080 processor. Our NadLabem transpiler is the corresponding translator.  
- - It translates to regular assembly.
+# NadLabem Assembly compiler
+Our Brandejs language is a C-like Python-like language with support for inline assembly that targets the 16bit i8086 processor. Our NadLabem transpiler is the corresponding translator.  
+ - It compiles Brandejs to regular i8086 assembly.
  - It is written in python.
  - It is open source.
  - It has no external dependencies.
 
 ### Brandejs source code example
 ```
-x = 5
-y = 10 - x ; comment
+# cpu 8086
+# mov ax, 5
+char[16][1]* acu = 0+["aa", "aaa"][0][0]
+char[] mystring = "Hello World!"; comment
 
-if(x != 5){
-    z = 0
-}else{
-    z = 1
+def bool compare(int* a, int b) return a + 1 >= b % 1000
+
+def int main(){
+    if(compare(*mystring, 5)){
+        return 0+mystring[len(mystring) - 1];
+    } else {
+        return fib(5);
+    }
 }
-    LDA z
-    HLT ; program end
+
+def int fib(int i){
+    if(i < 2){
+        return i;
+    } else {
+        return fib(i - 1) + fib(i - 2);
+    }
+}
 ```
 
 ### Usage

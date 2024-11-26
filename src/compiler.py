@@ -2,6 +2,8 @@ from .errors import NadLabemError
 from .config import CompilationConfig
 from .tokenizer import Tokenizer
 from .parser.program import ProgramParser
+from .targets import TARGETS, Translator
+from typing import Type
 
 class Compiler:
 
@@ -9,6 +11,11 @@ class Compiler:
         self.config = config
         self.config.compiler = self
         self.warnings: list[NadLabemError] = []
+
+        if self.config.target_cpu not in TARGETS:
+            raise NadLabemError(f"Invalid target CPU: {self.config.target_cpu}", line="in the compilation config")
+
+        self.target: list[Type[Translator]] = TARGETS[self.config.target_cpu]
 
     def compile(self, source_code: str):
         self.load(source_code)

@@ -3,6 +3,7 @@ from ..tokenizer import Token
 from .scope import Context
 from typing import Type
 from ..config import CompilationConfig
+from ..errors import NadLabemError
 
 #TODO: implement closest_parent( of type) for break and continuenodes to find their relevant parents
 
@@ -64,15 +65,18 @@ class AbstractSyntaxTreeNode(Node):
 
     def __str__(self):
         self_str = f"{self.__class__.__name__}({self.token})" + (" - "+ str(self.node_type) if self.node_type is not None else "")
+        
         for index, child in enumerate(self.children):
             is_last_child = (index == len(self.children) - 1)
             child_str = str(child)
             child_rows = child_str.split("\n")
+
             for row_index, row in enumerate(child_rows):
                 bullet_point = "├─" if not is_last_child else "└─"
                 connector = bullet_point if row_index == 0 else "│ "
                 connector = connector if not (is_last_child and row_index > 0) else "  "
                 self_str += f"\n  {connector}{row}"
+                
         if len(self.children) > 2:
             self_str += "\n"
         return self_str
@@ -82,11 +86,11 @@ class ProgramNode(AbstractSyntaxTreeNode):
 
     def __init__(self, statements: list[AbstractSyntaxTreeNode], parser: "ProgramParser"):
         super().__init__(None, statements, parser)
-        self.parent = self
+        self.parent = None
         self.root = self  # top level node
         self.statements = statements
         self.context = Context(self, None)
-        self.context.root = self.context.parent = self.context  #top level context
+        self.context.root = self.context.root = self.context  #top level context
     
     def validate(self):
         self.link(parent=self)

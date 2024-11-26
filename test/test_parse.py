@@ -6,26 +6,8 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-char[16][1]* acu = 0+["aa", "aaa"][0][0]
-char[] mystring = "Hello World!"; comment
+int x = 5
 
-def bool compare(int* a, int b) return a + 1 >= b % 1000
-
-def int main(){
-    if(compare(*mystring, 5)){
-        return 0+mystring[len(mystring) - 1];
-    } else {
-        return fib(5);
-    }
-}
-
-def int fib(int i){
-    if(i < 2){
-        return i;
-    } else {
-        return fib(i - 1) + fib(i - 2);
-    }
-}
 """
 
 if __name__ == "__main__":

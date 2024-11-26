@@ -62,6 +62,13 @@ class Array(ExpressionType):
         if not strict:
             self.size = other.size = max(self.size, other.size)
         return isinstance(other, Array) and self.element_type.matches(other.element_type, strict=strict) and (self.size >= other.size)
+
+    def size_defined(self) -> bool:
+        if self.size is None:
+            return False
+        if isinstance(self.element_type, Array):
+            return self.element_type.size_defined()
+        return True
         
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.element_type)}, size={self.size})"

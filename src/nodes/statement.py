@@ -41,6 +41,9 @@ class VariableDeclarationNode(StatementNode):
         if not self.node_type.matches(value_type, strict=isinstance(self.node_type.expression_type, Array)):
             pointed = "by pointer" if self.node_type.is_reference else "by value"
             raise TypeError(f"Cannot assign type {value_type} to type {self.node_type} {pointed}", self.token.line)
+        #TODO: check array and nested arrays have defined length, probably implement in types.py
+        if isinstance(self.node_type.expression_type, Array) and not self.node_type.expression_type.size_defined():
+            raise TypeError(f"Could not infer size of array \"{self.name_token.string}\"", self.token.line)
 
 class AssignmentNode(StatementNode):
     def __init__(self, name_token: Token, value: ExpressionNode, parser: "Parser"):
@@ -83,7 +86,7 @@ class FunctionDefinitonNode(StatementNode):
         self.scope.register_symbol(symbol)
 
     def verify(self) -> None:
-        if not self.return_nodes and self.node_type.return_type != Void:
+        if not self.return_nodes and self.node_type.return_type is not Void:
             self.config.warn(TypeError("Function has no return statement", self.token.line))
 
 class ReturnNode(StatementNode):

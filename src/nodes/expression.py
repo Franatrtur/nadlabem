@@ -165,7 +165,6 @@ class IndexRetrievalNode(ExpressionNode):
         super().__init__(token, [array_node, index], parser)
         self.array_node = array_node
         self.index = index
-        #TODO: check array is an array
 
     def verify(self) -> None:
         if not isinstance(self.array_node.node_type, Array):
