@@ -1,22 +1,19 @@
-from .program import ProgramTranslator
 from ..translator import Translator
-from ..nodes.node import AbstractSyntaxTreeNode as ASTNode
 from ..nodes.statement import VariableDeclarationNode
-from ..tokenizer.symbols import NumberToken
 
 class VariableDeclarationTranslator(Translator):
 
     node_type = VariableDeclarationNode
 
-    def translate(self) -> list[str]:
+    def make(self) -> None:
         self.node: VariableDeclarationNode
 
-        token: NumberToken = self.node.token
-
-        return [
-            "POP AX",
-            f"MOV {token.value}, AX",
-        ]
+        self.program.global_variable(self.node)
+        self.add(self.node.expression_value)
+        
+        self.assemble("pop", ["ax"], mapping=True)
+        self.assemble("mov", [f"[{self.node.token.string}]", "ax"])
+        #TODO: works only for ints rn
 
         
 

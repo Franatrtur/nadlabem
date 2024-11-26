@@ -1,6 +1,7 @@
 # I8086 - SPECIFIC CONSTANTS
 
 from ..nodes.types import Int, Char, Bool, Void, Array, ExpressionType
+from typing import Type
 
 #size in bytes for i8086
 SIZE: dict[Type[ExpressionType], int] = {

@@ -26,9 +26,9 @@ class CodeBlockNode(StatementNode):
             child.verify()
 
 class VariableDeclarationNode(StatementNode):
-    def __init__(self, name: Token, value: ExpressionNode, var_type: VariableType, parser: "Parser"):
-        super().__init__(name, [value], parser)
-        self.value = value
+    def __init__(self, name: Token, expression_value: ExpressionNode, var_type: VariableType, parser: "Parser"):
+        super().__init__(name, [expression_value], parser)
+        self.expression_value = expression_value
         self.name_token = name
         self.node_type: VariableType = var_type
 
@@ -37,7 +37,7 @@ class VariableDeclarationNode(StatementNode):
         self.context.register_symbol(symbol)
 
     def verify(self) -> None:
-        value_type: ExpressionType = self.value.node_type
+        value_type: ExpressionType = self.expression_value.node_type
         if not self.node_type.matches(value_type, strict=isinstance(self.node_type.expression_type, Array)):
             pointed = "by pointer" if self.node_type.is_reference else "by value"
             raise TypeError(f"Cannot assign type {value_type} to type {self.node_type} {pointed}", self.token.line)

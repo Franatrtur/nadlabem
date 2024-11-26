@@ -54,11 +54,14 @@ class BinaryOperationNode(ExpressionNode):
     def _register_type(self, default_type: ExpressionType, allowed_types: list[ExpressionType], allow_mixed: bool = True) -> None:
         assert_value_type(self.left, self)
         assert_value_type(self.right, self)
+        
         if self.left.node_type not in allowed_types or self.right.node_type not in allowed_types:
             allowed = ", ".join(map(str, allowed_types))
             raise TypeError(f"Cannot apply operation {self.token.string} on types {self.left.node_type} and {self.right.node_type}", self.token.line, expected_types=allowed)
+        
         if not allow_mixed and self.left.node_type != self.right.node_type:
             self.config.warn(TypeError(f"Mixed operands in operation {self.token.string} on types {self.left.node_type} and {self.right.node_type}", self.token.line))
+        
         self.node_type: ExpressionType = self.left.node_type if self.right.node_type == default_type else default_type
 
 def assert_value_type(child: ExpressionNode, parent: ExpressionNode) -> None:

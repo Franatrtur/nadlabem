@@ -6,7 +6,7 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-int x = 5
+int x = 5 + 1
 
 """
 
@@ -19,5 +19,5 @@ if __name__ == "__main__":
     #print(f"{compiler.tokens=}")
     compiler.parse()
     print(compiler.tree)
-    # compiler.translate()
-    # print(f"{compiler.machine_code=}")
+    compiler.translate()
+    print('\n'.join(compiler.machine_code))

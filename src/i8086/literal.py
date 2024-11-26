@@ -7,11 +7,9 @@ class LiteralTranslator(Translator):
 
     node_type = LiteralNode
 
-    def translate(self) -> list[str]:
+    def make(self) -> None:
         self.node: LiteralNode
-        return [
-            f"MOV AX, {self.node.token.value}",
-            f"PUSH AX"
-        ]
+        self.assemble("mov", ["ax", self.node.token.value], mapping=True)
+        self.assemble("push", ["ax"])
 
 
