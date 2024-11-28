@@ -1,6 +1,6 @@
 # I8086 - SPECIFIC CONSTANTS
 
-from ..nodes.types import Int, Char, Bool, Void, Array, ExpressionType
+from ..nodes.types import Int, Char, Bool, Void, Array, ExpressionType, VariableType
 from typing import Type
 
 #size in bytes for i8086
@@ -11,29 +11,37 @@ SIZE: dict[Type[ExpressionType], int] = {
     Void: 0,
 }
 
-def sizeof(expr_type: ExpressionType) -> int:
+def sizeof(node_type: ExpressionType | VariableType) -> int:
     """
     Calculate the size in bytes for a given expression type.
     
     Args:
-        expr_type (ExpressionType): The type to calculate size for
+        node_type (ExpressionType): The type to calculate size for
     
     Returns:
         int: Size of the type in bytes
     """
+
+    if isinstance(node_type, VariableType):
+        if node_type.is_reference:
+            return sizeof(Int)
+
+        return sizeof(node_type.expression_type)
+    
+
     # Handle basic value types
-    if expr_type in SIZE:
-        return SIZE[expr_type]
+    if node_type in SIZE:
+        return SIZE[node_type]
     
     # Handle array types
-    if isinstance(expr_type, Array):
+    if isinstance(node_type, Array):
         # If size is not defined, raise an error
-        if expr_type.size is None:
-            raise ValueError(f"Array size is not defined for type: {expr_type}")
+        if node_type.size is None:
+            raise ValueError(f"Array size is not defined for type: {node_type}")
         
         # Recursively calculate size of element type and multiply by array size
-        element_size = sizeof(expr_type.element_type)
-        return element_size * expr_type.size
+        element_size = sizeof(node_type.element_type)
+        return element_size * node_type.size
     
     # If type is not recognized, return 0
     return 0

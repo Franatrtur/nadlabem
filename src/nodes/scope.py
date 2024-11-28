@@ -5,11 +5,11 @@ from typing import Union
 
 class Context(Node):
 
-    def __init__(self, block: "Parser", parent: Union["Context", None] = None):
+    def __init__(self, node: "Parser", parent: Union["Context", None] = None):
         super().__init__(parent)
         self.parent: Context
-        self.block = block
-        self.symbols: dict[str, "Symbol"] = {}
+        self.node = node
+        self.symbols: dict[str, Symbol] = {}
         self.ids: set[str] = set()
 
     def register_symbol(self, symbol: "Symbol", local: bool = True):
@@ -38,7 +38,7 @@ class Context(Node):
             raise NameError(f"Undefined name '{name}'", name_token.line, context=self, tried_bubble_up=bubble_up)
 
     def __str__(self):
-        return f"Context({self.block.__class__.__name__}({self.block.token.line if self.block.token else 0}))"
+        return f"Context({self.node.__class__.__name__}({self.node.token.line if self.node.token else 0}))"
     def __repr__(self):
         return str(self)
 

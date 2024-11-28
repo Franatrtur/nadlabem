@@ -6,8 +6,9 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-int x = 5 + 1
-
+bool a = False
+char b = 0 + a
+#navesti hlt
 """
 
 if __name__ == "__main__":

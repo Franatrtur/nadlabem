@@ -1,66 +1,85 @@
 from ..translator import Translator, ProgramTranslator
 from .sizeof import sizeof
 from ..nodes.statement import VariableDeclarationNode
+from .allocator import Allocator
+import re
 
+#TODO: need to walk all contexts and assign ways of loading and storing each variables value
+# and the way of loading the pointer
+# need to set dno for each stack frame
+# x int   bs   mov ax, [dno] (loads x)     mov ax, dno (loads *x)
+# y bool  bs+2    mov al, dno <- tohle (loads y)    mov al, dno+2   (loads *y)
 
+# int* z = (36754 + 1) <- eval, na stacku zbude jeden int, ten ja loadnu
+# pop ax; spoleham ze je na stacku int 
+# a pushnu na stack na rezervovanou pozici, třeba bs+3
+# mov [dno+3], ax
+# když chci loadnout hodnotu z:
+# mov ax, [dno+3]
+# mov ax, [ax]
+# když chci loadnout pointer na z:
+# mov ax, [dno+3]
 class ProgramI8086Translator(ProgramTranslator):
     
     def make(self):
-        self.variables: dict[str, int] = {}
+        # decide offset for all local vars on stack
+        self.frame = Allocator(self).allocate()
 
         self.result.extend([
             "cpu 8086",
             "segment code"
         ])
-        self.assemble("mov", ["bx", "data"], label="..start")
-        self.assemble("mov", ["ds", "bx"])
-        self.assemble("mov", ["bx", "stack"])
-        self.assemble("mov", ["ss", "bx"])
-        self.assemble("mov", ["sp", "dno"])
+        self.assemble("mov", ["bx", "data"], label="..start")   # start of execution
+        self.assemble("mov", ["ds", "bx"])                      # data segment init
+        self.assemble("mov", ["bx", "stack"])                   
+        self.assemble("mov", ["ss", "bx"])                      # stack segment init
+        self.assemble("mov", ["sp", "dno"])                     # stack pointer init
+        self.assemble("mov", ["bp", "sp"])                      # base pointer init, set to stack pointer
 
-        self.space()
+        self.blank_line()
 
         for child in self.node.children:
             self.add(child)
 
         self.assemble("hlt")
-        self.space()
+        self.blank_line()
         self.result.append("segment data")
         
-        for name, size in self.variables.items():
-            if size <= 2:
-                self.assemble("db" if size == 1 else "dw", ["?"], label=name)
-            else:
-                self.assemble("resb", [str(size)], label=name)
+        for variable in self.frame.variables:
+            variable.declare(translator=self)
 
-        self.space()
+        self.blank_line()
 
         self.result.append("segment stack")
-        self.assemble("resb", ["16"])
+        self.assemble("resb", ["1024"])
         self.assemble("db", ["?"], label="dno")
 
-    def global_variable(self, node: VariableDeclarationNode) -> None:
-        name = node.name_token.string
-        bytesize = sizeof(node.node_type.expression_type)
-        self.variables[name] = bytesize
-
-    # def __init__(self, compiler: "Compiler"):
-    #     super().__init__(compiler)
+        self.optimize()
 
 
-#     def translate(self):
-#         part1 = "\n".split("""cpu 8086
-# segment	code
-# ..start	mov bx  , data
-# 	mov ds , bx
-# 	mov bx , stack
-# 	mov ss,bx
-# 	mov sp,dno""")
+    def optimize(self):
+        self.result: list[str]
 
-#     part1.extend(super().translate())
+        code: list[str] = []
 
-#     part1.extend("""segment	stack
-#         resb 16
-#     dno:	db ?""")
+        i = 0
+        while i < len(self.result):
+            if self.is_instruction(i, 'push') and self.is_instruction(i + 1, 'pop'):
+                push_reg = self.get_operand(i)
+                pop_reg = self.get_operand(i + 1)
 
-#     return part1
+                if push_reg != pop_reg:
+                    code.append(self.result[i].replace('push', 'mov').replace(push_reg, f'{pop_reg}, {push_reg}'))
+                i += 2
+                continue
+            code.append(self.result[i])
+            i += 1
+        self.result = code
+
+
+    def is_instruction(self, index: int, instruction: str) -> bool:
+        return self.result[index].strip().startswith(instruction)
+
+
+    def get_operand(self, index: int) -> str:
+        return self.result[index].strip().split()[1]

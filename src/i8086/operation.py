@@ -1,6 +1,6 @@
 from ..translator import Translator
 from ..nodes.expression import BinaryOperationNode
-from ..tokenizer.symbols import PlusToken, MinusToken, ModuloToken, StarToken
+from ..tokenizer.symbols import PlusToken, MinusToken, DivideToken, ModuloToken, StarToken
 from .sizeof import sizeof
 from ..errors import NotImplementedError
 
@@ -22,12 +22,25 @@ class BinaryOperationTranslator(Translator):
 
         if PlusToken.match(self.node.token):
             self.assemble("add", ["ax", "bx"])
+            self.assemble("push", ["ax"])
+    
         elif MinusToken.match(self.node.token):
             self.assemble("sub", ["ax", "bx"])
+            self.assemble("push", ["ax"])
+
         elif StarToken.match(self.node.token):
             self.assemble("mul", ["ax", "bx"])
-        else:
-            raise NotImplementedError(f"Operation {self.node.token.string} not implemented fror i8086", self.node.token.line)
+            self.assemble("push", ["ax"])
 
-        self.assemble("push", ["ax"], mapping=True)
+        elif DivideToken.match(self.node.token):
+            self.assemble("div", ["ax", "bx"])
+            self.assemble("push", ["ax"])
+
+        elif ModuloToken.match(self.node.token):
+            self.assemble("div", ["ax", "bx"])
+            self.assemble("push", ["dx"])
+
+        else:
+            raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
+
 

@@ -11,7 +11,8 @@ class Translator(Node):
     def __init__(self, parent: "Translator", node: ASTNode):
         super().__init__(parent)
         self.node = node
-        self.node.translator = self
+        if self.node is not None:
+            self.node.translator = self
         self.program: ProgramTranslator = self.root
         self.result: list[str] = []
         self.make()
@@ -20,7 +21,7 @@ class Translator(Node):
         for child in self.node.children:
             self.add(child)
 
-    def space(self) -> None:
+    def blank_line(self) -> None:
         self.result.append("")
 
     def add(self, node: ASTNode) -> None:

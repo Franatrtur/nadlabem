@@ -137,6 +137,7 @@ class VariableReferenceNode(ExpressionNode):
 
     def register(self) -> None:
         symbol = self.scope.resolve_symbol(self.token)
+        self.symbol = symbol
         symbol.reference(self)
         var_type: VariableType = symbol.node.node_type
         if not VariableType.match(var_type):

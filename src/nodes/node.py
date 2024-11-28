@@ -32,8 +32,8 @@ class AbstractSyntaxTreeNode(Node):
 
         if self.context is None:
             self.context = self.scope
-        else:
-            self.context.set_parent(self.scope)
+        elif self.scope is not self.context:
+            self.scope.add_child(self.context)
 
         for child in self.children:
             child.link(parent=self)

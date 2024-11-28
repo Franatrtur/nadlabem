@@ -103,7 +103,7 @@ class ExpressionParser(Parser):
                     self.devour(CommaToken)
                     elements.append(self.expression())
 
-                self.devour(ArrayEndToken)
+            self.devour(ArrayEndToken)
 
             return ArrayLiteralNode(begin, elements, parser=self)
 

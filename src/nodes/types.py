@@ -41,7 +41,7 @@ class ValueType(ExpressionType):
         self.name = name
 
     def matches(self, other: ExpressionType, strict: bool = False) -> bool:
-        return isinstance(other, self.__class__) if not strict else other == self
+        return other in CompatibilityTable[self] if not strict else other == self
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name})"
     def __str__(self):
@@ -50,6 +50,12 @@ class ValueType(ExpressionType):
 Int = ValueType(IntToken.literal_string)
 Bool = ValueType(BoolToken.literal_string)
 Char = ValueType(CharToken.literal_string)
+
+CompatibilityTable: dict[ValueType, set[ValueType]] = {
+    Int: [Int, Char],
+    Char: [Int, Char],
+    Bool: [Bool]
+}
 
 class Array(ExpressionType):
     def __init__(self, element_type: ExpressionType, size: int | None):

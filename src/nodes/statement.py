@@ -35,6 +35,7 @@ class VariableDeclarationNode(StatementNode):
     def register(self) -> None:
         symbol = Symbol(self.name_token, node=self)
         self.context.register_symbol(symbol)
+        self.symbol: Symbol = symbol
 
     def verify(self) -> None:
         value_type: ExpressionType = self.expression_value.node_type
