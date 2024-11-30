@@ -37,6 +37,15 @@ class Context(Node):
         else:
             raise NameError(f"Undefined name '{name}'", name_token.line, context=self, tried_bubble_up=bubble_up)
 
+    def generate_id(self, name_suggestion: str) -> str:
+        symbol_id = name_suggestion
+        num = 1
+        while symbol_id in self.root.ids:
+            symbol_id = name_suggestion + str(num)
+            num += 1
+        self.root.ids.add(symbol_id)
+        return symbol_id
+
     def __str__(self):
         return f"Context({self.node.__class__.__name__}({self.node.token.line if self.node.token else 0}))"
     def __repr__(self):

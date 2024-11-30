@@ -164,6 +164,15 @@ class ArrayLiteralNode(ExpressionNode):
             elif not element.node_type.matches(self.node_type.element_type, strict=False):
                 self.config.warn(TypeError(f"Mixed types in array literal, adding element of type {element.node_type} to array of type {self.node_type}", self.token.line))
 
+
+class AssemblyExpressionNode(ExpressionNode):
+    
+    def __init__(self, token: Token, assembly_expression: str, parser: "Parser"):
+        super().__init__(token, [], parser)
+        self.assembly_expression: str = assembly_expression
+        self.node_type = Int
+
+
 class IndexRetrievalNode(ExpressionNode):
     def __init__(self, token: Token, array_node: ExpressionNode, index: ExpressionNode, parser: "Parser"):
         super().__init__(token, [array_node, index], parser)

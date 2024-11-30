@@ -5,9 +5,10 @@ from ..nodes.node import AbstractSyntaxTreeNode
 from .literal import LiteralTranslator
 from .var import VariableDeclarationTranslator, VariableReferenceTranslator
 from .operation import BinaryOperationTranslator
-from .assembly import AssemblyTranslator
+from .assembly import AssemblyTranslator, AssemblyExpressionTranslator
+from .ifelse import IfTranslator
 
-from .program import ProgramI8086Translator
+from .program import ProgramI8086Translator, CodeBlockTranslator
 
 
 TRANSLATORS: list[Type[Translator]] = [
@@ -15,7 +16,10 @@ TRANSLATORS: list[Type[Translator]] = [
     VariableDeclarationTranslator,
     BinaryOperationTranslator,
     VariableReferenceTranslator,
-    AssemblyTranslator
+    AssemblyTranslator,
+    AssemblyExpressionTranslator,
+    IfTranslator,
+    CodeBlockTranslator
 ]
 
 ENTRY_POINT: Type[ProgramTranslator] = ProgramI8086Translator

@@ -1,24 +1,21 @@
 from ..translator import Translator, ProgramTranslator
 from .sizeof import sizeof
-from ..nodes.statement import VariableDeclarationNode
+from ..nodes.statement import VariableDeclarationNode, CodeBlockNode, FunctionDefinitonNode
 from .allocator import Allocator
 import re
 
-#TODO: need to walk all contexts and assign ways of loading and storing each variables value
-# and the way of loading the pointer
-# need to set dno for each stack frame
-# x int   bs   mov ax, [dno] (loads x)     mov ax, dno (loads *x)
-# y bool  bs+2    mov al, dno <- tohle (loads y)    mov al, dno+2   (loads *y)
 
-# int* z = (36754 + 1) <- eval, na stacku zbude jeden int, ten ja loadnu
-# pop ax; spoleham ze je na stacku int 
-# a pushnu na stack na rezervovanou pozici, třeba bs+3
-# mov [dno+3], ax
-# když chci loadnout hodnotu z:
-# mov ax, [dno+3]
-# mov ax, [ax]
-# když chci loadnout pointer na z:
-# mov ax, [dno+3]
+class CodeBlockTranslator(Translator):
+
+    node_type = CodeBlockNode
+
+    def make(self):
+        for child in self.node.children:
+            self.blank_line()
+            self.add(child)
+            #self.blank_line()
+
+
 class ProgramI8086Translator(ProgramTranslator):
     
     def make(self):
@@ -39,10 +36,18 @@ class ProgramI8086Translator(ProgramTranslator):
         self.blank_line()
 
         for child in self.node.children:
-            self.add(child)
+            if not isinstance(child, FunctionDefinitonNode):
+                self.add(child)
 
         self.assemble("hlt")
         self.blank_line()
+
+        for child in self.node.children:
+            if isinstance(child, FunctionDefinitonNode):
+                self.add(child)
+        
+        self.blank_line()
+
         self.result.append("segment data")
         
         for variable in self.frame.variables:

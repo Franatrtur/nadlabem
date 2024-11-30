@@ -7,8 +7,10 @@ from src.config import CompilationConfig
 
 PROGRAM = """
 bool a = False
-char b = 0 + a
-#navesti hlt
+char b = 0 + @cx
+if(true){
+    @navesti hlt
+}
 """
 
 if __name__ == "__main__":

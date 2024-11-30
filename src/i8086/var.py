@@ -9,17 +9,15 @@ class VariableDeclarationTranslator(Translator):
 
     node_type = VariableDeclarationNode
 
-    def load(self, translator: Translator) -> None:
-        self.assemble("push", ["ax"])
-
     def make(self) -> None:
         self.node: VariableDeclarationNode
     
+        #TODO add init value to program variables instead if the value is a literal
         self.add(self.node.expression_value)
         self.assemble("pop", ["ax"])
         Variable.variables[self.node.symbol].store(translator=self, source_register="a")
 
-        
+
 class VariableReferenceTranslator(Translator):
 
     node_type = VariableReferenceNode
@@ -27,5 +25,6 @@ class VariableReferenceTranslator(Translator):
     def make(self) -> None:
         self.node: VariableReferenceNode
 
+        # arrays should be handled in the index array access  node translator
         Variable.variables[self.node.symbol].load(translator=self, target_register="a")
         self.assemble("push", ["ax"])

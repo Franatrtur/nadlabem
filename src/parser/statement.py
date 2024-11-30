@@ -1,6 +1,6 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
-                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, HashToken, DefinitionToken,
+                        OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, AtToken, DefinitionToken, DoToken,
                         ReturnToken, BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, BinaryToken)
 from typing import Type
 from .expression import ExpressionParser
@@ -68,13 +68,23 @@ class IfParser(Parser):
 
 class WhileParser(Parser):
 
-    def parse(self) -> WhileNode:
-        self.devour(WhileToken)
+    def _condition(self) -> None:
         self.devour(OpenParenToken)
         condition = ExpressionParser(parent=self).parse()
         self.devour(CloseParenToken)
-        body = CodeBlockParser(parent=self).parse()
-        return WhileNode(condition, body, parser=self)
+        return condition
+
+    def parse(self) -> WhileNode:
+        if self.is_ahead(WhileToken):
+            token = self.devour(WhileToken)
+            condition = self._condition()
+            body = CodeBlockParser(parent=self).parse()
+        else:
+            token = self.devour(DoToken)
+            body = CodeBlockParser(parent=self).parse()
+            self.devour(WhileToken)
+            condition = self._condition()
+        return WhileNode(token, condition, body, parser=self)
 
 
 class ForParser(Parser):
@@ -178,7 +188,7 @@ class PassParser(Parser):
 
 class AssemblyParser(Parser):
     def parse(self) -> AssemblyNode:
-        tok = self.devour(HashToken)
+        tok = self.devour(AtToken)
         code: list[Token] = []
         while not self.is_ahead(NewLineToken):
             code.append(self.devour(Token))
@@ -189,6 +199,7 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     OpenBraceToken: CodeBlockParser,
     IfToken: IfParser,
     WhileToken: WhileParser,
+    DoToken: WhileParser,
     ForToken: ForParser,
     NameToken: AssignmentParser,
     TypeToken: DeclarationParser,
@@ -196,7 +207,7 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     ContinueToken: ContinueParser,
     BreakToken: BreakParser,
     PassToken: PassParser,
-    HashToken: AssemblyParser,
+    AtToken: AssemblyParser,
     DefinitionToken: FunctionDefinitionParser
 }
 

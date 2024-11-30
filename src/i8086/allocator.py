@@ -1,9 +1,9 @@
 from .sizeof import sizeof
-from ..nodes.statement import VariableDeclarationNode, ArgumentDeclarationNode, FunctionDefinitonNode
+from ..nodes.statement import VariableDeclarationNode, ArgumentDeclarationNode, FunctionDefinitonNode, StatementNode
 from ..nodes.scope import Context, Symbol
 from ..translator import Translator
 from ..nodes.types import Array, Int, VariableType
-from ..errors import NotImplementedError
+from ..errors import NadLabemError, NotImplementedError
 from typing import Literal
 
 class StackFrame:
@@ -98,7 +98,7 @@ class Variable:
 
 
     def load_pointer(self, translator: Translator, index_offset: int = 0, target_register: Literal["a", "b", "c", "d"] = "a"):
-        register = target_register + "ax"
+        register = target_register + "x"
         if self.is_global:
             translator.assemble("lea", [register, self._shifted(self.symbol.name, index_offset, sized=False)])
         else:
@@ -122,23 +122,35 @@ class Variable:
             translator.assemble("mov", ["ax", self._shifted("bp", self.offset)])
             translator.assemble("mov", [self._shifted("ax", index_offset), register])
 
+    
+    def store_pointer(self, translator: Translator, source_register: Literal["a", "b", "c", "d"] = "a"):
+        register = source_register + "x"
+        if not self.is_reference:
+            raise NadLabemError(f"Cannot overwrite pointer to non-reference variable {self.symbol.name}", self.symbol.node.token.line)
+        
+        if self.is_global:
+            translator.assemble("mov", [f"[{self.symbol.name}]", register])
+        else:
+            translator.assemble("mov", [self._shifted("bp", self.offset), register])
+
+
 
 
 
 
 class Allocator:
-    """Allocates memory fixend and on stack - determines offsets for local variables and assigns global ones"""
+    """Allocates memory fixed and on stack - determines offsets for local variables and assigns global ones"""
 
     def __init__(self, program: "ProgramTranslator"):
         self.program: "ProgramTranslator" = program
 
     def allocate(self) -> StackFrame:
-        return self.allocate_variables(self.program.node.context)
+        return self.create_stack_frame(self.program.node.context)
 
     # recursive
-    def allocate_variables(self, context: Context) -> StackFrame:
+    def create_stack_frame(self, context: Context) -> StackFrame:
 
         for child in context.children:
-            self.allocate_variables(child)
+            self.create_stack_frame(child)
 
         return StackFrame(context)

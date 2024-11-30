@@ -45,7 +45,7 @@ class StringLiteralToken(Token):
             self.value = ast.literal_eval(string)
         except Exception as e:
             raise SymbolError("Invalid string literal", line)
-        self.bytes: bytes = bytes(self.value, encoding='utf8')
+        self.bytes: bytes = bytes(self.value, encoding='utf8') + b'\0'
     
     @staticmethod
     def detect(string: str) -> bool:
@@ -63,6 +63,7 @@ class CommentToken(Token):
 
 IfToken = Token.literal("if", "IfToken")
 ElseToken = Token.literal("else", "ElseToken")
+DoToken = Token.literal("do", "DoToken")
 WhileToken = Token.literal("while", "WhileToken")
 ForToken = Token.literal("for", "ForToken")
 ReturnToken = Token.literal("return", "ReturnToken")
@@ -109,6 +110,7 @@ NegationToken = Token.literal("!", "NegationToken")
 CommaToken = Token.literal(",", "CommaToken")
 ColonToken = Token.literal(":", "ColonToken")
 HashToken = Token.literal("#", "HashToken")
+AtToken = Token.literal("@", "AtToken")
 
 BinaryAndToken = Token.literal("&", "BinaryAndToken")
 BinaryOrToken = Token.literal("|", "BinaryOrToken")
@@ -153,8 +155,9 @@ TOKEN_DETECTORS = [
     BoolLiteralToken,
 
     IfToken,
-    WhileToken,
     ElseToken,
+    DoToken,
+    WhileToken,
     ForToken,
     ReturnToken,
     BreakToken,
@@ -186,6 +189,7 @@ TOKEN_DETECTORS = [
     CommaToken,
     ColonToken,
     HashToken,
+    AtToken,
 
     BinaryAndToken,
     BinaryOrToken,
@@ -220,6 +224,7 @@ TypeToken = Token.any(
 
 KeywordToken = Token.any(
     IfToken,
+    DoToken,
     WhileToken,
     ElseToken,
     ForToken,

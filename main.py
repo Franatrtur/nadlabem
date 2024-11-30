@@ -4,13 +4,13 @@ import argparse
 from pathlib import Path
 import sys
 
-from src.config import TranslationConfig
-from src.translator import NadLabemTranslator, TARGETS
+from src.config import CompilationConfig
+from src.compiler import Compiler, TARGETS
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("file", help="The input file name")
-parser.add_argument("-p", "--processor", "--target", help="Choose Processor target (default=i8080)", default="i8080")
+parser.add_argument("-p", "--processor", "--target", help="Choose Processor target (default=i8086)", default="i8086")
 
 parser.add_argument("-lax", "--forgive", action="store_true", help="Reduce strictness when verifying the program")
 parser.add_argument("-dev", "--devmode", action="store_true", help="Developper mode flag")
@@ -36,7 +36,7 @@ def main() -> None:
         if args.processor not in TARGETS:
             raise ValueError(f"Unknown processor {args.processor}!")
 
-        config = TranslationConfig(
+        config = CompilationConfig(
             target_cpu = args.processor,
             strict = not args.forgive,
             generate_mapping = not args.nomapping,
@@ -50,13 +50,13 @@ def main() -> None:
             with open("logo.txt", "r") as file:
                 print("\033[96m" + file.read() + '\033[0m')
 
-        translator = NadLabemTranslator(config)
+        translator = Compiler(config)
 
         if config.verbose:
             print(config)
             print()
-
-        output = translator.translate(code)
+        
+        output = translator.compile(code)
 
         if args.output:
             if Path(args.output).exists():

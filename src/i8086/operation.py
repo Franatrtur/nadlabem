@@ -43,4 +43,7 @@ class BinaryOperationTranslator(Translator):
         else:
             raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
 
+        # if sizeof(self.node.node_type) == 1:
+        #     self.assemble("mov", ["ah", "0"])
+
 

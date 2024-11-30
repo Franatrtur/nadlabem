@@ -1,10 +1,11 @@
 from .parsing import Parser
-from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken,
-                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken,
+from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken, StringLiteralToken,
+                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, AtToken,
                         ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken)
 from typing import Type
-from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, VariableReferenceNode, LogicalNode, BinaryNode,
-                    UnaryOperationNode, LiteralNode, FunctionCallNode, IndexRetrievalNode, ArrayLiteralNode)
+from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode,
+                                VariableReferenceNode, LogicalNode, BinaryNode, UnaryOperationNode,
+                                LiteralNode, FunctionCallNode, IndexRetrievalNode, ArrayLiteralNode, AssemblyExpressionNode)
 from ..errors import SyntaxError
 
 
@@ -74,19 +75,31 @@ class ExpressionParser(Parser):
         
         primary = self.primary()
 
-        while self.is_ahead(ArrayBeginToken):
+        # if, not while, we only allow one dimensional arrays
+        if self.is_ahead(ArrayBeginToken):
             #index retrieval
             token = self.devour(ArrayBeginToken)
 
             index = self.expression()
 
             self.devour(ArrayEndToken)
-            
+
             primary = IndexRetrievalNode(token, primary, index, parser=self)
-        
+
         return primary
     
     def primary(self) -> ExpressionNode:
+
+        if self.is_ahead(AtToken):
+            token = self.devour(AtToken)
+            if self.is_ahead(NameToken):
+                name_str = self.devour(NameToken).string
+            elif self.is_ahead(StringLiteralToken):
+                name_str = self.devour(StringLiteralToken).value
+            else:
+                raise SyntaxError(f"Invalid assembly expression: {self.look_ahead()}", self.look_ahead().line, suggestion="Put the assembly expression in string quotes?")
+            
+            return AssemblyExpressionNode(token, name_str, parser=self)
 
         if self.is_ahead(LiteralToken):
             return LiteralNode(self.devour(LiteralToken), parser=self)
