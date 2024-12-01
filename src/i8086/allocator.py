@@ -13,8 +13,6 @@ class StackFrame:
     def __init__(self, context: Context):
         self.context: Context = context
         self.variables: list[Variable] = []
-        self.var_size: int = 0
-        self.arg_size: int = 0
         StackFrame.frames[context] = self
 
         if not context.is_root:
@@ -27,8 +25,8 @@ class StackFrame:
 
     def allocate(self):
         
-        arg_offset: int = -6
-        var_offset: int = 2
+        self.var_bytes: int = 0     # forwards (-)
+        self.arg_bytes: int = 0     # backwards (+)
 
         if not self.context.is_root:
 
@@ -38,14 +36,15 @@ class StackFrame:
 
                 if isinstance(symbol.node, VariableDeclarationNode):
 
-                    variable = Variable(symbol, var_offset)
-                    var_offset += sizeof(symbol.node.node_type.expression_type)
+                    self.var_bytes += sizeof(symbol.node.node_type.expression_type)
+                    variable = Variable(symbol, -self.var_bytes)
                     self.variables.append(variable)
         
             for arg_node in fn_node.arguments:
 
-                variable = Variable(symbol, arg_offset)
-                arg_offset -= sizeof(symbol.node.node_type.expression_type)
+                self.arg_bytes += 2  # we just dont care
+                variable = Variable(symbol, self.arg_bytes + 2)     # ret addr + old bp = 4
+                self.variables.append(variable)
 
 
 class Variable:
@@ -68,25 +67,25 @@ class Variable:
     def declare(self, translator: Translator) -> None:
         if self.is_global:
             if self.init_value is not None and self.bytes == 2:
-                translator.assemble("dw", [self.init_value], label=self.symbol.name)
+                translator.assemble("dw", [self.init_value], label=self.symbol.id)
             elif self.init_value is not None:
-                translator.assemble("db", [self.init_value], label=self.symbol.name)
+                translator.assemble("db", [self.init_value], label=self.symbol.id)
             else:
-                translator.assemble("resb", [self.bytes], label=self.symbol.name)
+                translator.assemble("resb", [self.bytes], label=self.symbol.id)
 
     def _shifted(self, source: str, offset: int, onebyte: bool | None = None, sized: bool = True) -> str:
         onebyte = onebyte if onebyte is not None else self.bytes == 1
         prefix = ("byte" if onebyte else "word") if sized else ""
-        return prefix + "[" + source + (((" + " if self.offset > 0 else " - ") + offset) if offset else "") + "]"
+        return prefix + "[" + source + (((" + " if self.offset > 0 else " - ") + str(offset)) if offset else "") + "]"
 
     def load(self, translator: Translator, index_offset: int = 0, target_register: Literal["a", "b", "c", "d"] = "a") -> None:
         register = target_register + ("l" if self.bytes == 1 else "x")
 
         if self.is_global and not self.is_reference:
-            translator.assemble("mov", [register, self._shifted(self.symbol.name, index_offset)])
+            translator.assemble("mov", [register, self._shifted(self.symbol.id, index_offset)])
 
         elif self.is_global and self.is_reference:
-            translator.assemble("mov", ["ax", f"[{self.symbol.name}]"])
+            translator.assemble("mov", ["ax", f"word[{self.symbol.id}]"])
             translator.assemble("mov", [register, self._shifted("ax", index_offset)])
 
         elif not self.is_global and not self.is_reference:
@@ -100,7 +99,7 @@ class Variable:
     def load_pointer(self, translator: Translator, index_offset: int = 0, target_register: Literal["a", "b", "c", "d"] = "a"):
         register = target_register + "x"
         if self.is_global:
-            translator.assemble("lea", [register, self._shifted(self.symbol.name, index_offset, sized=False)])
+            translator.assemble("lea", [register, self._shifted(self.symbol.id, index_offset, sized=False)])
         else:
             translator.assemble("lea", [register, self._shifted("bp", self.offset + index_offset, sized=False)])
 
@@ -109,10 +108,10 @@ class Variable:
         register = source_register + ("l" if self.bytes == 1 else "x")
 
         if self.is_global and not self.is_reference:
-            translator.assemble("mov", [self._shifted(self.symbol.name, index_offset), register])
+            translator.assemble("mov", [self._shifted(self.symbol.id, index_offset), register])
 
         elif self.is_global and self.is_reference:
-            translator.assemble("mov", ["ax", f"[{self.symbol.name}]"])
+            translator.assemble("mov", ["ax", f"[{self.symbol.id}]"])
             translator.assemble("mov", [self._shifted("ax", index_offset), register])
 
         elif not self.is_global and not self.is_reference:
@@ -126,10 +125,10 @@ class Variable:
     def store_pointer(self, translator: Translator, source_register: Literal["a", "b", "c", "d"] = "a"):
         register = source_register + "x"
         if not self.is_reference:
-            raise NadLabemError(f"Cannot overwrite pointer to non-reference variable {self.symbol.name}", self.symbol.node.token.line)
+            raise NadLabemError(f"Cannot overwrite pointer to non-reference variable {self.symbol.id}", self.symbol.node.token.line)
         
         if self.is_global:
-            translator.assemble("mov", [f"[{self.symbol.name}]", register])
+            translator.assemble("mov", [f"[{self.symbol.id}]", register])
         else:
             translator.assemble("mov", [self._shifted("bp", self.offset), register])
 

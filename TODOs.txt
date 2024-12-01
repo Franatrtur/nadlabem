@@ -1,15 +1,1 @@
-STRUCTURE
-1) Tokenization
-  - class based as it is now
-  - 
-  - add line obj to each token instance for tracebacks
-  - line object will not have much other use, apart from remembering comments
-    + will refer strictly to the parsed source code lines (as is now)
-  - result = one big list of tokens for the whole source code, newline is also a token
-2) Parsing
-  - there will not be a stack based loop
-  - there will be a recursive approach instead
-  - origin = method called in the program object
-  - parser objects deriving from Node will parse their subtrees
-
-
+add named code blocks

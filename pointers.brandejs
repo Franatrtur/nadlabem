@@ -1,6 +1,0 @@
-
-bool a = False
-char b = 0 + @cx
-if(true){
-    @navesti hlt
-}

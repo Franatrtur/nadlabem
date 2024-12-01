@@ -1,5 +1,6 @@
 import json
 from .config import CompilationConfig
+from typing import Type
 
 class Node:
 
@@ -17,6 +18,13 @@ class Node:
     def add_child(self, child: "Node"):
         self.children.append(child)
         child.set_parent(self)
+
+    def closest_parent(self, *parent_types: Type["Node"]) -> "Node | None":
+        if self.is_root or self.parent is None:
+            return None
+        if any(isinstance(self.parent, parent_type) for parent_type in parent_types):
+            return self.parent
+        return self.parent.closest_parent(*parent_types)
 
     @property
     def is_root(self) -> bool:

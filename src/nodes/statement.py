@@ -49,7 +49,7 @@ class VariableDeclarationNode(StatementNode):
 class AssignmentNode(StatementNode):
     def __init__(self, name_token: Token, value: ExpressionNode, parser: "Parser"):
         super().__init__(name_token, [value], parser)
-        self.value = value
+        self.value: ExpressionNode = value
 
     def register(self) -> None:
         symbol = self.scope.resolve_symbol(self.token)
@@ -70,6 +70,7 @@ class ArgumentDeclarationNode(StatementNode):
 
     def register(self) -> None:
         symbol = Symbol(self.name_token, node=self)
+        self.symbol: Symbol = symbol
         self.context.register_symbol(symbol)
 
 class FunctionDefinitonNode(StatementNode):
@@ -83,8 +84,8 @@ class FunctionDefinitonNode(StatementNode):
         self.return_nodes: list[ReturnNode] = []
 
     def register(self) -> None:
-        symbol = Symbol(self.name_token, node=self)
-        self.scope.register_symbol(symbol)
+        self.symbol: Symbol = Symbol(self.name_token, node=self)
+        self.scope.register_symbol(self.symbol)
 
     def verify(self) -> None:
         if not self.return_nodes and self.node_type.return_type is not Void:
@@ -152,10 +153,11 @@ class FunctionCallStatementNode(StatementNode):
     #TODO: check return type is void if strict mode is on
     def __init__(self, token: Token, arguments: list[ExpressionNode], parser: "Parser"):
         super().__init__(token, arguments, parser)
-        self.arguments = arguments
+        self.arguments: list[ExpressionNode] = arguments
 
     def register(self) -> None:
-        self.scope.resolve_symbol(self.token).reference(self)
+        self.symbol: Symbol = self.scope.resolve_symbol(self.token)
+        self.symbol.reference(self)
 
     def verify(self) -> None:
         function_type: FunctionType = self.scope.resolve_symbol(self.token).node.node_type

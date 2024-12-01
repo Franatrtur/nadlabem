@@ -27,9 +27,9 @@ class FunctionCallNode(ExpressionNode):
             self.simulated = True
             return
 
-        symbol = self.scope.resolve_symbol(self.token)
-        symbol.reference(self)
-        definition = symbol.node
+        self.symbol = self.scope.resolve_symbol(self.token)
+        self.symbol.reference(self)
+        definition = self.symbol.node
         if not FunctionType.match(definition.node_type):
             raise TypeError(f"Cannot call \"{self.token.string}\" of type {definition.node_type} as a function", self.token.line, defined_at=definition.token.line)
         

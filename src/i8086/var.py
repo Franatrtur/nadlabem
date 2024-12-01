@@ -1,5 +1,5 @@
 from ..translator import Translator
-from ..nodes.statement import VariableDeclarationNode
+from ..nodes.statement import VariableDeclarationNode, AssignmentNode
 from ..nodes.expression import VariableReferenceNode
 from .sizeof import sizeof
 from ..nodes.types import Int, Bool, Array
@@ -16,6 +16,19 @@ class VariableDeclarationTranslator(Translator):
         self.add(self.node.expression_value)
         self.assemble("pop", ["ax"])
         Variable.variables[self.node.symbol].store(translator=self, source_register="a")
+
+
+class AssignmentTranslator(Translator):
+
+    node_type = AssignmentNode
+
+    def make(self) -> None:
+        self.node: AssignmentNode
+
+        #TODO: handle array access
+        self.add(self.node.value)
+        self.assemble("pop", ["ax"])
+        Variable.variables[self.node.symbol].store(translator=self, target_register="a")
 
 
 class VariableReferenceTranslator(Translator):

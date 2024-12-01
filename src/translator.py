@@ -43,7 +43,8 @@ class Translator(Node):
         map_target: Line = self.node.token.line if self.node.token is not None else None
         if mapping and map_target is not None and map_target not in self.program.mapped and not self.config.erase_comments:
             self.program.mapped.add(map_target)
-            mapstr = " " * (30 - len(line_string)) + ";" + (map_target.string + f" ({map_target.number})" if self.config.generate_mapping else map_target.comment)
+            content = map_target.string + f" ({map_target.number})" if self.config.generate_mapping else map_target.comment
+            mapstr = (" " * (30 - len(line_string)) + f";{content}") if content else ""
 
         self.result.append(line_string + mapstr)
 

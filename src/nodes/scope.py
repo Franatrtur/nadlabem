@@ -40,7 +40,7 @@ class Context(Node):
     def generate_id(self, name_suggestion: str) -> str:
         symbol_id = name_suggestion
         num = 1
-        while symbol_id in self.root.ids:
+        while symbol_id in self.root.ids or symbol_id in RESERVED_NAMES:
             symbol_id = name_suggestion + str(num)
             num += 1
         self.root.ids.add(symbol_id)
@@ -68,17 +68,8 @@ class Symbol:
     @property
     def id(self) -> str:
         if self._id is None:
-            self._id = self.generate_id()
+            self._id = self.scope.generate_id(self.name)
         return self._id
-
-    def generate_id(self) -> str:
-        symbol_id = self.name
-        num = 1
-        while symbol_id in self.scope.root.ids:
-            symbol_id = self.name + str(num)
-            num += 1
-        self.scope.root.ids.add(symbol_id)
-        return symbol_id
 
     def reference(self, node: "Node"):
         self.references.append(node)
@@ -87,3 +78,8 @@ class Symbol:
         return f"Symbol({self.name})"
 
 
+RESERVED_NAMES: set[str] = {
+    "dno", "code", "..start", "stack", "data", "sp", "bp",
+    "di", "ax", "bx", "cx", "dx", "cs", "ss", "ds", "cpu",
+    "segment"
+}

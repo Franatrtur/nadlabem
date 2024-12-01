@@ -29,16 +29,16 @@ class BinaryOperationTranslator(Translator):
             self.assemble("push", ["ax"])
 
         elif StarToken.match(self.node.token):
-            self.assemble("mul", ["ax", "bx"])
+            self.assemble("mul", ["bx"])
             self.assemble("push", ["ax"])
 
-        elif DivideToken.match(self.node.token):
-            self.assemble("div", ["ax", "bx"])
-            self.assemble("push", ["ax"])
+        # elif DivideToken.match(self.node.token):
+        #     self.assemble("div", ["ax", "bx"])
+        #     self.assemble("push", ["ax"])
 
-        elif ModuloToken.match(self.node.token):
-            self.assemble("div", ["ax", "bx"])
-            self.assemble("push", ["dx"])
+        # elif ModuloToken.match(self.node.token):
+        #     self.assemble("div", ["ax", "bx"])
+        #     self.assemble("push", ["dx"])
 
         else:
             raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)

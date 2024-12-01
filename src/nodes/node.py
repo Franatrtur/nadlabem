@@ -18,13 +18,6 @@ class AbstractSyntaxTreeNode(Node):
         self.scope: Context = None
         self.config: CompilationConfig = parser.config
         self.node_type = None
-
-    def closest_parent(self, *parent_types: Type["AbstractSyntaxTreeNode"]) -> "AbstractSyntaxTreeNode | None":
-        if self.parent is None or self.is_root:
-            return None
-        if any(isinstance(self.parent, parent_type) for parent_type in parent_types):
-            return self.parent
-        return self.parent.closest_parent(*parent_types)
         
     def link(self, parent: "AbstractSyntaxTreeNode"):
         self.set_parent(parent)

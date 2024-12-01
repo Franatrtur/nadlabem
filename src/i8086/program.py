@@ -3,6 +3,7 @@ from .sizeof import sizeof
 from ..nodes.statement import VariableDeclarationNode, CodeBlockNode, FunctionDefinitonNode
 from .allocator import Allocator
 import re
+from ..ui import progress_bar
 
 
 class CodeBlockTranslator(Translator):
@@ -35,9 +36,14 @@ class ProgramI8086Translator(ProgramTranslator):
 
         self.blank_line()
 
+        children_done = 0
+
         for child in self.node.children:
             if not isinstance(child, FunctionDefinitonNode):
                 self.add(child)
+                children_done += 1
+                if self.compiler.config.verbose:
+                    progress_bar("Translating", children_done, len(self.node.children))
 
         self.assemble("hlt")
         self.blank_line()
@@ -45,19 +51,23 @@ class ProgramI8086Translator(ProgramTranslator):
         for child in self.node.children:
             if isinstance(child, FunctionDefinitonNode):
                 self.add(child)
+                children_done += 1
+                if self.compiler.config.verbose:
+                    progress_bar("Translating", children_done, len(self.node.children))
         
         self.blank_line()
 
         self.result.append("segment data")
         
+        self.assemble("resw", ["1024"], label="stack")
+        self.assemble("db", ["?"], label="dno")
+
+        self.blank_line()
+        
         for variable in self.frame.variables:
             variable.declare(translator=self)
 
         self.blank_line()
-
-        self.result.append("segment stack")
-        self.assemble("resb", ["1024"])
-        self.assemble("db", ["?"], label="dno")
 
         self.optimize()
 
