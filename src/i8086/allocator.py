@@ -67,73 +67,65 @@ class Variable:
     def declare(self, translator: Translator) -> None:
         if self.is_global:
             if self.init_value is not None and self.bytes == 2:
-                translator.assemble("dw", [self.init_value], label=self.symbol.id)
+                #translator.assemble("dw", [self.init_value], label=self.symbol.id)
+                #TODO: WTF, why does dw randomly sometimes not work???
+                translator.assemble("resw", [1], label=self.symbol.id)
             elif self.init_value is not None:
-                translator.assemble("db", [self.init_value], label=self.symbol.id)
+                #translator.assemble("db", [self.init_value], label=self.symbol.id)
+                translator.assemble("resb", [1], label=self.symbol.id)
             else:
                 translator.assemble("resb", [self.bytes], label=self.symbol.id)
 
-    def _shifted(self, source: str, offset: int, onebyte: bool | None = None, sized: bool = True) -> str:
-        onebyte = onebyte if onebyte is not None else self.bytes == 1
-        prefix = ("byte" if onebyte else "word") if sized else ""
-        return prefix + "[" + source + (((" + " if self.offset > 0 else " - ") + str(offset)) if offset else "") + "]"
+    def _location(self, sized: bool = True) -> str:
+        source = self.symbol.id if self.is_global else "bp"
+        if not sized:
+            prefix = ""
+        elif self.is_reference:
+            prefix = "word"
+        else:
+            prefix = "byte" if self.bytes == 1 else "word"
+        off = ((" + " if self.offset > 0 else " - ") + self.offset) if self.offset else ""
+        return prefix + f"[{source}{off}]"
 
-    def load(self, translator: Translator, index_offset: int = 0, target_register: Literal["a", "b", "c", "d"] = "a") -> None:
+    def load(self, translator: Translator, src_index: str = "", target_register: Literal["a", "b", "c", "d"] = "a") -> None:
         register = target_register + ("l" if self.bytes == 1 else "x")
 
         if self.is_global and not self.is_reference:
-            translator.assemble("mov", [register, self._shifted(self.symbol.id, index_offset)])
+            translator.assemble("mov", [register, self._location(self.symbol.id) + src_index])
 
         elif self.is_global and self.is_reference:
-            translator.assemble("mov", ["ax", f"word[{self.symbol.id}]"])
-            translator.assemble("mov", [register, self._shifted("ax", index_offset)])
+            translator.assemble("mov", ["bx", f"word[{self.symbol.id}]"])
+            translator.assemble("mov", [register, "bx" + src_index])
 
         elif not self.is_global and not self.is_reference:
-            translator.assemble("mov", [register, self._shifted("bp", self.offset + index_offset)])
+            translator.assemble("mov", [register, f"bp + {self.offset}" + src_index])
 
         elif not self.is_global and self.is_reference:
-            translator.assemble("mov", ["ax", self._shifted("bp", self.offset, onebyte=False)])
-            translator.assemble("mov", [register, self._shifted("ax", index_offset)])
+            translator.assemble("mov", ["bx", self._location("bp", self.offset, onebyte=False)])
+            translator.assemble("mov", [register, "bx" + src_index])
 
-
-    def load_pointer(self, translator: Translator, index_offset: int = 0, target_register: Literal["a", "b", "c", "d"] = "a"):
+    def load_pointer(self, translator: Translator, src_index: str = "", target_register: Literal["a", "b", "c", "d"] = "a"):
         register = target_register + "x"
-        if self.is_global:
-            translator.assemble("lea", [register, self._shifted(self.symbol.id, index_offset, sized=False)])
-        else:
-            translator.assemble("lea", [register, self._shifted("bp", self.offset + index_offset, sized=False)])
+        translator.assemble("lea", [register, self._location(sized=False) + src_index])
+        
 
-
-    def store(self, translator: Translator, index_offset: int = 0, source_register: Literal["a", "b", "c", "d"] = "a"):
+    def store(self, translator: Translator, target_index: str = "", source_register: Literal["a", "b", "c", "d"] = "a"):
         register = source_register + ("l" if self.bytes == 1 else "x")
 
-        if self.is_global and not self.is_reference:
-            translator.assemble("mov", [self._shifted(self.symbol.id, index_offset), register])
+        if not self.is_reference:
+            translator.assemble("mov", [self._location(), register])
 
-        elif self.is_global and self.is_reference:
-            translator.assemble("mov", ["ax", f"[{self.symbol.id}]"])
-            translator.assemble("mov", [self._shifted("ax", index_offset), register])
-
-        elif not self.is_global and not self.is_reference:
-            translator.assemble("mov", [self._shifted("bp", self.offset + index_offset), register])
-
-        elif not self.is_global and self.is_reference:
-            translator.assemble("mov", ["ax", self._shifted("bp", self.offset)])
-            translator.assemble("mov", [self._shifted("ax", index_offset), register])
+        else:
+            translator.assemble("mov", ["bx", self._location()])
+            translator.assemble("mov", ["[bx]" + target_index, register])
 
     
     def store_pointer(self, translator: Translator, source_register: Literal["a", "b", "c", "d"] = "a"):
         register = source_register + "x"
         if not self.is_reference:
             raise NadLabemError(f"Cannot overwrite pointer to non-reference variable {self.symbol.id}", self.symbol.node.token.line)
-        
-        if self.is_global:
-            translator.assemble("mov", [f"[{self.symbol.id}]", register])
-        else:
-            translator.assemble("mov", [self._shifted("bp", self.offset), register])
 
-
-
+        translator.assemble("mov", [self._location(), register])
 
 
 

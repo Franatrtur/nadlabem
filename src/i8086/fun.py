@@ -16,7 +16,7 @@ class ReturnTranslator(Translator):
         self.node: ReturnNode
 
         fn_translator: FunctionDefinitionTranslator = self.node.function.translator
-        
+
         if self.node.value is not None:
             self.add(self.node.value)
             self.assemble("pop", [RETURN_REGISTER])
@@ -69,5 +69,5 @@ class FunctionCallTranslator(FunctionCallStatementTranslator):
         self.node: FunctionCallNode
 
         super().make()
-        
+
         self.assemble("push", [RETURN_REGISTER])

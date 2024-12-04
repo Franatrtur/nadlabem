@@ -1,6 +1,6 @@
 # I8086 - SPECIFIC CONSTANTS
 
-from ..nodes.types import Int, Char, Bool, Void, Array, ExpressionType, VariableType
+from ..nodes.types import Int, Char, Bool, Void, Array, ExpressionType, VariableType, Pointer
 from typing import Type
 
 #size in bytes for i8086
@@ -28,6 +28,8 @@ def sizeof(node_type: ExpressionType | VariableType) -> int:
 
         return sizeof(node_type.expression_type)
     
+    if isinstance(node_type, Pointer):
+        return sizeof(Int)
 
     # Handle basic value types
     if node_type in SIZE:

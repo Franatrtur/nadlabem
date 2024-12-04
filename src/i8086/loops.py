@@ -1,5 +1,5 @@
 from ..translator import Translator
-from ..nodes.statement import WhileNode, ForNode
+from ..nodes.statement import WhileNode, ForNode, PassNode
 from ..tokenizer.symbols import DoToken, WhileToken
 
 class WhileTranslator(Translator):
@@ -54,3 +54,10 @@ class ForTranslator(Translator):
         
         self.assemble("jmp", [loop_label])
         self.assemble("nop", label=out_label)
+
+
+class PassTranslator(Translator):
+    node_type = PassNode
+    def make(self) -> None:
+        self.node: PassNode
+        self.assemble("nop")

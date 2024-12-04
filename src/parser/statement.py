@@ -1,14 +1,15 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
                         OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, AtToken, DefinitionToken, DoToken,
-                        ReturnToken, BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, BinaryToken)
+                        ColonToken, DollarToken, AtEqualsToken, ArrayBeginToken, ArrayEndToken,
+                        ReturnToken, BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, BinaryToken, ArrowToken)
 from typing import Type
 from .expression import ExpressionParser
 from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
                     CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
-                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode)
+                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode, ArrayIndexAssigmentNode)
 
-from .types import VariableTypeParser, ReturnTypeParser
+from .types import TypeParser
 from ..errors import SyntaxError
 
 
@@ -104,38 +105,67 @@ class ForParser(Parser):
 
 class AssignmentParser(Parser):
 
-    def parse(self) -> AssignmentNode:
+    def parse(self) -> ASTNode:
         name_token = self.devour(NameToken)
         
-        if self.is_ahead(OpenParenToken):
-            #function call
-            self.devour(OpenParenToken)
-            args = []
-            if not self.is_ahead(CloseParenToken):
+        if self.is_ahead(OpenParenToken):       # f(...)
+            return self.parse_function_call(name_token)
+        
+        elif self.is_ahead(EqualsToken) or self.is_ahead(AtEqualsToken):        # f = 
+            return self.parse_assignment(name_token)
+        
+        elif self.is_ahead(ColonToken):         # f: int = 
+            return self.parse_declaration(name_token)
+
+        elif self.is_ahead(ArrayBeginToken):    # f[5] =
+            return self.parse_array_assignment(name_token)
+
+        else:
+            raise SyntaxError(f"Invalid assignment, unexpected name \"{name_token.line}\"", name_token.line)
+
+    def parse_array_assignment(self, name_token: NameToken) -> ArrayIndexAssigmentNode:
+        self.devour(ArrayBeginToken)
+        index = ExpressionParser(parent=self).parse()
+        self.devour(ArrayEndToken)
+        self.devour(EqualsToken)
+        expression = ExpressionParser(parent=self).parse()
+        return ArrayIndexAssigmentNode(name_token, index, expression, parser=self)
+    
+    def parse_assignment(self, name_token: NameToken) -> AssignmentNode:
+        by_reference = self.is_ahead(AtEqualsToken)
+        self.devour(Token)
+        expression = ExpressionParser(parent=self).parse()
+        return AssignmentNode(name_token, expression, by_reference=by_reference, parser=self)
+
+    def parse_function_call(self, name_token: NameToken) -> FunctionCallStatementNode:
+        self.devour(OpenParenToken)
+        args = []
+        if not self.is_ahead(CloseParenToken):
+            args.append(ExpressionParser(parent=self).parse())
+            while self.is_ahead(CommaToken):
+                self.devour(CommaToken)
                 args.append(ExpressionParser(parent=self).parse())
-                while self.is_ahead(CommaToken):
-                    self.devour(CommaToken)
-                    args.append(ExpressionParser(parent=self).parse())
-            self.devour(CloseParenToken)
-            return FunctionCallStatementNode(name_token, args, parser=self)
-        
-        self.devour(EqualsToken)
-        expression = ExpressionParser(parent=self).parse()
-        return AssignmentNode(name_token, expression, parser=self)
+        self.devour(CloseParenToken)
+        return FunctionCallStatementNode(name_token, args, parser=self)
 
+    def parse_declaration(self, name_token: NameToken) -> VariableDeclarationNode:
+        self.devour(ColonToken)
+        var_type = TypeParser(parent=self).variable_type()
 
-class DeclarationParser(Parser):
+        if var_type.is_reference:
+            if not self.is_ahead(AtEqualsToken):
+                raise SyntaxError(f"Declaration of \"{name_token.string}\" by reference must assign a reference", name_token.line)
+            self.devour(AtEqualsToken)
+            expression = ExpressionParser(parent=self).parse()
+            return VariableDeclarationNode(name_token, expression, var_type, parser=self)
 
-    def parse(self) -> VariableDeclarationNode | FunctionDefinitonNode:
-        val_type = VariableTypeParser(parent=self).parse()
-        name_token = self.devour(NameToken)
-
+        # else
         if not self.is_ahead(EqualsToken):
-            raise SyntaxError("Declaration must assign a value", name_token.line)
-        
+            raise SyntaxError(f"Declaration of \"{name_token.string}\" by value must assign a value", name_token.line)
+    
         self.devour(EqualsToken)
         expression = ExpressionParser(parent=self).parse()
-        return VariableDeclarationNode(name_token, expression, val_type, parser=self)
+        return VariableDeclarationNode(name_token, expression, var_type, parser=self)
 
 
 class FunctionDefinitionParser(Parser):
@@ -147,8 +177,7 @@ class FunctionDefinitionParser(Parser):
 
     def parse(self) -> FunctionDefinitonNode:
         self.devour(DefinitionToken)
-        return_type = ReturnTypeParser(parent=self).parse()
-        name_token = self.devour(NameToken)
+        fn_name_token = self.devour(NameToken)
 
         self.devour(OpenParenToken)
         params: list[ArgumentDeclarationNode] = []
@@ -160,8 +189,12 @@ class FunctionDefinitionParser(Parser):
                 params.append(self._parse_param())
         
         self.devour(CloseParenToken)
+        self.devour(ArrowToken)
+
+        return_type = TypeParser(parent=self).return_type()
+
         body = CodeBlockParser(parent=self).parse()
-        return FunctionDefinitonNode(name_token, params, body, return_type, parser=self)
+        return FunctionDefinitonNode(fn_name_token, params, body, return_type, parser=self)
 
 
 class ReturnParser(Parser):
@@ -188,7 +221,7 @@ class PassParser(Parser):
 
 class AssemblyParser(Parser):
     def parse(self) -> AssemblyNode:
-        tok = self.devour(AtToken)
+        tok = self.devour(DollarToken)
         code: list[Token] = []
         while not self.is_ahead(NewLineToken):
             code.append(self.devour(Token))
@@ -202,12 +235,11 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     DoToken: WhileParser,
     ForToken: ForParser,
     NameToken: AssignmentParser,
-    TypeToken: DeclarationParser,
     ReturnToken: ReturnParser,
     ContinueToken: ContinueParser,
     BreakToken: BreakParser,
     PassToken: PassParser,
-    AtToken: AssemblyParser,
+    DollarToken: AssemblyParser,
     DefinitionToken: FunctionDefinitionParser
 }
 

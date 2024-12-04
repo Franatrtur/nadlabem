@@ -20,8 +20,11 @@ class AbstractSyntaxTreeNode(Node):
         self.node_type = None
         
     def link(self, parent: "AbstractSyntaxTreeNode"):
-        self.set_parent(parent)
-        self.scope: Context = parent.context
+        if parent is not None:
+            self.set_parent(parent)
+            self.scope: Context = parent.context
+        else:
+            self.scope = self.context
 
         if self.context is None:
             self.context = self.scope
@@ -52,6 +55,15 @@ class AbstractSyntaxTreeNode(Node):
 
         for child in self.children:
             child.verify()
+
+    def prune(self) -> bool:
+        return False
+
+    def prune_children(self) -> None:
+        for child in self.children:
+            child.prune_children()
+            if child.prune():
+                self.children.remove(child)
 
     def verify(self) -> None:
         pass
@@ -86,6 +98,6 @@ class ProgramNode(AbstractSyntaxTreeNode):
         self.context.root = self.context.root = self.context  #top level context
     
     def validate(self):
-        self.link(parent=self)
-        self.register_children()
-        self.verify()
+        self.link(parent=None)
+        self.register_children()  # registers and validates tree
+        self.prune_children()

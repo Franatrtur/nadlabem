@@ -1,6 +1,6 @@
 def println(str_pointer: int) -> int {
     sp = str_pointer
-    @ mov dx, [sp]
+    $ mov dx, [sp]
 }
 
-int sp = 5
+sp: @int =@= 

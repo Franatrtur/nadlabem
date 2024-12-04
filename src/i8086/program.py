@@ -23,11 +23,13 @@ class ProgramI8086Translator(ProgramTranslator):
         # decide offset for all local vars on stack
         self.frame = Allocator(self).allocate()
 
+        data_segment = "heap" if self.config.generate_mapping else "data"
+
         self.result.extend([
             "cpu 8086",
             "segment code"
         ])
-        self.assemble("mov", ["bx", "data"], label="..start")   # start of execution
+        self.assemble("mov", ["bx", data_segment], label="..start")   # start of execution
         self.assemble("mov", ["ds", "bx"])                      # data segment init
         self.assemble("mov", ["bx", "stack"])                   
         self.assemble("mov", ["ss", "bx"])                      # stack segment init
@@ -45,6 +47,7 @@ class ProgramI8086Translator(ProgramTranslator):
                 if self.compiler.config.verbose:
                     progress_bar("Translating", children_done, len(self.node.children))
 
+        self.result.append("exit:")
         self.assemble("hlt")
         self.blank_line()
 
@@ -57,7 +60,7 @@ class ProgramI8086Translator(ProgramTranslator):
         
         self.blank_line()
 
-        self.result.append("segment data")
+        self.result.append(f"segment {data_segment}")
         
         self.assemble("resw", ["1024"], label="stack")
         self.assemble("db", ["?"], label="dno")

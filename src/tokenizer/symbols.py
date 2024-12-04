@@ -74,12 +74,13 @@ DefinitionToken = Token.literal("def", "DefinitionToken")
 
 LogicalAndToken = Token.literal("and", "LogicalAndToken")
 LogicalOrToken = Token.literal("or", "LogicalOrToken")
-NegationToken = Token.literal("not", "LogicalNotToken")
+LogicalNotToken = Token.literal("not", "LogicalNotToken")
 
 IntToken = Token.literal("int", "IntToken")
 BoolToken = Token.literal("bool", "BoolToken")
 CharToken = Token.literal("char", "CharToken")
 VoidToken = Token.literal("void", "VoidToken")
+DoubleToken = Token.literal("double", "DoubleToken")
 
 
 class NameToken(Token):
@@ -105,17 +106,23 @@ IsLtEqToken = Token.literal("<=", "IsLtEqToken")
 IsGtEqToken = Token.literal(">=", "IsGtEqToken")
 
 EqualsToken = Token.literal("=", "EqualsToken")
-NegationToken = Token.literal("!", "NegationToken")
+AtEqualsToken = Token.literal("=@=", "AtEqualsToken")
 
 CommaToken = Token.literal(",", "CommaToken")
 ColonToken = Token.literal(":", "ColonToken")
 HashToken = Token.literal("#", "HashToken")
 AtToken = Token.literal("@", "AtToken")
+ArrowToken = Token.literal("->", "ArrowToken")
+DollarToken = Token.literal("$", "DollarToken")
 
 BinaryAndToken = Token.literal("&", "BinaryAndToken")
 BinaryOrToken = Token.literal("|", "BinaryOrToken")
 BinaryXorToken = Token.literal("^", "BinaryXorToken")
 BinaryNotToken = Token.literal("~", "BinaryNotToken")
+BinaryShiftRightToken = Token.literal(">>", "BinaryShiftRightToken")
+BinaryShiftLeftToken = Token.literal("<<", "BinaryShiftLeftToken")
+BinaryRotateRightToken = Token.literal(">>>", "BinaryRotateRightToken")
+BinaryShiftLeftToken = Token.literal("<<<", "BinaryShiftLeftToken")
 
 PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
@@ -167,7 +174,7 @@ TOKEN_DETECTORS = [
 
     LogicalAndToken,
     LogicalOrToken,
-    NegationToken,
+    LogicalNotToken,
 
     IntToken,
     BoolToken,
@@ -184,17 +191,28 @@ TOKEN_DETECTORS = [
     LessThanToken,
 
     EqualsToken,
-    NegationToken,
+    AtEqualsToken,
+
+    LogicalAndToken,
+    LogicalOrToken,
+    LogicalNotToken,
 
     CommaToken,
     ColonToken,
     HashToken,
     AtToken,
+    ArrowToken,
+    DollarToken,
 
     BinaryAndToken,
     BinaryOrToken,
     BinaryXorToken,
     BinaryNotToken,
+
+    BinaryShiftRightToken,
+    BinaryShiftLeftToken,
+    BinaryRotateRightToken,
+    BinaryShiftLeftToken,
 
     PlusToken,
     MinusToken,
@@ -236,17 +254,10 @@ KeywordToken = Token.any(
     class_name="KeywordToken"
 )
 
-StatementBeginToken = Token.any(
-    KeywordToken,
-    HashToken,
-    TypeToken,
-    class_name="StatementBeginToken"
-)
-
 LogicalToken = Token.any(
     LogicalAndToken,
     LogicalOrToken,
-    NegationToken,
+    LogicalNotToken,
     class_name="LogicalToken"
 )
 
@@ -264,6 +275,10 @@ BinaryToken = Token.any(
     BinaryAndToken,
     BinaryOrToken,
     BinaryXorToken,
+    BinaryShiftRightToken,
+    BinaryShiftLeftToken,
+    BinaryRotateRightToken,
+    BinaryShiftLeftToken,
     class_name="BinaryToken"
 )
 
@@ -282,9 +297,8 @@ MultiplicativeToken = Token.any(
 )
 
 UnaryToken = Token.any(
-    NegationToken,
+    LogicalNotToken,
     MinusToken,
-    StarToken,
     BinaryNotToken,
     class_name="UnaryToken"
 )

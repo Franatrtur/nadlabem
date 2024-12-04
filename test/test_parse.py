@@ -6,11 +6,8 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-bool a = False
-char b = 0 + @cx
-if(true){
-    @navesti hlt
-}
+x: int = 5
+y: char = char(x)
 """
 
 if __name__ == "__main__":

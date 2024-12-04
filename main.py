@@ -67,6 +67,12 @@ def main() -> None:
         
         output = translator.compile(code)
 
+        if config.verbose and not config.strict:
+            print("\33[44m", "WARNINGS:", '\033[0m')
+            for warning in translator.warnings:
+                print(warning)
+            print()
+
         if not args.print:
             out = args.output if args.output else replace_file_extension(file_path, ".asm")
 

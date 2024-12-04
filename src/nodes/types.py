@@ -1,15 +1,26 @@
-from ..tokenizer.symbols import (IntToken, BoolToken, CharToken, Token, VoidToken, LiteralToken,
-                                 CharLiteralToken, NumberToken, StringLiteralToken, BoolLiteralToken)
+from ..tokenizer.symbols import (IntToken, BoolToken, CharToken, Token, VoidToken, LiteralToken, LogicalNotToken,
+                                 CharLiteralToken, NumberToken, StringLiteralToken, BoolLiteralToken, DoubleToken)
 from typing import Type
 from ..errors import TypeError
 from ..tree import Node
+from .node import AbstractSyntaxTreeNode as ASTNode
 
-class ExpressionType:
-    def matches(self, other: "ExpressionType", strict: bool = False) -> bool:
-        pass
-    @classmethod
-    def match(cls, other: "ExpressionType") -> bool:
-        return isinstance(other, cls)
+class NadLabemType:
+    pass
+
+
+class NoType(NadLabemType):
+    def __init__(self, name: int):
+        self.name = name
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.name})"
+    def __str__(self):
+        return self.name
+
+Void = NoType(VoidToken.literal_string)
+
+class ExpressionType(NadLabemType):
 
     @staticmethod
     def decide(token: Token) -> "ExpressionType":
@@ -25,23 +36,10 @@ class ExpressionType:
             raise TypeError(f"Cannot decide literal expression type of \"{token}\"", token.line)
 
 
-
-class NoType(ExpressionType):
-    def __init__(self, name: int):
-        self.name = name
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.name})"
-    def __str__(self):
-        return self.name
-
-Void = NoType(VoidToken.literal_string)
-
 class ValueType(ExpressionType):
     def __init__(self, name: int):
         self.name = name
 
-    def matches(self, other: ExpressionType, strict: bool = False) -> bool:
-        return other in CompatibilityTable[self] if not strict else other == self
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name})"
     def __str__(self):
@@ -50,34 +48,26 @@ class ValueType(ExpressionType):
 Int = ValueType(IntToken.literal_string)
 Bool = ValueType(BoolToken.literal_string)
 Char = ValueType(CharToken.literal_string)
+Double = ValueType(DoubleToken.literal_string)
 
-CompatibilityTable: dict[ValueType, set[ValueType]] = {
-    Int: [Int, Char],
-    Char: [Int, Char],
-    Bool: [Bool]
-}
+
+class Pointer(ValueType):
+    def __init__(self, element_type: ExpressionType):
+        self.element_type: ExpressionType = element_type
+
+    def __repr__(self):
+        return f"Pointer({repr(self.element_type)})"
+    def __str__(self):
+        return str(self.element_type) + "*"
+
 
 class Array(ExpressionType):
-    def __init__(self, element_type: ExpressionType, size: int | None):
-        self.element_type: ExpressionType = element_type
+    def __init__(self, element_type: ValueType, size: int | None):
+        self.element_type: ValueType = element_type
         self.size: int | None = size
-
-    def matches(self, other: ExpressionType, strict: bool = False) -> bool:
-        if self.size is None and other.size is not None:
-            self.size = other.size
-        if not strict:
-            self.size = other.size = max(self.size, other.size)
-        return isinstance(other, Array) and self.element_type.matches(other.element_type, strict=strict) and (self.size >= other.size)
-
-    def size_defined(self) -> bool:
-        if self.size is None:
-            return False
-        if isinstance(self.element_type, Array):
-            return self.element_type.size_defined()
-        return True
         
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.element_type)}, size={self.size})"
+        return f"Array({repr(self.element_type)}, size={self.size})"
     def __str__(self):
         size = f"{self.size}" if self.size is not None else ""
         return f"{str(self.element_type)}[{size}]"
@@ -94,11 +84,6 @@ class VariableType(DeclarationType):
     def __init__(self, expression_type: ExpressionType, is_reference: bool):
         self.expression_type: ExpressionType = expression_type
         self.is_reference: bool = is_reference
-
-    def matches(self, expression_type: ExpressionType, strict: bool = False) -> bool:
-        if self.is_reference:
-            return expression_type == Int
-        return self.expression_type.matches(expression_type, strict=strict)
     
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.expression_type)}, is_reference={self.is_reference})"
@@ -124,18 +109,167 @@ class FunctionType(DeclarationType):
         return f"{self.__class__.__name__}({self.return_type}, [{parameters}])"
     def __str__(self):
         parameters = ", ".join(str(parameter) for parameter in self.parameters)
-        return f"{str(self.return_type)} ({parameters})"
+        return f"({parameters}) -> {self.return_type}"
 
 
-VALUE_TYPES: dict[Type[Token], ExpressionType] = {
-    IntToken: Int,
-    BoolToken: Bool,
-    CharToken: Char
-}
-
-RETURNABLE_TYPES: dict[Type[Token], ExpressionType] = {
+VALUE_TYPES: dict[Type[Token], ValueType] = {
     IntToken: Int,
     BoolToken: Bool,
     CharToken: Char,
-    VoidToken: Void
+    DoubleToken: Double,
 }
+
+RETURNABLE_TYPES: dict[Type[Token], NadLabemType] = {
+    IntToken: Int,
+    BoolToken: Bool,
+    CharToken: Char,
+    VoidToken: Void,
+    DoubleToken: Double,
+}
+
+
+class Comparator:
+
+    @staticmethod
+    def match(left: ValueType, right: ValueType) -> bool:
+        return (left is right or
+            (isinstance(left, Pointer) and
+            isinstance(right, Pointer) and
+            Comparator.match(left.element_type, right.element_type)))
+
+    def cast(from_type: ExpressionType, to_type: ValueType, node: ASTNode) -> ValueType:
+        if not isinstance(from_type, ValueType) or not isinstance(to_type, ValueType):
+            raise TypeError(f"Cannot cast {from_type} to {to_type}", node.token.line)
+        if isinstance(from_type, Pointer) or isinstance(to_type, Pointer):
+            node.config.warn(TypeError(f"Casting pointers is dangerous", node.token.line))
+        return to_type
+
+    @staticmethod
+    def _binary_operation(left: ValueType, right: ValueType, allowed: set[ValueType], node: ASTNode) -> None:
+        if not isinstance(left, ValueType) or not isinstance(right, ValueType) or left is not right:
+            raise TypeError(f"Cannot perform binary operation {node.token.string} on types {left} and {right}", node.token.line, allowed=allowed)
+
+    @staticmethod
+    def comparison(left: ExpressionType, right: ExpressionType, node: ASTNode) -> ValueType:
+        Comparator._binary_operation(left, right, allowed = {Int, Char, Double}, node=node)
+        return Bool
+
+    @staticmethod
+    def logic(left: ExpressionType, right: ExpressionType, node: ASTNode) -> ValueType:
+        Comparator._binary_operation(left, right, allowed = {Bool}, node=node)
+        return Bool
+
+    @staticmethod
+    def arithmetic(left: ExpressionType, right: ExpressionType, node: ASTNode) -> ValueType:
+        Comparator._binary_operation(left, right, allowed = {Int, Char, Double}, node=node)
+        return left
+
+    @staticmethod
+    def pointer_access(source: VariableType, node: ASTNode) -> ValueType:
+        return Pointer(source.expression_type)
+
+    @staticmethod
+    def dereference(source: VariableType, node: ASTNode) -> ValueType:
+        if not isinstance(source.expression_type, Pointer):
+            raise TypeError(f"Cannot dereference non-pointer type {source.expression_type}", node.token.line)
+        if isinstance(source.expression_type.element_type, Array):
+            raise TypeError(f"Cannot dereference array (from pointer type {source.expression_type})", node.token.line)
+        return source.expression_type.element_type
+
+    @staticmethod
+    def unary_logic(operand: ExpressionType, node: ASTNode) -> ValueType:
+        if operand is not Bool:
+            raise TypeError(f"Cannot perform unary logical operation on type {operand}", node.token.line)
+        return Bool
+    
+    @staticmethod
+    def unary_arithmetic(operand: ExpressionType, node: ASTNode) -> ValueType:
+        if operand not in {Int, Char, Double}:
+            raise TypeError(f"Cannot perform unary arithmetic operation on type {operand}", node.token.line)
+        return operand
+
+    @staticmethod
+    def function_call_value(function: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> ValueType:
+        if function.return_type is Void:
+            raise TypeError(f"Function \"{node.symbol.name}\" does not return a value", node.token.line)
+        Comparator.function_call(function, arguments, node)
+        return function.return_type
+
+
+    @staticmethod
+    def function_call(function: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
+        if len(function.parameters) != len(arguments):
+            raise TypeError(f"Function \"{function.name}\" expects {len(function.parameters)} arguments, but {len(arguments)} were given", node.token.line)
+        if not isinstance(function_type, FunctionType):
+            raise TypeError(f"Cannot call \"{node.token.string}\" of type {function_type} as a function", self.token.line)
+        for i in range(len(function.parameters)):
+            Comparator.assignment(function.parameters[i], arguments[i])
+
+    @staticmethod
+    def function_call_statement(function: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
+        Comparator.function_call(function, arguments, node)
+        if function_type.return_type is not Void:
+            self.config.warn(TypeError(f"Non-void return type {function_type.return_type} in function call statement, assign the return value to a variable", self.token.line))
+
+
+
+    @staticmethod
+    def assignment(left: VariableType, right: ExpressionType, node: ASTNode) -> None:
+        if isinstance(right, Array):
+            if not isinstance(left.expression_type, Array):
+                raise TypeError(f"Cannot assign array to non-array variable", node.token.line)
+
+            left: Array = left.expression_type
+            right: Array
+
+            if left.size is None:
+                left.size = right.size
+            if right.element_type is None:
+                right.element_type = left.element_type
+
+            if left.size is None:
+                raise TypeError(f"Could not infer size of array", node.token.line)
+            if not Comparator.match(left.element_type, right.element_type):
+                raise TypeError(f"Cannot assign array type {right} to {left}", node.token.line)
+            if left.size < right.size:
+                raise TypeError(f"Cannot assign array of size {right.size} to array of size {left.size}", node.token.line)
+
+        elif not Comparator.match(left.expression_type, right):
+            raise TypeError(f"Cannot assign type {right} to {left} by value", node.token.line)
+
+    @staticmethod
+    def pointer_assignment(left: VariableType, right: ExpressionType, node: ASTNode) -> None:
+        if not left.is_reference:
+            raise TypeError(f"Cannot assign type by reference to non-reference type {left}", node.token.line)
+        if not isinstance(right, Pointer):
+            raise TypeError(f"Cannot assign non-pointer type {right} to {left} by reference", node.token.line)
+        if not Comparator.match(left.expression_type, right.element_type):
+            raise TypeError(f"Cannot assign type {right} to {left} by reference", node.token.line)
+
+    @staticmethod
+    def array_index_value(array: VariableType, index: ExpressionType, node: ASTNode) -> ValueType:
+        Comparator.array_access(array, index, node)
+        return array.expression_type.element_type
+
+    @staticmethod
+    def array_access(array: VariableType, index: ExpressionType, node: ASTNode) -> None:
+        if not isinstance(left.expression_type, Array):
+            raise TypeError(f"Cannot index variable of type {left.expression_type} as an array", node.token.line)
+        if right not in {Int, Char}:
+            raise TypeError(f"Cannot index array with type {right}", node.token.line)
+
+    @staticmethod
+    def array_index_assignment(array: VariableType, index: ExpressionType, value: ExpressionType, node: ASTNode) -> None:
+        Comparator.array_access()
+        if not Comparator.match(array.expression_type.element_type, value):
+            raise TypeError(f"Cannot assign type {value} to array of type {array.expression_type}", node.token.line)
+
+    @staticmethod
+    def return_value(value_type: ValueType | NoType, function_type: FunctionType, node: ASTNode) -> None:
+        if value_type is not function_type.return_type:
+            raise TypeError(f"Cannot return value of type {value_type} from function of type {function_type}", node.token.line)
+
+    @staticmethod
+    def condition(condition: ExpressionType, node: ASTNode) -> None:
+        if condition_type is not Bool:
+            raise TypeError(f"Expected bool type in condition, got type {condition_type}", node.token.line)

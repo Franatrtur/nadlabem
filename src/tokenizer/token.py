@@ -9,7 +9,7 @@ class Token:
         self.line = line
 
     def __str__(self):
-        return f"{self.__class__.__name__}(\"{self.string}\")"
+        return f"{self.__class__.__name__}({repr(self.string)})"
     
     def __repr__(self):
         return str(self)
@@ -72,7 +72,7 @@ class Line:
         self.comment: str = ""
 
     def __str__(self):
-        return f"Line {self.number}: \n\"{self.string}\" ({len(self.tokens)} tokens)"
+        return f"Line {self.number}: \n{repr(self.string.strip())} ({len(self.tokens)} tokens)"
     def __repr__(self):
         tokens_string = ','.join(map(str, self.tokens))
-        return f"Line {self.number}: \"{self.string}\""# [{tokens_string}]"
+        return f"Line {self.number}: {repr(self.string)}\""# [{tokens_string}]"

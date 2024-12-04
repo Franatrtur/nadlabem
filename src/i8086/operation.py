@@ -1,7 +1,8 @@
 from ..translator import Translator
-from ..nodes.expression import BinaryOperationNode
-from ..tokenizer.symbols import PlusToken, MinusToken, DivideToken, ModuloToken, StarToken
+from ..nodes.expression import BinaryOperationNode, UnaryOperationNode
+from ..tokenizer.symbols import PlusToken, MinusToken, DivideToken, ModuloToken, StarToken, BinaryNotToken, LogicalNotToken
 from .sizeof import sizeof
+from .allocator import Variable
 from ..errors import NotImplementedError
 
 class BinaryOperationTranslator(Translator):
@@ -45,5 +46,42 @@ class BinaryOperationTranslator(Translator):
 
         # if sizeof(self.node.node_type) == 1:
         #     self.assemble("mov", ["ah", "0"])
+
+
+class UnaryOperationTranslator(Translator):
+
+    node_type = UnaryOperationNode
+
+    def make(self) -> None:
+        self.node: UnaryOperationNode
+
+        if StarToken.match(self.node.token):
+            
+            Variable.variables[self.node.operand.symbol].load_pointer(translator=self, target_register="a")
+            self.assemble("push", ["ax"])
+
+        elif MinusToken.match(self.node.token):
+            self.add(self.node.operand)
+            #TODO: handle bytes differently than ints
+            self.assemble("pop", ["ax"])
+            self.assemble("neg", ["ax"])
+            self.assemble("push", ["ax"])
+
+        elif BinaryNotToken.match(self.node.token):
+            self.add(self.node.operand)
+            self.assemble("pop", ["ax"])
+            self.assemble("not", ["ax"])
+            self.assemble("push", ["ax"])
+
+        elif LogicalNotToken.match(self.node.token):
+            self.add(self.node.operand)
+            self.assemble("pop", ["ax"])
+            self.assemble("cmp", ["ax", "0"])
+            self.assemble("sete", ["al"])
+            self.assemble("push", ["ax"])
+
+        else:
+            raise NotImplementedError(f"Unary operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
+
 
 

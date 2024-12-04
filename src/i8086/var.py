@@ -13,7 +13,7 @@ class VariableDeclarationTranslator(Translator):
         self.node: VariableDeclarationNode
     
         #TODO add init value to program variables instead if the value is a literal
-        self.add(self.node.expression_value)
+        self.add(self.node.assignment)
         self.assemble("pop", ["ax"])
         Variable.variables[self.node.symbol].store(translator=self, source_register="a")
 
@@ -28,7 +28,7 @@ class AssignmentTranslator(Translator):
         #TODO: handle array access
         self.add(self.node.value)
         self.assemble("pop", ["ax"])
-        Variable.variables[self.node.symbol].store(translator=self, target_register="a")
+        Variable.variables[self.node.variable.symbol].store(translator=self, source_register="a")
 
 
 class VariableReferenceTranslator(Translator):

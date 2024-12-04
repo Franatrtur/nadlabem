@@ -1,18 +1,40 @@
 from .parsing import Parser
 from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken, StringLiteralToken,
-                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, AtToken,
-                        ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken)
+                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, DollarToken, AtToken,
+                        ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken, TypeToken, StarToken)
 from typing import Type
-from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode,
+from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, CastNode,
                                 VariableReferenceNode, LogicalNode, BinaryNode, UnaryOperationNode,
                                 LiteralNode, FunctionCallNode, IndexRetrievalNode, ArrayLiteralNode, AssemblyExpressionNode)
+from .types import TypeParser
 from ..errors import SyntaxError
 
 
 class ExpressionParser(Parser):
 
     def parse(self) -> ExpressionNode:
-        return self.expression()
+        return self.array()
+
+    def array(self) -> ExpressionNode:
+        
+        if self.is_ahead(ArrayBeginToken):
+            begin = self.devour(ArrayBeginToken)
+            elements: list[ExpressionNode] = []
+
+            if not self.is_ahead(ArrayEndToken):
+
+                elements.append(self.expression())
+
+                while self.is_ahead(CommaToken):
+                    self.devour(CommaToken)
+                    elements.append(self.expression())
+
+            self.devour(ArrayEndToken)
+
+            return ArrayLiteralNode(begin, elements, parser=self)
+        
+        else:
+            return self.expression()
     
     def expression(self) -> ExpressionNode:
         return self.logical()
@@ -90,36 +112,29 @@ class ExpressionParser(Parser):
     
     def primary(self) -> ExpressionNode:
 
-        if self.is_ahead(AtToken):
-            token = self.devour(AtToken)
+        if self.is_ahead(DollarToken):
+            token = self.devour(DollarToken)
             if self.is_ahead(NameToken):
                 name_str = self.devour(NameToken).string
             elif self.is_ahead(StringLiteralToken):
                 name_str = self.devour(StringLiteralToken).value
             else:
                 raise SyntaxError(f"Invalid assembly expression: {self.look_ahead()}", self.look_ahead().line, suggestion="Put the assembly expression in string quotes?")
-            
+
             return AssemblyExpressionNode(token, name_str, parser=self)
 
         if self.is_ahead(LiteralToken):
             return LiteralNode(self.devour(LiteralToken), parser=self)
 
-        elif self.is_ahead(ArrayBeginToken):
-            begin = self.devour(ArrayBeginToken)
-            elements: list[ExpressionNode] = []
+        elif self.is_ahead(StarToken):
+            token = self.devour(StarToken)
+            name_token = self.devour(NameToken)
+            return VariableReferenceNode(name_token, pointer=True, dereference=False, parser=self)
 
-            if not self.is_ahead(ArrayEndToken):
-
-                elements.append(self.expression())
-
-                while self.is_ahead(CommaToken):
-                    self.devour(CommaToken)
-                    elements.append(self.expression())
-
-            self.devour(ArrayEndToken)
-
-            return ArrayLiteralNode(begin, elements, parser=self)
-
+        elif self.is_ahead(AtToken):
+            token = self.devour(AtToken)
+            name_token = self.devour(NameToken)
+            return VariableReferenceNode(name_token, pointer=False, dereference=True, parser=self)
         
         elif self.is_ahead(NameToken):
             name_token = self.devour(NameToken)
@@ -139,7 +154,14 @@ class ExpressionParser(Parser):
 
                 return FunctionCallNode(name_token, arguments, parser=self)
             
-            return VariableReferenceNode(name_token, parser=self)
+            return VariableReferenceNode(name_token, pointer=False, dereference=False, parser=self)
+
+        
+        elif self.is_ahead(TypeToken):
+            token = self.look_ahead()
+            value_type = TypeParser(parent=self).value_type()
+            expr = self.expression()
+            return CastNode(token, value_type, expr, parser=self)
 
         
         elif self.is_ahead(OpenParenToken):

@@ -2,7 +2,7 @@ from ..tree import Node
 from ..tokenizer import Token, TypeToken
 from .scope import Context, Symbol
 from typing import Type
-from .types import VariableType, FunctionType, Void, Int, Char, Bool, Array, DeclarationType, ExpressionType, ValueType
+from .types import VariableType, FunctionType, Void, Int, Char, Bool, Array, DeclarationType, ExpressionType, ValueType, Comparator
 from .node import AbstractSyntaxTreeNode as ASTNode
 from .expression import ExpressionNode
 from ..errors import TypeError
@@ -28,9 +28,10 @@ class CodeBlockNode(StatementNode):
 class VariableDeclarationNode(StatementNode):
     def __init__(self, name: Token, expression_value: ExpressionNode, var_type: VariableType, parser: "Parser"):
         super().__init__(name, [expression_value], parser)
-        self.expression_value = expression_value
+        self.assignment = expression_value
         self.name_token = name
         self.node_type: VariableType = var_type
+        self.by_reference: bool = var_type.is_reference
 
     def register(self) -> None:
         symbol = Symbol(self.name_token, node=self)
@@ -38,18 +39,16 @@ class VariableDeclarationNode(StatementNode):
         self.symbol: Symbol = symbol
 
     def verify(self) -> None:
-        value_type: ExpressionType = self.expression_value.node_type
-        if not self.node_type.matches(value_type, strict=isinstance(self.node_type.expression_type, Array)):
-            pointed = "by pointer" if self.node_type.is_reference else "by value"
-            raise TypeError(f"Cannot assign type {value_type} to type {self.node_type} {pointed}", self.token.line)
-        #TODO: check array and nested arrays have defined length, probably implement in types.py
-        if isinstance(self.node_type.expression_type, Array) and not self.node_type.expression_type.size_defined():
-            raise TypeError(f"Could not infer size of array \"{self.name_token.string}\"", self.token.line)
+        if self.by_reference:
+            Comparator.pointer_assignment(self.node_type, self.assignment.node_type, node=self)
+        else:
+            Comparator.assignment(self.node_type, self.assignment.node_type, node=self)
 
 class AssignmentNode(StatementNode):
-    def __init__(self, name_token: Token, value: ExpressionNode, parser: "Parser"):
+    def __init__(self, name_token: Token, value: ExpressionNode, by_reference: bool, parser: "Parser"):
         super().__init__(name_token, [value], parser)
         self.value: ExpressionNode = value
+        self.by_reference: bool = by_reference
 
     def register(self) -> None:
         symbol = self.scope.resolve_symbol(self.token)
@@ -57,10 +56,24 @@ class AssignmentNode(StatementNode):
         symbol.reference(self)
 
     def verify(self) -> None:
-        variable_type: VariableType = self.variable.node_type
-        value_type: ExpressionType = self.value.node_type
-        if not variable_type.matches(value_type):
-            raise TypeError(f"Cannot assign type {value_type} to type {variable_type}", self.token.line)
+        if self.by_reference:
+            Comparator.pointer_assignment(self.variable.node_type, self.value.node_type, node=self)
+        else:
+            Comparator.assignment(self.variable.node_type, self.value.node_type, node=self)
+
+class ArrayIndexAssigmentNode(StatementNode):
+    def __init__(self, name_token: Token, index: ExpressionNode, value: ExpressionNode, parser: "Parser"):
+        super().__init__(name_token, [index, value], parser)
+        self.value: ExpressionNode = value
+        self.index: ExpressionNode = index
+
+    def register(self) -> None:
+        symbol = self.scope.resolve_symbol(self.token)
+        self.variable: VariableDeclarationNode = symbol.node
+        symbol.reference(self)
+
+    def verify(self) -> None:
+        Comparator.array_index_assignment(self.variable.node_type, self.index.node_type, self.value.node_type, node=self)
 
 class ArgumentDeclarationNode(StatementNode):
     def __init__(self, name_token: Token, var_type: VariableType, parser: "Parser"):
@@ -89,7 +102,7 @@ class FunctionDefinitonNode(StatementNode):
 
     def verify(self) -> None:
         if not self.return_nodes and self.node_type.return_type is not Void:
-            self.config.warn(TypeError("Function has no return statement", self.token.line))
+            self.config.warn(TypeError(f"Function \"{self.name_token.string}\" has no return statement", self.token.line))
 
 class ReturnNode(StatementNode):
     def __init__(self, token: Token, value: ExpressionNode | None, parser: "Parser"):
@@ -105,17 +118,8 @@ class ReturnNode(StatementNode):
             raise TypeError("Return statement outside of function", self.token.line)
         function_type = self.function.node_type
         value_type = self.value.node_type if self.value is not None else Void
-        if function_type.return_type != value_type:
-             raise TypeError(f"Expected return type {function_type.return_type}, got type {value_type}", self.token.line)
+        Comparator.return_value(value_type, function_type, node=self)
         self.function.return_nodes.append(self)
-
-
-def verify_condition(condition: ExpressionNode) -> None:
-    condition_type = condition.node_type
-    if not ValueType.match(condition_type):
-        raise TypeError(f"Expected value type in condition, got type {condition_type}", condition.token.line)
-    if condition_type != Bool:
-        condition.config.warn(TypeError(f"Expected bool type in condition, got type {condition_type}", condition.token.line))
 
 
 class IfNode(StatementNode):
@@ -127,7 +131,8 @@ class IfNode(StatementNode):
         self.else_body: StatementNode | None = else_body
 
     def verify(self) -> None:
-        verify_condition(self.condition)
+        Comparator.condition(self.condition.node_type, node=self)
+
 
 class WhileNode(StatementNode):
     def __init__(self, token: Token, condition: ExpressionNode, body: CodeBlockNode, parser: "Parser"):
@@ -136,7 +141,7 @@ class WhileNode(StatementNode):
         self.body = body
 
     def verify(self) -> None:
-        verify_condition(self.condition)
+        Comparator.condition(self.condition.node_type, node=self)
 
 class ForNode(StatementNode):
     def __init__(self, token: Token, initialization: StatementNode, condition: ExpressionNode, increment: StatementNode, body: CodeBlockNode, parser: "Parser"):
@@ -147,10 +152,9 @@ class ForNode(StatementNode):
         self.body = body
 
     def verify(self) -> None:
-        verify_condition(self.condition)
+        Comparator.condition(self.condition.node_type, node=self)
 
 class FunctionCallStatementNode(StatementNode):
-    #TODO: check return type is void if strict mode is on
     def __init__(self, token: Token, arguments: list[ExpressionNode], parser: "Parser"):
         super().__init__(token, arguments, parser)
         self.arguments: list[ExpressionNode] = arguments
@@ -160,15 +164,8 @@ class FunctionCallStatementNode(StatementNode):
         self.symbol.reference(self)
 
     def verify(self) -> None:
-        function_type: FunctionType = self.scope.resolve_symbol(self.token).node.node_type
-        if not FunctionType.match(function_type):
-            raise TypeError(f"Cannot call \"{self.token.string}\" of type {function_type} as a function", self.token.line)
-        if not function_type.match_params([arg.node_type for arg in self.arguments]):
-            expected = ", ".join(map(str, function_type.parameters))
-            got = ", ".join([str(arg.node_type) for arg in self.arguments])
-            raise TypeError(f"Expected argument types ({expected}), got ({got})", self.token.line)
-        if Void != function_type.return_type:
-            self.config.warn(TypeError(f"Non-void return type {function_type.return_type} in function call statement, assign the return value to a variable", self.token.line))
+        function_type: FunctionType = self.symbol.node.node_type
+        Comparator.function_call_statement(function_type, [arg.node_type for arg in self.arguments], node=self)
 
 class BreakNode(StatementNode):
     def __init__(self, token: Token, parser: "Parser"):
@@ -177,7 +174,7 @@ class BreakNode(StatementNode):
     def register(self) -> None:
         self.loop: ForNode | WhileNode = self.closest_parent(WhileNode, ForNode)
         if self.loop is None:
-            raise TypeError("Break statement outside of loop", self.token.line)
+            raise SyntaxError("Break statement outside of loop", self.token.line)
 
 class ContinueNode(StatementNode):
     def __init__(self, token: Token, parser: "Parser"):
@@ -186,7 +183,7 @@ class ContinueNode(StatementNode):
     def register(self) -> None:
         self.loop: ForNode | WhileNode = self.closest_parent(WhileNode, ForNode)
         if self.loop is None:
-            raise TypeError("Break statement outside of loop", self.token.line)
+            raise SyntaxError("Continue statement outside of loop", self.token.line)
 
 class PassNode(StatementNode):
     def __init__(self, token: Token, parser: "Parser"):

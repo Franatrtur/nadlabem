@@ -16,7 +16,7 @@ class AssemblyTranslator(Translator):
         # if the command starts with a space its unlabeled instruction  @ mov
         # otherwise treat it as labeled                                 @label mov
 
-        instruction = "@".join(self.node.token.line.string.split("@")[1:])
+        instruction = "$".join(self.node.token.line.string.split("$")[1:])
 
         if not instruction:
             raise SyntaxError("Assembly node without instruction", self.node.token.line)

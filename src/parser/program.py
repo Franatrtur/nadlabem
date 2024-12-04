@@ -51,7 +51,7 @@ class ProgramParser(Parser):
             return token
             
         else:
-            raise SyntaxError(f"Expected {token_type.__name__}, but got {self.tokens[self.i]} instead", line=self.tokens[self.i].line, suggestion=find_suggestion(token_type, self.tokens[self.i]))
+            raise SyntaxError(f"Expected {token_type.__name__}, but got {self.tokens[self.i]} instead", line=self.tokens[self.i].line, parser=parser, suggestion=find_suggestion(token_type, self.tokens[self.i], parser))
 
     def look_ahead(self) -> Token:
 

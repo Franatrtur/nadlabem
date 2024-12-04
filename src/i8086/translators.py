@@ -4,10 +4,10 @@ from ..nodes.node import AbstractSyntaxTreeNode
 
 from .literal import LiteralTranslator
 from .var import VariableDeclarationTranslator, VariableReferenceTranslator, AssignmentTranslator
-from .operation import BinaryOperationTranslator
+from .operation import BinaryOperationTranslator, UnaryOperationTranslator
 from .assembly import AssemblyTranslator, AssemblyExpressionTranslator
 from .ifelse import IfTranslator
-from .loops import WhileTranslator, ForTranslator
+from .loops import WhileTranslator, ForTranslator, PassTranslator
 from .fun import FunctionCallTranslator, FunctionCallStatementTranslator, FunctionDefinitionTranslator, ReturnTranslator
 
 from .program import ProgramI8086Translator, CodeBlockTranslator
@@ -17,6 +17,7 @@ TRANSLATORS: list[Type[Translator]] = [
     LiteralTranslator,
     VariableDeclarationTranslator,
     BinaryOperationTranslator,
+    UnaryOperationTranslator,
     VariableReferenceTranslator,
     AssemblyTranslator,
     AssemblyExpressionTranslator,
@@ -24,6 +25,7 @@ TRANSLATORS: list[Type[Translator]] = [
     CodeBlockTranslator,
     WhileTranslator,
     ForTranslator,
+    PassTranslator,
     AssignmentTranslator,
     FunctionCallTranslator,
     FunctionCallStatementTranslator,

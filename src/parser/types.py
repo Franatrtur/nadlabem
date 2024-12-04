@@ -1,57 +1,63 @@
 from .parsing import Parser
-from ..tokenizer import (Token, TypeToken, StarToken, ArrayBeginToken, ArrayEndToken, NumberToken)
+from ..tokenizer.symbols import (Token, TypeToken, StarToken, ArrayBeginToken, ArrayEndToken, NumberToken,
+                        CharToken, IntToken, BoolToken, VoidToken, AtToken)
 from typing import Type
-from ..nodes.types import VALUE_TYPES, RETURNABLE_TYPES, Int, Char, Bool, Void, Array, VariableType, ExpressionType
+from ..nodes.types import VALUE_TYPES, RETURNABLE_TYPES, NoType, Int, Char, Bool, Void, Array, Pointer, VariableType, ExpressionType, ValueType
 from ..errors import TypeError
 
-class VariableTypeParser(Parser):
 
-    def parse(self) -> VariableType:
+class TypeParser(Parser):
 
+    def value_type(self) -> ValueType:
         type_token = self.devour(TypeToken)
-        expr_type: ExpressionType
+        result: ValueType = None
 
         for token_type, value_type in VALUE_TYPES.items():
             if token_type.match(type_token):
-                expr_type = value_type
-                break  # Exit the loop if a match is found, break will skip the following else:
-        else:
-            allowed = ", ".join(str(t) for t in VALUE_TYPES.values())
-            raise TypeError(
-                f"Cannot assign to type {type_token.string}, expected a value type", type_token.line,
-                value_types=allowed, suggestion="Did you forget \"def\" to define a void function?"
-            )
+                result = value_type
+                break
 
-        while self.is_ahead(ArrayBeginToken):
+        while self.is_ahead(StarToken):
+            self.devour(StarToken)
+            result = Pointer(result)
+
+        return result
+
+
+    def expression_type(self) -> ExpressionType:
+        result: ValueType = self.value_type()
+
+        #handle arrays
+        if self.is_ahead(ArrayBeginToken):
             self.devour(ArrayBeginToken)
-            
             array_length = None
             if not self.is_ahead(ArrayEndToken):
                 array_length = self.devour(NumberToken).value
 
             self.devour(ArrayEndToken)
-            expr_type = Array(expr_type, size=array_length)
+            result = Array(result, size=array_length)
 
-        is_reference: bool = False
+        #handle pointers once more
         if self.is_ahead(StarToken):
             self.devour(StarToken)
-            is_reference = True
+            result = Pointer(result)
 
-        return VariableType(expr_type, is_reference)
+        return result
 
-
-class ReturnTypeParser(Parser):
-
-    def parse(self) -> ExpressionType:
-
-        type_token = self.devour(TypeToken)
-
-        for token_type, value_type in RETURNABLE_TYPES.items():
-            if token_type.match(type_token):
-                return value_type
+    
+    def return_type(self) -> ValueType | NoType:
+        if self.is_ahead(VoidToken):
+            self.devour(VoidToken)
+            return Void
         else:
-            allowed = ", ".join(t.__name__ for t in RETURNABLE_TYPES.keys())
-            raise TypeError(
-                f"Cannot return type {type_token}", type_token.line,
-                returnable_types=allowed
-            )
+            return self.value_type()
+
+    
+    def variable_type(self) -> VariableType:
+        #handle references
+        is_ref: bool = False
+        if self.is_ahead(AtToken):
+            self.devour(AtToken)
+            is_ref = True
+
+        return VariableType(self.expression_type(), is_ref)
