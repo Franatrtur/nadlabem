@@ -2,7 +2,7 @@ from .sizeof import sizeof
 from ..nodes.statement import VariableDeclarationNode, ArgumentDeclarationNode, FunctionDefinitonNode, StatementNode
 from ..nodes.scope import Context, Symbol
 from ..translator import Translator
-from ..nodes.types import Array, Int, VariableType
+from ..nodes.types import Array, Int, VariableType, ExpressionType, Pointer, ValueType
 from ..errors import NadLabemError, NotImplementedError
 from typing import Literal
 
@@ -39,8 +39,10 @@ class StackFrame:
                     self.var_bytes += sizeof(symbol.node.node_type.expression_type)
                     variable = Variable(symbol, -self.var_bytes)
                     self.variables.append(variable)
-        
+
             for arg_node in fn_node.arguments:
+
+                symbol = arg_node.symbol
 
                 self.arg_bytes += 2  # we just dont care
                 variable = Variable(symbol, self.arg_bytes + 2)     # ret addr + old bp = 4
@@ -58,10 +60,10 @@ class Variable:
 
         #the amount of bytes taken in memory
         self.offset: int | None = offset
-        self.size: int | None = self.symbol.node.node_type.size if isinstance(self.symbol.node.node_type, Array) else None
-        self.bytes: int = sizeof(self.symbol.node.node_type)
+        self.var_type: VariableType = self.symbol.node.node_type
+        self.bytes: int = sizeof(self.var_type)
         self.is_global: bool = self.symbol.scope.is_root
-        self.is_reference: bool = self.symbol.node.node_type.is_reference
+        self.is_reference: bool = self.var_type.is_reference
         self.init_value: str | None = "?" if self.bytes <= 2 else None
 
     def declare(self, translator: Translator) -> None:
@@ -76,56 +78,79 @@ class Variable:
             else:
                 translator.assemble("resb", [self.bytes], label=self.symbol.id)
 
-    def _location(self, sized: bool = True) -> str:
+    def _location(self) -> str:
         source = self.symbol.id if self.is_global else "bp"
-        if not sized:
-            prefix = ""
-        elif self.is_reference:
-            prefix = "word"
+        off = ((" + " if self.offset > 0 else " - ") + str(abs(self.offset))) if self.offset else ""
+        return source + off
+
+    def _dereference(self, translator: Translator, as_type: ExpressionType, source: str, target_register: str, index_register: str = "") -> None:
+        value_size: int = sizeof(as_type)
+        index_modifier = f" + {index_register}" if index_register else ""
+        if value_size == 1:
+            assert target_register[0] in ["a", "b", "c", "l"] and target_register[1] in ["l", "h"], "Cannot load type 1 byte into register "+target_register
+            translator.assemble("mov", [target_register[0]+"x", "0"])
+            translator.assemble("mov", [target_register, f"byte[{source}{index_modifier}]"])
+        elif value_size == 2:
+            assert target_register in ["ax", "bx", "cx", "dx"], "Cannot load type 2 bytes into register "+target_register
+            translator.assemble("mov", [target_register, f"word[{source}{index_modifier}]"])
+        elif value_size == 4:
+            assert target_register in ["ax,dx", "bx,cx", "si,di"], "Cannot load type 4 bytes into register/s "+target_register
+            [low, high] = target_register.split(",")
+            translator.assemble("mov", [low, f"word[{source}{index_modifier}]"])
+            translator.assemble("mov", [high, f"word[{source}{index_modifier} + 2]"])
         else:
-            prefix = "byte" if self.bytes == 1 else "word"
-        off = ((" + " if self.offset > 0 else " - ") + self.offset) if self.offset else ""
-        return prefix + f"[{source}{off}]"
+            raise NadLabemError(f"Cannot load type {self.var_type} as {as_type} of size {value_size} bytes into register {target_register} - too big", self.symbol.node.token.line)
 
-    def load(self, translator: Translator, src_index: str = "", target_register: Literal["a", "b", "c", "d"] = "a") -> None:
-        register = target_register + ("l" if self.bytes == 1 else "x")
+    def _store(self, translator: Translator, as_type: ExpressionType, target: str, source_register: str, index_register: str = "") -> None:
+        index_modifier = f" + {index_register}" if index_register else ""
+        value_size: int = sizeof(as_type)
+        if value_size == 1:
+            assert source_register[0] in ["a", "b", "c", "l"] and source_register[1] in ["l", "h"], "Cannot store 1 byte from register "+source_register
+            translator.assemble("mov", [f"byte[{target}{index_modifier}]", source_register])
+        elif value_size == 2:
+            assert source_register in ["ax", "bx", "cx", "dx"], "Cannot store 2 bytes from register "+source_register
+            translator.assemble("mov", [f"word[{target}{index_modifier}]", source_register])
+        elif value_size == 4:
+            [low, high] = source_register.split(",")
+            translator.assemble("mov", [f"word[{target}{index_modifier}]", low])
+            translator.assemble("mov", [f"word[{target}{index_modifier} + 2]", high])
+        else:
+            raise NadLabemError(f"Cannot store type {self.var_type} as {as_type} of size {value_size} bytes from register {source_register} - too big", self.symbol.node.token.line)
 
-        if self.is_global and not self.is_reference:
-            translator.assemble("mov", [register, self._location(self.symbol.id) + src_index])
-
-        elif self.is_global and self.is_reference:
-            translator.assemble("mov", ["bx", f"word[{self.symbol.id}]"])
-            translator.assemble("mov", [register, "bx" + src_index])
-
-        elif not self.is_global and not self.is_reference:
-            translator.assemble("mov", [register, f"bp + {self.offset}" + src_index])
-
-        elif not self.is_global and self.is_reference:
-            translator.assemble("mov", ["bx", self._location("bp", self.offset, onebyte=False)])
-            translator.assemble("mov", [register, "bx" + src_index])
-
-    def load_pointer(self, translator: Translator, src_index: str = "", target_register: Literal["a", "b", "c", "d"] = "a"):
-        register = target_register + "x"
-        translator.assemble("lea", [register, self._location(sized=False) + src_index])
+    def load_value(self, translator: Translator, target_register: str, index_register: str = "") -> None:
         
-
-    def store(self, translator: Translator, target_index: str = "", source_register: Literal["a", "b", "c", "d"] = "a"):
-        register = source_register + ("l" if self.bytes == 1 else "x")
-
-        if not self.is_reference:
-            translator.assemble("mov", [self._location(), register])
-
+        if self.is_reference:
+            self.load_pointer(translator, "di", "")
+            self._dereference(translator, self.var_type.expression_type, "di", target_register, index_register)
         else:
-            translator.assemble("mov", ["bx", self._location()])
-            translator.assemble("mov", ["[bx]" + target_index, register])
+            self._dereference(translator, self.var_type.expression_type, self._location(), target_register, index_register)
+            
 
-    
-    def store_pointer(self, translator: Translator, source_register: Literal["a", "b", "c", "d"] = "a"):
-        register = source_register + "x"
-        if not self.is_reference:
-            raise NadLabemError(f"Cannot overwrite pointer to non-reference variable {self.symbol.id}", self.symbol.node.token.line)
+    def load_pointer(self, translator: Translator, target_register: str = "bx", index_register: str = ""):
+        index_modifier = f" + {index_register}" if index_register else ""
+        translator.assemble("lea", [target_register, f"[{self._location()}{index_modifier}]"])
 
-        translator.assemble("mov", [self._location(), register])
+    def load_dereference(self, translator: Translator, target_register: str, index_register: str = ""):
+        target_type: ValueType = self.var_type.expression_type
+        if isinstance(self.var_type.expression_type, Array):
+            target_type = target_type.element_type
+        assert isinstance(target_type, Pointer), "Cannot dereference non-pointer variable "+self.symbol.id
+        self.load_value(translator, "bx", "")
+        self._dereference(translator, target_type, "bx", target_register, index_register)
+
+
+    def store_pointer(self, translator: Translator, source_register: str = "bx", index_register: str = ""):
+        index_modifier = f" + {index_register}" if index_register else ""
+        assert self.var_type.is_reference, "Cannot store pointer to non-reference variable "+self.symbol.id
+        translator.assemble("mov", [f"word[{self._location()}{index_modifier}]", source_register])
+        
+    def store_value(self, translator: Translator, source_register: str = "bx", index_register: str = ""):
+        
+        if self.is_reference:
+            self.load_pointer(translator, "di", "")
+            self._store(translator, self.var_type.expression_type, "di", source_register, index_register)
+        else:
+            self._store(translator, self.var_type.expression_type, self._location(), source_register, index_register)
 
 
 

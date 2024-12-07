@@ -180,6 +180,7 @@ TOKEN_DETECTORS = [
     BoolToken,
     CharToken,
     VoidToken,
+    DoubleToken,
 
     NameToken,
 
@@ -237,6 +238,7 @@ TypeToken = Token.any(
     BoolToken,
     CharToken,
     VoidToken,
+    DoubleToken,
     class_name="TypeToken"
 )
 

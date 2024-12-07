@@ -101,3 +101,4 @@ class ProgramNode(AbstractSyntaxTreeNode):
         self.link(parent=None)
         self.register_children()  # registers and validates tree
         self.prune_children()
+        print(self)

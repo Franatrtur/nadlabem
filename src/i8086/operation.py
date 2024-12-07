@@ -1,6 +1,6 @@
 from ..translator import Translator
 from ..nodes.expression import BinaryOperationNode, UnaryOperationNode
-from ..tokenizer.symbols import PlusToken, MinusToken, DivideToken, ModuloToken, StarToken, BinaryNotToken, LogicalNotToken
+from ..tokenizer.symbols import PlusToken, MinusToken, DivideToken, ModuloToken, StarToken, BinaryNotToken, LogicalNotToken, IsEqualToken
 from .sizeof import sizeof
 from .allocator import Variable
 from ..errors import NotImplementedError
@@ -31,6 +31,15 @@ class BinaryOperationTranslator(Translator):
 
         elif StarToken.match(self.node.token):
             self.assemble("mul", ["bx"])
+            self.assemble("push", ["ax"])
+    
+        elif IsEqualToken.match(self.node.token):
+            self.assemble("cmp", ["ax", "bx"])
+            self.assemble("pushf")
+            self.assemble("pop", ["ax"])
+            self.assemble("and", ["ax", "64"])
+            self.assemble("mov", ["cl", "6"])
+            self.assemble("shr", ["al", "cl"])
             self.assemble("push", ["ax"])
 
         # elif DivideToken.match(self.node.token):

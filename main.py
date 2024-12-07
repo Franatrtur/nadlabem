@@ -67,7 +67,7 @@ def main() -> None:
         
         output = translator.compile(code)
 
-        if config.verbose and not config.strict:
+        if config.verbose and not config.strict and translator.warnings:
             print("\33[44m", "WARNINGS:", '\033[0m')
             for warning in translator.warnings:
                 print(warning)

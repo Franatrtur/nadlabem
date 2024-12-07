@@ -1,1 +1,8 @@
-$ hlt
+def myfn() -> int {
+	$ax = 5 + 3
+	${
+		mov ax, 5
+		#label mov dx, ax
+	}
+	return $dx
+}

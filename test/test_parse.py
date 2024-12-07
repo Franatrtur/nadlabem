@@ -6,8 +6,20 @@ from src.compiler import Compiler
 from src.config import CompilationConfig
 
 PROGRAM = """
-x: int = 5
-y: char = char(x)
+def load_file(arg_by_ref: @int) -> void {
+    arg_by_ref = 8
+}
+
+length: bool = true
+
+x: int = int(length) * 5
+
+load_file(*x)
+
+
+z: double = double(5)
+y: double = double(10)
+z = double^(x) + y
 """
 
 if __name__ == "__main__":

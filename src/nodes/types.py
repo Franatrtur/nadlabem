@@ -88,7 +88,7 @@ class VariableType(DeclarationType):
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.expression_type)}, is_reference={self.is_reference})"
     def __str__(self):
-        return f"{str(self.expression_type)}{'*' if self.is_reference else ''}"
+        return f"{'@' if self.is_reference else ''}{str(self.expression_type)}"
 
 
 class FunctionType(DeclarationType):
@@ -135,13 +135,18 @@ class Comparator:
         return (left is right or
             (isinstance(left, Pointer) and
             isinstance(right, Pointer) and
+            Comparator.match(left.element_type, right.element_type)) or
+            (isinstance(left, Array) and
+            isinstance(right, Array) and
             Comparator.match(left.element_type, right.element_type)))
 
     def cast(from_type: ExpressionType, to_type: ValueType, node: ASTNode) -> ValueType:
         if not isinstance(from_type, ValueType) or not isinstance(to_type, ValueType):
             raise TypeError(f"Cannot cast {from_type} to {to_type}", node.token.line)
-        if isinstance(from_type, Pointer) or isinstance(to_type, Pointer):
-            node.config.warn(TypeError(f"Casting pointers is dangerous", node.token.line))
+        if isinstance(to_type, Pointer):
+            node.config.warn(TypeError(f"Pointer casting is dangerous", node.token.line))
+        if from_type is to_type:
+            node.config.warn(TypeError(f"Casting {from_type} to {to_type} is pointless", node.token.line))
         return to_type
 
     @staticmethod
@@ -197,21 +202,43 @@ class Comparator:
 
 
     @staticmethod
-    def function_call(function: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
-        if len(function.parameters) != len(arguments):
-            raise TypeError(f"Function \"{function.name}\" expects {len(function.parameters)} arguments, but {len(arguments)} were given", node.token.line)
+    def function_call(function_type: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
+        if len(function_type.parameters) != len(arguments):
+            raise TypeError(f"Function \"{function_type.name}\" expects {len(function_type.parameters)} arguments, but {len(arguments)} were given", node.token.line)
         if not isinstance(function_type, FunctionType):
-            raise TypeError(f"Cannot call \"{node.token.string}\" of type {function_type} as a function", self.token.line)
-        for i in range(len(function.parameters)):
-            Comparator.assignment(function.parameters[i], arguments[i])
+            raise TypeError(f"Cannot call \"{node.token.string}\" of type {function_type} as a function", node.token.line)
+        for getting, giving in zip(function_type.parameters, arguments):
+            if getting.is_reference:
+                Comparator.pointer_assignment(getting, giving, node)
+            else:
+                if not Comparator.match(getting.expression_type, giving):
+                    raise TypeError(f"Cannot assign type {giving} to {getting}", node.token.line)
 
     @staticmethod
-    def function_call_statement(function: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
-        Comparator.function_call(function, arguments, node)
+    def function_call_statement(function_type: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
+        Comparator.function_call(function_type, arguments, node)
         if function_type.return_type is not Void:
-            self.config.warn(TypeError(f"Non-void return type {function_type.return_type} in function call statement, assign the return value to a variable", self.token.line))
+            node.config.warn(TypeError(f"Non-void return type {function_type.return_type} in function call statement, assign the return value to a variable", node.token.line))
 
+    @staticmethod
+    def variable_reference(var_type: VariableType,
+                           load_pointer: bool,
+                           dereference: bool,
+                           index: ExpressionType | None,
+                           node: ASTNode) -> ValueType:
+        if index is not None:
+            var_type = VariableType(Comparator.array_index_value(var_type, index, node), is_reference=False)
+        if load_pointer:
+            return Comparator.pointer_access(var_type, node)
+        elif dereference:
+            return Comparator.dereference(var_type, node)
+        else:
+            return var_type.expression_type
 
+    @staticmethod
+    def array_index_value(array: VariableType, index: ExpressionType, node: ASTNode) -> ValueType:
+        Comparator.array_access(array, index, node)
+        return array.expression_type.element_type
 
     @staticmethod
     def assignment(left: VariableType, right: ExpressionType, node: ASTNode) -> None:
@@ -247,11 +274,6 @@ class Comparator:
             raise TypeError(f"Cannot assign type {right} to {left} by reference", node.token.line)
 
     @staticmethod
-    def array_index_value(array: VariableType, index: ExpressionType, node: ASTNode) -> ValueType:
-        Comparator.array_access(array, index, node)
-        return array.expression_type.element_type
-
-    @staticmethod
     def array_access(array: VariableType, index: ExpressionType, node: ASTNode) -> None:
         if not isinstance(left.expression_type, Array):
             raise TypeError(f"Cannot index variable of type {left.expression_type} as an array", node.token.line)
@@ -261,6 +283,7 @@ class Comparator:
     @staticmethod
     def array_index_assignment(array: VariableType, index: ExpressionType, value: ExpressionType, node: ASTNode) -> None:
         Comparator.array_access()
+        #TODO: write with index and pointer support
         if not Comparator.match(array.expression_type.element_type, value):
             raise TypeError(f"Cannot assign type {value} to array of type {array.expression_type}", node.token.line)
 
@@ -270,6 +293,6 @@ class Comparator:
             raise TypeError(f"Cannot return value of type {value_type} from function of type {function_type}", node.token.line)
 
     @staticmethod
-    def condition(condition: ExpressionType, node: ASTNode) -> None:
+    def condition(condition_type: ExpressionType, node: ASTNode) -> None:
         if condition_type is not Bool:
             raise TypeError(f"Expected bool type in condition, got type {condition_type}", node.token.line)

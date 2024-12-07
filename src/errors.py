@@ -16,7 +16,8 @@ class NadLabemError(Exception):
         else:
             label = self.__class__.__name__
             color = "\033[41m "
-        return f"\n\n{color}{label} \033[0m {self.error_string} on {self.line}\nAdditional info: {self.kwargs}"
+        additional = f"\nAdditional info: {self.kwargs}" if self.kwargs else ""
+        return f"\n\n{color}{label} \033[0m {self.error_string} on {self.line}" + additional
 
 
 class NameError(NadLabemError):

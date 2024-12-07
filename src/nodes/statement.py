@@ -28,7 +28,7 @@ class CodeBlockNode(StatementNode):
 class VariableDeclarationNode(StatementNode):
     def __init__(self, name: Token, expression_value: ExpressionNode, var_type: VariableType, parser: "Parser"):
         super().__init__(name, [expression_value], parser)
-        self.assignment = expression_value
+        self.assignment: ExpressionNode = expression_value
         self.name_token = name
         self.node_type: VariableType = var_type
         self.by_reference: bool = var_type.is_reference
@@ -44,37 +44,6 @@ class VariableDeclarationNode(StatementNode):
         else:
             Comparator.assignment(self.node_type, self.assignment.node_type, node=self)
 
-class AssignmentNode(StatementNode):
-    def __init__(self, name_token: Token, value: ExpressionNode, by_reference: bool, parser: "Parser"):
-        super().__init__(name_token, [value], parser)
-        self.value: ExpressionNode = value
-        self.by_reference: bool = by_reference
-
-    def register(self) -> None:
-        symbol = self.scope.resolve_symbol(self.token)
-        self.variable: VariableDeclarationNode = symbol.node
-        symbol.reference(self)
-
-    def verify(self) -> None:
-        if self.by_reference:
-            Comparator.pointer_assignment(self.variable.node_type, self.value.node_type, node=self)
-        else:
-            Comparator.assignment(self.variable.node_type, self.value.node_type, node=self)
-
-class ArrayIndexAssigmentNode(StatementNode):
-    def __init__(self, name_token: Token, index: ExpressionNode, value: ExpressionNode, parser: "Parser"):
-        super().__init__(name_token, [index, value], parser)
-        self.value: ExpressionNode = value
-        self.index: ExpressionNode = index
-
-    def register(self) -> None:
-        symbol = self.scope.resolve_symbol(self.token)
-        self.variable: VariableDeclarationNode = symbol.node
-        symbol.reference(self)
-
-    def verify(self) -> None:
-        Comparator.array_index_assignment(self.variable.node_type, self.index.node_type, self.value.node_type, node=self)
-
 class ArgumentDeclarationNode(StatementNode):
     def __init__(self, name_token: Token, var_type: VariableType, parser: "Parser"):
         super().__init__(name_token, [], parser)
@@ -85,6 +54,27 @@ class ArgumentDeclarationNode(StatementNode):
         symbol = Symbol(self.name_token, node=self)
         self.symbol: Symbol = symbol
         self.context.register_symbol(symbol)
+
+class AssignmentNode(StatementNode):
+    def __init__(self, name_token: Token, value: ExpressionNode, index: ExpressionNode | None, by_reference: bool, parser: "Parser"):
+        super().__init__(name_token, [value] + ([index] if index else []), parser)
+        self.value: ExpressionNode = value
+        self.by_reference: bool = by_reference
+        self.index: ExpressionNode | None = index
+
+    def register(self) -> None:
+        symbol = self.scope.resolve_symbol(self.token)
+        self.symbol = symbol
+        self.variable: VariableDeclarationNode = symbol.node
+        symbol.reference(self)
+
+    def verify(self) -> None:
+        if self.index is not None:
+            Comparator.array_index_assignment(self.variable.node_type, self.index.node_type, self.value.node_type, node=self)
+        elif self.by_reference:
+            Comparator.pointer_assignment(self.variable.node_type, self.value.node_type, node=self)
+        else:
+            Comparator.assignment(self.variable.node_type, self.value.node_type, node=self)
 
 class FunctionDefinitonNode(StatementNode):
     def __init__(self, token: Token, arguments: list[ArgumentDeclarationNode], body: CodeBlockNode, return_type: ExpressionType, parser: "Parser"):

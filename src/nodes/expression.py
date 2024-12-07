@@ -31,10 +31,11 @@ class FunctionCallNode(ExpressionNode):
 
 class CastNode(ExpressionNode):
 
-    def __init__(self, token: Token, result_type: ValueType, operand: ExpressionNode, parser: "Parser"):
+    def __init__(self, token: Token, result_type: ValueType, operand: ExpressionNode, signed: bool, parser: "Parser"):
         super().__init__(token, [operand], parser)
         self.operand = operand
         self.result_type: ValueType = result_type
+        self.signed: bool = signed
 
     def register(self) -> None:
         self.node_type: ValueType = Comparator.cast(self.operand.node_type, self.result_type, node=self)
@@ -91,22 +92,24 @@ class LogicalNode(BinaryOperationNode):
 
 
 class VariableReferenceNode(ExpressionNode):
-    def __init__(self, token: Token, pointer: bool, dereference: bool, parser: "Parser"):
-        super().__init__(token, [], parser)
+    def __init__(self, token: Token, pointer: bool, dereference: bool, index: ExpressionNode | None, parser: "Parser"):
+        super().__init__(token, [index] if index is not None else [], parser)
         self.pointer: bool = pointer
         self.dereference: bool = dereference
+        self.index: ExpressionNode | None = index
 
     def register(self) -> None:
         symbol = self.scope.resolve_symbol(self.token)
         self.symbol = symbol
         symbol.reference(self)
         var_type: VariableType = symbol.node.node_type
-        if self.pointer:
-            self.node_type: ValueType = Comparator.pointer_access(var_type, node=self)
-        elif self.dereference:
-            self.node_type: ValueType = Comparator.dereference(var_type, node=self)
-        else:
-            self.node_type: ValueType = var_type.expression_type
+        self.node_type = Comparator.variable_reference(
+            var_type,
+            self.pointer,
+            self.dereference,
+            index=(self.index.node_type if self.index is not None else None),
+            node=self
+        )
 
 class LiteralNode(ExpressionNode):
     def __init__(self, token: Token, parser: "Parser"):
@@ -133,20 +136,3 @@ class AssemblyExpressionNode(ExpressionNode):
         super().__init__(token, [], parser)
         self.assembly_expression: str = assembly_expression
         self.node_type = Int
-
-
-class IndexRetrievalNode(ExpressionNode):
-    def __init__(self, token: Token, name_token: Token, index: ExpressionNode, parser: "Parser"):
-        super().__init__(token, [index], parser)
-        self.name_token = name_token
-        self.index = index
-
-    def register(self) -> None:
-        self.symbol: Symbol = self.scope.resolve_symbol(self.name_token)
-        self.symbol.reference(self)
-
-    def verify(self) -> None:
-        if not isinstance(self.array_node.node_type, Array):
-            raise TypeError(f"Cannot index \"{self.token.string}\" of type {self.array_node.node_type} as an array", self.token.line, defined_at=self.array_node.token.line)
-        Comparator.array_access(self.symbol.node.node_type, self.index.node_type, node=self)
-        self.node_type: ExpressionType = self.array_node.node_type.element_type

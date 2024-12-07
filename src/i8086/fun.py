@@ -5,7 +5,7 @@ from ..tokenizer.symbols import DoToken, WhileToken
 from .allocator import Variable, StackFrame
 
 
-RETURN_REGISTER = "dx"
+RETURN_REGISTER = "ax"
 
 
 class ReturnTranslator(Translator):
@@ -45,7 +45,7 @@ class FunctionDefinitionTranslator(Translator):
 
         self.assemble("mov", ["sp", "bp"], label=self.ret_label)
         self.assemble("pop", ["bp"])
-        self.assemble("ret")
+        self.assemble("ret", [str(self.frame.arg_bytes)])
 
 
 class FunctionCallStatementTranslator(Translator):

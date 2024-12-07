@@ -20,7 +20,6 @@ class CompilationConfig:
         self.compiler: "Compiler" = None
 
     def warn(self, error: NadLabemError) -> None:
-        print(self.strict, error)
         if self.strict:
             error.kwargs["strict"] = "Error raised because strict mode is on"
             raise error

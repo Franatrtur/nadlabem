@@ -1,0 +1,11 @@
+def a(x: int) -> bool {
+    return x == 5
+}
+
+def b(x:int) -> bool {
+    y: int = x
+    r: bool =  a(y)
+    return r
+}
+
+y: bool = b(5)

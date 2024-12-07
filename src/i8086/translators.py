@@ -9,12 +9,14 @@ from .assembly import AssemblyTranslator, AssemblyExpressionTranslator
 from .ifelse import IfTranslator
 from .loops import WhileTranslator, ForTranslator, PassTranslator
 from .fun import FunctionCallTranslator, FunctionCallStatementTranslator, FunctionDefinitionTranslator, ReturnTranslator
+from .cast import CastTranslator
 
 from .program import ProgramI8086Translator, CodeBlockTranslator
 
 
 TRANSLATORS: list[Type[Translator]] = [
     LiteralTranslator,
+    CastTranslator,
     VariableDeclarationTranslator,
     BinaryOperationTranslator,
     UnaryOperationTranslator,

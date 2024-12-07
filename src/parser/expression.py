@@ -1,11 +1,11 @@
 from .parsing import Parser
 from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken, StringLiteralToken,
-                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, DollarToken, AtToken,
+                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, DollarToken, AtToken, BinaryXorToken,
                         ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken, TypeToken, StarToken)
 from typing import Type
 from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, CastNode,
                                 VariableReferenceNode, LogicalNode, BinaryNode, UnaryOperationNode,
-                                LiteralNode, FunctionCallNode, IndexRetrievalNode, ArrayLiteralNode, AssemblyExpressionNode)
+                                LiteralNode, FunctionCallNode, ArrayLiteralNode, AssemblyExpressionNode)
 from .types import TypeParser
 from ..errors import SyntaxError
 
@@ -95,20 +95,7 @@ class ExpressionParser(Parser):
             operand = self.unary()
             return UnaryOperationNode(operator, operand, parser=self)
         
-        primary = self.primary()
-
-        # if, not while, we only allow one dimensional arrays
-        if self.is_ahead(ArrayBeginToken):
-            #index retrieval
-            token = self.devour(ArrayBeginToken)
-
-            index = self.expression()
-
-            self.devour(ArrayEndToken)
-
-            primary = IndexRetrievalNode(token, primary, index, parser=self)
-
-        return primary
+        return self.primary()
     
     def primary(self) -> ExpressionNode:
 
@@ -125,43 +112,62 @@ class ExpressionParser(Parser):
 
         if self.is_ahead(LiteralToken):
             return LiteralNode(self.devour(LiteralToken), parser=self)
-
-        elif self.is_ahead(StarToken):
-            token = self.devour(StarToken)
-            name_token = self.devour(NameToken)
-            return VariableReferenceNode(name_token, pointer=True, dereference=False, parser=self)
-
-        elif self.is_ahead(AtToken):
-            token = self.devour(AtToken)
-            name_token = self.devour(NameToken)
-            return VariableReferenceNode(name_token, pointer=False, dereference=True, parser=self)
         
-        elif self.is_ahead(NameToken):
+        elif self.is_ahead(Token.any(NameToken, StarToken, AtToken)):
+
+            pointer: bool = False
+            dereference: bool = False
+
+            if self.is_ahead(StarToken):
+                token = self.devour(StarToken)
+                pointer = True
+            elif self.is_ahead(AtToken):
+                token = self.devour(AtToken)
+                dereference = True
+
             name_token = self.devour(NameToken)
 
             if self.is_ahead(OpenParenToken):
                 #function call
                 self.devour(OpenParenToken)
                 arguments = []
+
+                if pointer or dereference:
+                    raise SyntaxError("Cannot use pointer or dereference with function calls", name_token.line)
                 
                 if not self.is_ahead(CloseParenToken):
                     arguments.append(self.expression())
                     while self.is_ahead(CommaToken):
                         self.devour(CommaToken)  # consume ','
                         arguments.append(self.expression())
-                
+
                 self.devour(CloseParenToken)
 
                 return FunctionCallNode(name_token, arguments, parser=self)
+
+            # if, not while, we only allow one dimensional arrays
+            if self.is_ahead(ArrayBeginToken):
+                #index retrieval
+                token = self.devour(ArrayBeginToken)
+
+                index = self.expression()
+
+                self.devour(ArrayEndToken)
+
+                return VariableReferenceNode(name_token, pointer, dereference, index, parser=self)
             
-            return VariableReferenceNode(name_token, pointer=False, dereference=False, parser=self)
+            return VariableReferenceNode(name_token, pointer, dereference, index=None, parser=self)
 
         
         elif self.is_ahead(TypeToken):
             token = self.look_ahead()
             value_type = TypeParser(parent=self).value_type()
-            expr = self.expression()
-            return CastNode(token, value_type, expr, parser=self)
+            signed: bool = False
+            if self.is_ahead(BinaryXorToken):
+                self.devour(BinaryXorToken)
+                signed = True
+            expr = self.primary()
+            return CastNode(token, value_type, expr, signed, parser=self)
 
         
         elif self.is_ahead(OpenParenToken):

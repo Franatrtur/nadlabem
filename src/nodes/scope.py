@@ -75,7 +75,9 @@ class Symbol:
         self.references.append(node)
 
     def __str__(self):
-        return f"Symbol({self.name})"
+        return f"Symbol({repr(self.name)})"
+    def __repr__(self):
+        return str(self)
 
 
 RESERVED_NAMES: set[str] = {

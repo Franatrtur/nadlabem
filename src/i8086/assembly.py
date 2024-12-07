@@ -13,8 +13,8 @@ class AssemblyTranslator(Translator):
     def make(self) -> None:
         self.node: AssemblyNode
 
-        # if the command starts with a space its unlabeled instruction  @ mov
-        # otherwise treat it as labeled                                 @label mov
+        # if the command starts with a space its unlabeled instruction  $ mov
+        # otherwise treat it as labeled                                 $label mov
 
         instruction = "$".join(self.node.token.line.string.split("$")[1:])
 

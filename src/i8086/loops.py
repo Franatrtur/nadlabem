@@ -2,6 +2,9 @@ from ..translator import Translator
 from ..nodes.statement import WhileNode, ForNode, PassNode
 from ..tokenizer.symbols import DoToken, WhileToken
 
+
+#TODO: add break and continue
+
 class WhileTranslator(Translator):
 
     node_type = WhileNode

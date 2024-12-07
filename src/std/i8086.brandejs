@@ -3,4 +3,4 @@ def println(str_pointer: int) -> int {
     $ mov dx, [sp]
 }
 
-sp: @int =@= 
+sp: int* =@= 

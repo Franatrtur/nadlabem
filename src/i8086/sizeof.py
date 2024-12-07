@@ -1,6 +1,6 @@
 # I8086 - SPECIFIC CONSTANTS
 
-from ..nodes.types import Int, Char, Bool, Void, Array, ExpressionType, VariableType, Pointer
+from ..nodes.types import Int, Char, Bool, Void, Array, ExpressionType, VariableType, Pointer, Double
 from typing import Type
 
 #size in bytes for i8086
@@ -9,6 +9,7 @@ SIZE: dict[Type[ExpressionType], int] = {
     Char: 1,
     Bool: 1,
     Void: 0,
+    Double: 4
 }
 
 def sizeof(node_type: ExpressionType | VariableType) -> int:

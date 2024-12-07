@@ -7,7 +7,7 @@ from typing import Type
 from .expression import ExpressionParser
 from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
                     CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
-                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode, ArrayIndexAssigmentNode)
+                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode)
 
 from .types import TypeParser
 from ..errors import SyntaxError
@@ -111,31 +111,25 @@ class AssignmentParser(Parser):
         if self.is_ahead(OpenParenToken):       # f(...)
             return self.parse_function_call(name_token)
         
-        elif self.is_ahead(EqualsToken) or self.is_ahead(AtEqualsToken):        # f = 
+        elif self.is_ahead(Token.any(ArrayBeginToken, EqualsToken, AtEqualsToken)): # f =, f =@=, f[i] =, f[x] =@= 
             return self.parse_assignment(name_token)
         
-        elif self.is_ahead(ColonToken):         # f: int = 
+        elif self.is_ahead(ColonToken):         # f: int = , f: @bool =@=
             return self.parse_declaration(name_token)
 
-        elif self.is_ahead(ArrayBeginToken):    # f[5] =
-            return self.parse_array_assignment(name_token)
-
         else:
-            raise SyntaxError(f"Invalid assignment, unexpected name \"{name_token.line}\"", name_token.line)
-
-    def parse_array_assignment(self, name_token: NameToken) -> ArrayIndexAssigmentNode:
-        self.devour(ArrayBeginToken)
-        index = ExpressionParser(parent=self).parse()
-        self.devour(ArrayEndToken)
-        self.devour(EqualsToken)
-        expression = ExpressionParser(parent=self).parse()
-        return ArrayIndexAssigmentNode(name_token, index, expression, parser=self)
+            raise SyntaxError(f"Invalid assignment, unexpected name {repr(name_token.string)}", name_token.line)
     
     def parse_assignment(self, name_token: NameToken) -> AssignmentNode:
+        index = None
+        if self.is_ahead(ArrayBeginToken):
+            self.devour(ArrayBeginToken)
+            index = ExpressionParser(parent=self).parse()
+            self.devour(ArrayEndToken)
         by_reference = self.is_ahead(AtEqualsToken)
         self.devour(Token)
         expression = ExpressionParser(parent=self).parse()
-        return AssignmentNode(name_token, expression, by_reference=by_reference, parser=self)
+        return AssignmentNode(name_token, expression, index, by_reference=by_reference, parser=self)
 
     def parse_function_call(self, name_token: NameToken) -> FunctionCallStatementNode:
         self.devour(OpenParenToken)
@@ -171,8 +165,9 @@ class AssignmentParser(Parser):
 class FunctionDefinitionParser(Parser):
 
     def _parse_param(self) -> ArgumentDeclarationNode:
-        val_type = VariableTypeParser(parent=self).parse()
         name_token = self.devour(NameToken)
+        self.devour(ColonToken)
+        val_type = TypeParser(parent=self).variable_type()
         return ArgumentDeclarationNode(name_token, val_type, parser=self)
 
     def parse(self) -> FunctionDefinitonNode:
