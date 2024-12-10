@@ -9,7 +9,7 @@ class IfTranslator(Translator):
         self.node: IfNode
     
         #TODO: put all this code in if not isinstance(self.node.condition, LogicalNode):
-        # but if it IS a logical node, we can map the jump command based on the operator (==, <, >, >=, ...)
+        # but if it IS a logical node, we can modify the jump command based on the operator (== jnz, != jz, < jl, >, >=, ...)
         self.add(self.node.condition)
         self.assemble("pop", ["ax"])
 

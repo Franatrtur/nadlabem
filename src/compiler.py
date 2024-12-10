@@ -37,7 +37,7 @@ class Compiler:
         self.tree.validate()
 
     def translate(self) -> None:
-        self.machine_code: list[str] = self.entry_translator(self).translate()
+        self.machine_code: list[str] = [str(asmline) for asmline in self.entry_translator(self).translate()]
         if self.config.generate_mapping:
             self.machine_code = DISCLAIMER + self.machine_code
 

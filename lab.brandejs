@@ -1,8 +1,12 @@
-def myfn() -> int {
-	$ax = 5 + 3
-	${
-		mov ax, 5
-		#label mov dx, ax
-	}
-	return $dx
+def print(string: @char[]) -> void {
+    for(i: int = 0, i == 10, i = i + 1){
+        printchar(string[i])
+    }
 }
+def printchar(byte: char) -> void {
+    pass
+}
+
+print(*"Ahoj")
+
+a: int = 5 + 2

@@ -71,3 +71,5 @@ class CastTranslator(Translator):
                 self.assemble("pop", ["dx"])
             self.assemble("pop", ["ax"])
             
+        else:
+            raise NotImplementedError(f"Casting from {origin_type} to {result_type} is not yet implemented in i8086", self.node.token.line)

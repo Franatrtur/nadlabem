@@ -1,10 +1,13 @@
 from .program import ProgramTranslator
-from ..translator import Translator
+from ..translator import Translator, AssemblyInstruction
 from ..nodes.node import AbstractSyntaxTreeNode as ASTNode
-from ..nodes.expression import LiteralNode
+from ..nodes.expression import LiteralNode, StringReferenceNode
 from .sizeof import sizeof
-from ..errors import NotImplementedError
+from ..errors import NotImplementedError, NadLabemError
 from ..tokenizer.symbols import StringLiteralToken, NumberToken, BoolLiteralToken, CharLiteralToken
+from .allocator import Variable, StackFrame
+from .program import ProgramI8086Translator
+
 
 class LiteralTranslator(Translator):
 
@@ -30,3 +33,50 @@ class LiteralTranslator(Translator):
         self.assemble("push", ["ax"])
 
 
+
+class StringReferenceTranslator(Translator):
+
+    node_type = StringReferenceNode
+
+    def make(self) -> None:
+        self.node: StringReferenceNode
+
+        str_bytes = self.node.string_literal.bytes
+        vals = self.assembly_string(self.node.string_literal)
+
+        literal_label = self.node.scope.generate_id("_str")
+
+        declaration = [
+            AssemblyInstruction(self.config, "db", vals, label=literal_label)
+        ]
+
+        self.assemble("lea", ["ax", f"[{literal_label}]"])
+        self.assemble("push", ["ax"])
+
+        self.program: ProgramI8086Translator
+        self.program.declare(declaration)
+
+    @staticmethod
+    def assembly_string(string_token: StringLiteralToken) -> list[str]:
+
+        result: list[str] = []
+        current_string = ""
+        
+        for byte in string_token.bytes:
+            # Check if the byte is a printable ASCII character
+            if 32 <= byte <= 126:
+                current_string += chr(byte)
+            else:
+                # If there's a current string, add it to the result
+                if current_string:
+                    result.append(f'"{current_string}"')
+                    current_string = ""
+                
+                # Add the non-printable byte as a number
+                result.append(str(byte))
+        
+        # Add any remaining string
+        if current_string:
+            result.append(f'"{current_string}"')
+        
+        return result

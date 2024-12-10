@@ -6,29 +6,16 @@ Our Brandejs language is a C-like Python-like language with support for inline a
  - It has no external dependencies.
 
 ### Brandejs source code example
-```
-# cpu 8086
-# mov ax, 5
-char[16][1]* acu = 0+["aa", "aaa"][0][0]
-char[] mystring = "Hello World!"; comment
-
-def bool compare(int* a, int b) return a + 1 >= b % 1000
-
-def int main(){
-    if(compare(*mystring, 5)){
-        return 0+mystring[len(mystring) - 1];
-    } else {
-        return fib(5);
+```brandejs
+def fact(num: int) -> int {
+    if (num == 0) {  ; base case
+        return 1
     }
+
+	return num * fact(num - 1)  ; recursion
 }
 
-def int fib(int i){
-    if(i < 2){
-        return i;
-    } else {
-        return fib(i - 1) + fib(i - 2);
-    }
-}
+x: int = fact(5)
 ```
 
 ### Usage

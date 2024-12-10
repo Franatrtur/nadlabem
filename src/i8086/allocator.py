@@ -1,8 +1,8 @@
 from .sizeof import sizeof
 from ..nodes.statement import VariableDeclarationNode, ArgumentDeclarationNode, FunctionDefinitonNode, StatementNode
 from ..nodes.scope import Context, Symbol
-from ..translator import Translator
-from ..nodes.types import Array, Int, VariableType, ExpressionType, Pointer, ValueType
+from ..translator import Translator, AssemblyInstruction
+from ..nodes.types import Array, Int, VariableType, ExpressionType, Pointer, ValueType, Double
 from ..errors import NadLabemError, NotImplementedError
 from typing import Literal
 
@@ -46,6 +46,10 @@ class StackFrame:
 
                 self.arg_bytes += 2  # we just dont care
                 variable = Variable(symbol, self.arg_bytes + 2)     # ret addr + old bp = 4
+
+                if arg_node.node_type.expression_type is Double and not arg_node.node_type.is_reference:
+                    self.arg_bytes += 2
+
                 self.variables.append(variable)
 
 
@@ -64,21 +68,11 @@ class Variable:
         self.bytes: int = sizeof(self.var_type)
         self.is_global: bool = self.symbol.scope.is_root
         self.is_reference: bool = self.var_type.is_reference
-        self.init_value: str | None = "?" if self.bytes <= 2 else None
+        self.declaration: list[AssemblyInstruction] = [
+            AssemblyInstruction(self.symbol.node.config, "resb", [self.bytes], label=self.symbol.id, mapping="default")
+        ]
 
-    def declare(self, translator: Translator) -> None:
-        if self.is_global:
-            if self.init_value is not None and self.bytes == 2:
-                #translator.assemble("dw", [self.init_value], label=self.symbol.id)
-                #TODO: WTF, why does dw randomly sometimes not work???
-                translator.assemble("resw", [1], label=self.symbol.id)
-            elif self.init_value is not None:
-                #translator.assemble("db", [self.init_value], label=self.symbol.id)
-                translator.assemble("resb", [1], label=self.symbol.id)
-            else:
-                translator.assemble("resb", [self.bytes], label=self.symbol.id)
-
-    def _location(self) -> str:
+    def location(self) -> str:
         source = self.symbol.id if self.is_global else "bp"
         off = ((" + " if self.offset > 0 else " - ") + str(abs(self.offset))) if self.offset else ""
         return source + off
@@ -117,32 +111,32 @@ class Variable:
         else:
             raise NadLabemError(f"Cannot store type {self.var_type} as {as_type} of size {value_size} bytes from register {source_register} - too big", self.symbol.node.token.line)
 
-    def load_value(self, translator: Translator, target_register: str, index_register: str = "") -> None:
+    def load_value(self, translator: Translator, as_type: ExpressionType,  target_register: str, index_register: str = "") -> None:
         
         if self.is_reference:
-            self.load_pointer(translator, "di", "")
-            self._dereference(translator, self.var_type.expression_type, "di", target_register, index_register)
+            self.load_pointer(translator, "bx", "")
+            self._dereference(translator, as_type, "bx", target_register, index_register)
         else:
-            self._dereference(translator, self.var_type.expression_type, self._location(), target_register, index_register)
+            self._dereference(translator, as_type, self.location(), target_register, index_register)
             
 
     def load_pointer(self, translator: Translator, target_register: str = "bx", index_register: str = ""):
         index_modifier = f" + {index_register}" if index_register else ""
-        translator.assemble("lea", [target_register, f"[{self._location()}{index_modifier}]"])
+        translator.assemble("lea", [target_register, f"[{self.location()}{index_modifier}]"])
 
-    def load_dereference(self, translator: Translator, target_register: str, index_register: str = ""):
+    def load_dereference(self, translator: Translator, as_type: ExpressionType, target_register: str, index_register: str = ""):
         target_type: ValueType = self.var_type.expression_type
         if isinstance(self.var_type.expression_type, Array):
             target_type = target_type.element_type
         assert isinstance(target_type, Pointer), "Cannot dereference non-pointer variable "+self.symbol.id
         self.load_value(translator, "bx", "")
-        self._dereference(translator, target_type, "bx", target_register, index_register)
+        self._dereference(translator, as_type, target_type, "bx", target_register, index_register)
 
 
     def store_pointer(self, translator: Translator, source_register: str = "bx", index_register: str = ""):
         index_modifier = f" + {index_register}" if index_register else ""
         assert self.var_type.is_reference, "Cannot store pointer to non-reference variable "+self.symbol.id
-        translator.assemble("mov", [f"word[{self._location()}{index_modifier}]", source_register])
+        translator.assemble("mov", [f"word[{self.location()}{index_modifier}]", source_register])
         
     def store_value(self, translator: Translator, source_register: str = "bx", index_register: str = ""):
         
@@ -150,7 +144,7 @@ class Variable:
             self.load_pointer(translator, "di", "")
             self._store(translator, self.var_type.expression_type, "di", source_register, index_register)
         else:
-            self._store(translator, self.var_type.expression_type, self._location(), source_register, index_register)
+            self._store(translator, self.var_type.expression_type, self.location(), source_register, index_register)
 
 
 

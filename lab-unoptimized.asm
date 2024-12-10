@@ -17,23 +17,31 @@ segment code
         mov ax, 2                ;a: int = 5 + 2 (12)
         push ax
         mov ax, 5
+        push ax
+        pop ax
         pop bx
         add ax, bx
+        push ax
+        pop ax
         mov word[a], ax
 exit:
-ok      hlt
-error   hlt
+ok      hlt 
+error   hlt 
 
 print:
         push bp                  ;def print(string: @char[]) -> void { (1)
         mov bp, sp
         sub sp, 2
         mov ax, 0                ;    for(i: int = 0, i == 10, i = i + 1){ (2)
+        push ax
+        pop ax
         mov word[bp - 2], ax
 for     nop 
         mov ax, 10
         push ax
         mov ax, word[bp - 2]
+        push ax
+        pop ax
         pop bx
         cmp ax, bx
         pushf 
@@ -41,9 +49,12 @@ for     nop
         and ax, 64
         mov cl, 6
         shr al, cl
+        push ax
+        pop ax
         jz fout
         mov ax, word[bp - 2]     ;        printchar(string[i]) (3)
-        mov si, ax
+        push ax
+        pop si
         lea bx, [bp + 4]
         mov ax, 0
         mov al, byte[bx + si]

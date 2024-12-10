@@ -12,14 +12,14 @@ class BinaryOperationTranslator(Translator):
     def make(self) -> None:
         self.node: BinaryOperationNode
 
-        self.add(self.node.left)
         self.add(self.node.right)
+        self.add(self.node.left)
 
         # A = "ax" if sizeof(self.node.left.node_type) == 2 else "al"
         # B = "bx" if sizeof(self.node.right.node_type) == 2 else "bl"
         
-        self.assemble("pop", ["bx"])
         self.assemble("pop", ["ax"], mapping=True)
+        self.assemble("pop", ["bx"])
 
         if PlusToken.match(self.node.token):
             self.assemble("add", ["ax", "bx"])

@@ -2,7 +2,7 @@ from typing import Type
 from ..translator import Translator, ProgramTranslator
 from ..nodes.node import AbstractSyntaxTreeNode
 
-from .literal import LiteralTranslator
+from .literal import LiteralTranslator, StringReferenceTranslator
 from .var import VariableDeclarationTranslator, VariableReferenceTranslator, AssignmentTranslator
 from .operation import BinaryOperationTranslator, UnaryOperationTranslator
 from .assembly import AssemblyTranslator, AssemblyExpressionTranslator
@@ -16,6 +16,7 @@ from .program import ProgramI8086Translator, CodeBlockTranslator
 
 TRANSLATORS: list[Type[Translator]] = [
     LiteralTranslator,
+    StringReferenceTranslator,
     CastTranslator,
     VariableDeclarationTranslator,
     BinaryOperationTranslator,

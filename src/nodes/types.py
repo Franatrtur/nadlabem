@@ -204,7 +204,7 @@ class Comparator:
     @staticmethod
     def function_call(function_type: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
         if len(function_type.parameters) != len(arguments):
-            raise TypeError(f"Function \"{function_type.name}\" expects {len(function_type.parameters)} arguments, but {len(arguments)} were given", node.token.line)
+            raise TypeError(f"Function \"{node.symbol.name}\" expects {len(function_type.parameters)} argument/s, but {len(arguments)} given", node.token.line)
         if not isinstance(function_type, FunctionType):
             raise TypeError(f"Cannot call \"{node.token.string}\" of type {function_type} as a function", node.token.line)
         for getting, giving in zip(function_type.parameters, arguments):
@@ -237,7 +237,7 @@ class Comparator:
 
     @staticmethod
     def array_index_value(array: VariableType, index: ExpressionType, node: ASTNode) -> ValueType:
-        Comparator.array_access(array, index, node)
+        Comparator.array_access(array.expression_type, index, node)
         return array.expression_type.element_type
 
     @staticmethod
@@ -274,15 +274,15 @@ class Comparator:
             raise TypeError(f"Cannot assign type {right} to {left} by reference", node.token.line)
 
     @staticmethod
-    def array_access(array: VariableType, index: ExpressionType, node: ASTNode) -> None:
-        if not isinstance(left.expression_type, Array):
-            raise TypeError(f"Cannot index variable of type {left.expression_type} as an array", node.token.line)
-        if right not in {Int, Char}:
-            raise TypeError(f"Cannot index array with type {right}", node.token.line)
+    def array_access(array_expr: ExpressionType, index: ExpressionType, node: ASTNode) -> None:
+        if not isinstance(array_expr, Array):
+            raise TypeError(f"Cannot index variable of type {array_expr} as an array", node.token.line)
+        if index not in {Int, Char}:
+            raise TypeError(f"Cannot index array with type {index}", node.token.line)
 
     @staticmethod
     def array_index_assignment(array: VariableType, index: ExpressionType, value: ExpressionType, node: ASTNode) -> None:
-        Comparator.array_access()
+        Comparator.array_access(array.expression_type, index, node)
         #TODO: write with index and pointer support
         if not Comparator.match(array.expression_type.element_type, value):
             raise TypeError(f"Cannot assign type {value} to array of type {array.expression_type}", node.token.line)

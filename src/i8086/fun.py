@@ -36,7 +36,7 @@ class FunctionDefinitionTranslator(Translator):
 
         self.frame = StackFrame.frames[self.node.context]
 
-        self.result.append(f"{self.fn_label}:")
+        self.special(f"{self.fn_label}:")
         self.assemble("push", ["bp"])
         self.assemble("mov", ["bp", "sp"])
         self.assemble("sub", ["sp", f"{self.frame.var_bytes}"])

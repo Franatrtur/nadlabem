@@ -4,7 +4,7 @@ from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, Mu
                         ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken, TypeToken, StarToken)
 from typing import Type
 from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, CastNode,
-                                VariableReferenceNode, LogicalNode, BinaryNode, UnaryOperationNode,
+                                VariableReferenceNode, LogicalNode, BinaryNode, UnaryOperationNode, StringReferenceNode,
                                 LiteralNode, FunctionCallNode, ArrayLiteralNode, AssemblyExpressionNode)
 from .types import TypeParser
 from ..errors import SyntaxError
@@ -120,7 +120,13 @@ class ExpressionParser(Parser):
 
             if self.is_ahead(StarToken):
                 token = self.devour(StarToken)
+                
+                if self.is_ahead(StringLiteralToken):
+                    str_token = self.devour(StringLiteralToken)
+                    return StringReferenceNode(token, str_token, parser=self)
+
                 pointer = True
+
             elif self.is_ahead(AtToken):
                 token = self.devour(AtToken)
                 dereference = True

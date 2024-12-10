@@ -1,8 +1,8 @@
 from ..tree import Node
-from ..tokenizer import Token, AdditiveToken, MultiplicativeToken, MinusToken, StarToken, BinaryNotToken, LogicalNotToken, NameToken
+from ..tokenizer import Token, StringLiteralToken, AdditiveToken, MultiplicativeToken, MinusToken, StarToken, BinaryNotToken, LogicalNotToken, NameToken
 from .scope import Context, Symbol
 from typing import Type
-from .types import ExpressionType, FunctionType, VariableType, ValueType, Comparator, VALUE_TYPES, Array, Int
+from .types import ExpressionType, FunctionType, VariableType, ValueType, Comparator, VALUE_TYPES, Array, Int, Pointer, Char
 from .node import AbstractSyntaxTreeNode as ASTNode
 from ..errors import TypeError
 
@@ -115,6 +115,12 @@ class LiteralNode(ExpressionNode):
     def __init__(self, token: Token, parser: "Parser"):
         super().__init__(token, [], parser)
         self.node_type: ExpressionType = ExpressionType.decide(token)
+
+class StringReferenceNode(ExpressionNode):
+    def __init__(self, token: Token, str_token: StringLiteralToken, parser: "Parser"):
+        super().__init__(token, [], parser)
+        self.string_literal: StringLiteralToken = str_token
+        self.node_type = Pointer(Array(Char, None))
 
 class ArrayLiteralNode(ExpressionNode):
     def __init__(self, token: Token, elements: list[ExpressionNode], parser: "Parser"):

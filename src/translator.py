@@ -3,6 +3,52 @@ from .tree import Node
 from .tokenizer import Line
 from typing import Type
 from .errors import NotImplementedError
+from .config import CompilationConfig
+
+
+class AssemblyInstruction:
+    def __init__(self, config: CompilationConfig, operation: str = "", arguments: list[str] = [], label: str = "", mapping: str = ""):
+        self.operation: str | None = operation
+        self.arguments: list[str] = arguments
+        self.label: str | None = label
+        self.mapping: str = mapping
+        self.config: CompilationConfig = config
+        self.line_break: bool = False
+        self.assembled: bool = False
+
+    def __str__(self):
+        superlabel: str = ""
+
+        if self.label is None:
+            init = " " * self.config.tabspaces
+        elif len(self.label) < self.config.tabspaces:
+            init = self.label + " " * (self.config.tabspaces - len(self.label))
+        else:
+            superlabel = self.label + ":\n"
+            init = " " * self.config.tabspaces
+        
+        line_string = f"{init}{self.operation} {', '.join(map(str, self.arguments))}"
+            
+        mapstr = ""
+
+        if self.mapping and not self.config.erase_comments:
+            mapstr = " " + (" " * (4 * self.config.tabspaces - len(line_string)) + f";{self.mapping}")
+
+        ending = "\n" if self.line_break else ""
+
+        return superlabel + line_string + mapstr + ending
+
+
+class SpecialInstruction(AssemblyInstruction):
+
+    def __init__(self, config: CompilationConfig, string: str):
+        super().__init__(config)
+        self.assembled = False
+        self.string = string
+    
+    def __str__(self):
+        return self.string + ("\n" if self.line_break else "")
+
 
 class Translator(Node):
 
@@ -14,7 +60,7 @@ class Translator(Node):
         if self.node is not None:
             self.node.translator = self
         self.program: ProgramTranslator = self.root
-        self.result: list[str] = []
+        self.result: list[AssemblyInstruction] = []
         self.make()
 
     def make(self) -> None:
@@ -22,33 +68,29 @@ class Translator(Node):
             self.add(child)
 
     def blank_line(self) -> None:
-        self.result.append("")
+        if self.result:
+            self.result[-1].line_break = True
 
     def add(self, node: ASTNode) -> None:
         translator_type: Type[Translator] = self.program.select_translator(node)
         self.result.extend(translator_type(self, node).translate())
 
-    def assemble(self, operation: str, arguments: list[str] = [], label: str | None = None, mapping: bool = True) -> None:
-        if label is None:
-            init = " " * self.config.tabspaces
-        elif len(label) < self.config.tabspaces:
-            init = label + " " * (self.config.tabspaces - len(label))
-        else:
-            self.result.append(label + ":")
-            init = " " * self.config.tabspaces
+    def assemble(self, operation: str = "", arguments: list[str] = [], label: str | None = None, mapping: bool = True) -> None:
 
-        line_string = f"{init}{operation} {', '.join(map(str, arguments))}"
-            
-        mapstr = ""
+        map_content = ""
         map_target: Line = self.node.token.line if self.node.token is not None else None
         if mapping and map_target is not None and map_target not in self.program.mapped and not self.config.erase_comments:
             self.program.mapped.add(map_target)
-            content = map_target.string + f" ({map_target.number})" if self.config.generate_mapping else map_target.comment
-            mapstr = (" " * (30 - len(line_string)) + f";{content}") if content else ""
+            map_content = map_target.string + f" ({map_target.number})" if self.config.generate_mapping else map_target.comment
 
-        self.result.append(line_string + mapstr)
+        instruction = AssemblyInstruction(self.config, operation, arguments, label, map_content)
+        instruction.assembled = True
+        self.result.append(instruction)
 
-    def translate(self) -> list[str]:
+    def special(self, string: str) -> None:
+        self.result.append(SpecialInstruction(self.config, string))
+
+    def translate(self) -> list[AssemblyInstruction]:
         return self.result
 
     
@@ -75,6 +117,3 @@ class ProgramTranslator(Translator):
             if isinstance(node, translator_type.node_type):
                 return translator_type
         raise NotImplementedError(f"No translator found for {node.__class__.__name__} in target {self.config.target_cpu}", line=node.token.line)
-
-    def global_variable(self, node: ASTNode) -> None:
-        pass

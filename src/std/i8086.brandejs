@@ -1,6 +1,11 @@
-def println(str_pointer: int) -> int {
-    sp = str_pointer
-    $ mov dx, [sp]
-}
 
-sp: int* =@= 
+;implement:
+; - printchar
+; - puts (knwon length)
+; - print
+; - println
+; - malloc
+; - free
+; - datetime
+; - readchar
+; - readline
