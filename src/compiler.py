@@ -2,7 +2,7 @@ from .errors import NadLabemError
 from .config import CompilationConfig
 from .tokenizer import Tokenizer
 from .parser.program import ProgramParser
-from .targets import TARGETS, Translator, ProgramTranslator, ENTRY_POINTS
+from .targets import TARGETS, Translator, ProgramTranslator, CompilationTarget
 from typing import Type
 
 class Compiler:
@@ -15,8 +15,7 @@ class Compiler:
         if self.config.target_cpu not in TARGETS:
             raise NadLabemError(f"Invalid target CPU: {self.config.target_cpu}", line="in the compilation config")
 
-        self.target: list[Type[Translator]] = TARGETS[self.config.target_cpu]
-        self.entry_translator: Type[ProgramTranslator] = ENTRY_POINTS[self.config.target_cpu]
+        self.target: CompilationTarget = TARGETS[self.config.target_cpu]
 
     def compile(self, source_code: str) -> str:
         self.load(source_code)
@@ -37,7 +36,7 @@ class Compiler:
         self.tree.validate()
 
     def translate(self) -> None:
-        self.machine_code: list[str] = [str(asmline) for asmline in self.entry_translator(self).translate()]
+        self.machine_code: list[str] = [str(asmline) for asmline in self.target.entry_point(self).translate()]
         if self.config.generate_mapping:
             self.machine_code = DISCLAIMER + self.machine_code
 

@@ -14,7 +14,7 @@ from .cast import CastTranslator
 from .program import ProgramI8086Translator, CodeBlockTranslator
 
 
-TRANSLATORS: list[Type[Translator]] = [
+I8086_TRANSLATORS: list[Type[Translator]] = [
     LiteralTranslator,
     StringReferenceTranslator,
     CastTranslator,
