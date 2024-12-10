@@ -1,59 +1,119 @@
-from . import tokenizer
-from . import parser
-from .config import TranslationConfig
-from .ui import progress_bar
-from .target import TARGETS
+from .nodes.node import AbstractSyntaxTreeNode as ASTNode, ProgramNode
+from .tree import Node
+from .tokenizer import Line
+from typing import Type
+from .errors import NotImplementedError
+from .config import CompilationConfig
 
 
-#TODO: ensure last instruction is hlt
+class AssemblyInstruction:
+    def __init__(self, config: CompilationConfig, operation: str = "", arguments: list[str] = [], label: str = "", mapping: str = ""):
+        self.operation: str | None = operation
+        self.arguments: list[str] = arguments
+        self.label: str | None = label
+        self.mapping: str = mapping
+        self.config: CompilationConfig = config
+        self.line_break: bool = False
+        self.assembled: bool = False
 
+    def __str__(self):
+        superlabel: str = ""
 
-class NadLabemTranslator:
-    
-    def __init__(self, config: TranslationConfig):
-        self.config = config
-
-    def translate(self, code: str) -> str:
-
-        #split by lines
-        string_lines = code.split("\n")
-        self.string_lines = string_lines
-
-        #map string lines to semantic lines
-        lines: list[tokenizer.Line] = []
-        for number, line in enumerate(string_lines):
-
-            lines.append(tokenizer.tokenize(line, number+1))
+        if self.label is None:
+            init = " " * self.config.tabspaces
+        elif len(self.label) < self.config.tabspaces:
+            init = self.label + " " * (self.config.tabspaces - len(self.label))
+        else:
+            superlabel = self.label + ":\n"
+            init = " " * self.config.tabspaces
+        
+        line_string = f"{init}{self.operation} {', '.join(map(str, self.arguments))}"
             
-            if self.config.verbose:
-                progress_bar("Tokenizing", number+1, len(string_lines))
+        mapstr = ""
 
-        self.lines = lines
+        if self.mapping and not self.config.erase_comments:
+            mapstr = " " + (" " * (4 * self.config.tabspaces - len(line_string)) + f";{self.mapping}")
 
-        if self.config.devmode:
-            print("\nTokenized:", [line.__str__() for line in lines])
+        ending = "\n" if self.line_break else ""
 
-        #parse a the semantic tree
-        parsed_program = parser.parse(lines, self.config)
-        self.parsed_program = parsed_program
+        return superlabel + line_string + mapstr + ending
+
+
+class SpecialInstruction(AssemblyInstruction):
+
+    def __init__(self, config: CompilationConfig, string: str):
+        super().__init__(config)
+        self.assembled = False
+        self.string = string
+    
+    def __str__(self):
+        return self.string + ("\n" if self.line_break else "")
+
+
+class Translator(Node):
+
+    node_type: Type[ASTNode]
+
+    def __init__(self, parent: "Translator", node: ASTNode):
+        super().__init__(parent)
+        self.node = node
+        if self.node is not None:
+            self.node.translator = self
+        self.program: ProgramTranslator = self.root
+        self.result: list[AssemblyInstruction] = []
+        self.make()
+
+    def make(self) -> None:
+        for child in self.node.children:
+            self.add(child)
+
+    def blank_line(self) -> None:
+        if self.result:
+            self.result[-1].line_break = True
+
+    def add(self, node: ASTNode) -> None:
+        translator_type: Type[Translator] = self.program.select_translator(node)
+        self.result.extend(translator_type(self, node).translate())
+
+    def assemble(self, operation: str = "", arguments: list[str] = [], label: str | None = None, mapping: bool = True) -> None:
+
+        map_content = ""
+        map_target: Line = self.node.token.line if self.node.token is not None else None
+        if mapping and map_target is not None and map_target not in self.program.mapped and not self.config.erase_comments:
+            self.program.mapped.add(map_target)
+            map_content = map_target.string + f" ({map_target.number})" if self.config.generate_mapping else map_target.comment
+
+        instruction = AssemblyInstruction(self.config, operation, arguments, label, map_content)
+        instruction.assembled = True
+        self.result.append(instruction)
+
+    def special(self, string: str) -> None:
+        self.result.append(SpecialInstruction(self.config, string))
+
+    def translate(self) -> list[AssemblyInstruction]:
+        return self.result
+
+    
+class ProgramTranslator(Translator):
+
+    def __init__(self, compiler: "Compiler"):
+        self.config = compiler.config
+        self.root = self
+        self.parent = None
+        self.program = self
         
-        if self.config.devmode:
-            print("\nParsed:", parsed_program)
+        self.mapped: set[Line] = set()
+        self.compiler: "Compiler" = compiler
+        self.target: list[Type[Translator]] = compiler.target
 
-        translated = parsed_program.translate()
-        self.translated = translated
-        
-        if self.config.devmode:
-            print("\nTranslated:", translated, "\n")
+        self.node: ProgramNode = compiler.tree
+        self.result: list[str] = []
+        self.node.translator = self
 
-        if self.config.generate_mapping and not self.config.erase_comments:
-            translated.insert(0, ";Compiled by NadLabem:")
-            translated.insert(1, ";A Python-powered, dependency-free brandejs-to-assembly transpiler for the i8080 processor.")
-            translated.insert(2, "")
+        self.make()
 
-        #remove comments
-        if self.config.erase_comments:
-            translated = list(map(lambda line_str: line_str.split(";")[0], translated))
-
-        #join lines
-        return "\n".join(translated)
+    def select_translator(self, node: ASTNode) -> Type[Translator]:
+        for translator_type in self.target:
+            if isinstance(node, translator_type.node_type):
+                return translator_type
+        raise NotImplementedError(f"No translator found for {node.__class__.__name__} in target {self.config.target_cpu}", line=node.token.line)

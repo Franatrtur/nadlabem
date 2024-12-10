@@ -1,4 +1,0 @@
-x db 5; comment 1 should stay even without mapping
-y db 1
-x = 1; comment 2 should stay even without mapping
- hlt; comment 3 should stay even without mapping

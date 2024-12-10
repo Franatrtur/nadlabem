@@ -1,4 +1,0 @@
-x = 5
-; inline if clause ->throw error
-if(x==5){}
-y = 1

@@ -1,5 +1,0 @@
-x= 5;
-; if is incorrectly formated comparison, should throw an error
-if(x=5){
-    x=6
-}
