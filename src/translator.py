@@ -104,7 +104,7 @@ class ProgramTranslator(Translator):
         
         self.mapped: set[Line] = set()
         self.compiler: "Compiler" = compiler
-        self.target: list[Type[Translator]] = compiler.target
+        self.translators: list[Type[Translator]] = compiler.target.translators
 
         self.node: ProgramNode = compiler.tree
         self.result: list[str] = []
@@ -113,7 +113,7 @@ class ProgramTranslator(Translator):
         self.make()
 
     def select_translator(self, node: ASTNode) -> Type[Translator]:
-        for translator_type in self.target:
+        for translator_type in self.translators:
             if isinstance(node, translator_type.node_type):
                 return translator_type
         raise NotImplementedError(f"No translator found for {node.__class__.__name__} in target {self.config.target_cpu}", line=node.token.line)

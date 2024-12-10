@@ -21,8 +21,8 @@ segment code
         add ax, bx
         mov word[a], ax
 exit:
-ok      hlt
-error   hlt
+ok      hlt 
+error   hlt 
 
 print:
         push bp                  ;def print(string: @char[]) -> void { (1)
