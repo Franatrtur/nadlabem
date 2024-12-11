@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("file", help="The input file name")
 parser.add_argument("-cpu", "--target", "--processor", help="Choose Processor target (default=i8086)", default="i8086")
 
-parser.add_argument("-lax", "--forgive", action="store_true", help="Reduce strictness when verifying the program")
+parser.add_argument("-lax", "--forgive", "--nostrict", action="store_true", help="Reduce strictness when verifying the program")
 parser.add_argument("-nomap", "--nomapping", action="store_true", help="Dont generate mapping comments flag")
 parser.add_argument("-nocom", "--nocomments", action="store_true", help="Erase all comments flag")
 parser.add_argument("-novb", "--noverbose", action="store_true", help="Dont generate generation info output")

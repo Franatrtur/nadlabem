@@ -26,8 +26,10 @@ class AssemblyInstruction:
         else:
             superlabel = self.label + ":\n"
             init = " " * self.config.tabspaces
+
+        arg_sep = "" if not self.arguments else " " + (" " * (4 - len(self.operation)))
         
-        line_string = f"{init}{self.operation} {', '.join(map(str, self.arguments))}"
+        line_string = f"{init}{self.operation}{arg_sep}{', '.join(map(str, self.arguments))}"
             
         mapstr = ""
 

@@ -3,86 +3,88 @@
 
 cpu 8086
 segment code
-..start mov bx, heap
-        mov ds, bx
-        mov es, bx
-        mov bx, stack
-        mov ss, bx
-        mov sp, dno
-        mov bp, sp
+..start mov  bx, heap
+        mov  ds, bx
+        mov  es, bx
+        mov  bx, stack
+        mov  ss, bx
+        mov  sp, dno
+        mov  bp, sp
 
-        mov ax, 0                ;x: int = 0 (1)
-        mov word[x], ax
-        mov ax, 0                ;for(i: int = 0, i != 15, i = i + 1){ (2)
-        mov word[i], ax
-for     nop 
-        mov ax, 15
+        mov  ax, 0
+        mov  word[x], ax
+        mov  ax, 0
+        mov  word[i], ax
+for     nop
+        mov  ax, 15
         push ax
-        mov ax, word[i]
-        pop bx
-        cmp ax, bx
-        pushf 
-        pop ax
-        mov cl, 6
-        shr ax, cl
-        and ax, 1
-        xor ax, 1
-        jz fout
-        mov ax, 10               ;    if(i == 10) break (3)
+        mov  ax, word[i]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        xor  ax, 1
+        jz   fout
+        mov  ax, 10
         push ax
-        mov ax, word[i]
-        pop bx
-        cmp ax, bx
-        pushf 
-        pop ax
-        mov cl, 6
-        shr ax, cl
-        and ax, 1
-        jz ifout
-        jmp fout
+        mov  ax, word[i]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        jz   ifout
+        jmp  fout
 
-ifout   nop 
+ifout   nop
 
-        mov ax, 5                ;    if(i == 5) continue (4)
+        mov  ax, 5
         push ax
-        mov ax, word[i]
-        pop bx
-        cmp ax, bx
-        pushf 
-        pop ax
-        mov cl, 6
-        shr ax, cl
-        and ax, 1
-        jz ifout1
-        jmp finc
+        mov  ax, word[i]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        jz   ifout1
+        jmp  finc
 
-ifout1  nop 
+ifout1  nop
 
-        mov ax, word[i]          ;    x = x + i (5)
+        mov bx, word[i]
+
+        mov  ax, word[i]
         push ax
-        mov ax, word[x]
-        pop bx
-        add ax, bx
-        mov word[x], ax
+        mov  ax, word[x]
+        pop  bx
+        add  ax, bx
+        mov  word[x], ax
 
-finc    nop 
-        mov ax, 1
+finc    nop
+        mov  ax, 1
         push ax
-        mov ax, word[i]
-        pop bx
-        add ax, bx
-        mov word[i], ax
-        jmp for
-fout    nop 
-        mov ax, word[x]          ;x = x (7)
-        mov word[x], ax
+        mov  ax, word[i]
+        pop  bx
+        add  ax, bx
+        mov  word[i], ax
+        jmp  for
+fout    nop
+        mov  ax, word[x]
+        mov  word[x], ax
 exit:
-ok      hlt 
-error   hlt 
+ok      hlt
+error   hlt
 
 segment heap
 stack   resw 1024
-dno     db ?
+dno     db   ?
 
-x       resb 2                   ;default
-i       resb 2                   ;default
+x       resb 2
+i       resb 2

@@ -78,7 +78,8 @@ class Optimizer:
             if self.config.verbose:
                 time.sleep(0.1)
 
-        print()     # flush the last progress bar
+        if self.config.verbose:
+            print()     # flush the last progress bar
 
         return self.result
 

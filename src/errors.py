@@ -7,9 +7,9 @@ class NadLabemError(Exception):
         self.line = line
         self.kwargs = kwargs
         self.warning: bool = False
-        print()
 
     def __str__(self):
+        print()
         if self.warning:
             label = self.__class__.__name__[:-5] + " Warning:"
             color = "\033[33m"

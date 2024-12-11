@@ -3,63 +3,64 @@
 
 cpu 8086
 segment code
-..start mov bx, heap
-        mov ds, bx
-        mov bx, stack
-        mov ss, bx
-        mov sp, dno
-        mov bp, sp
+..start mov  bx, heap
+        mov  ds, bx
+        mov  es, bx
+        mov  bx, stack
+        mov  ss, bx
+        mov  sp, dno
+        mov  bp, sp
 
-        mov ax, 5             ;y: bool = b(5) (11)
+        mov  ax, 5               ;y: bool = b(5) (11)
         push ax
         call b
-        mov byte[y], al
+        mov  byte[y1], al
 exit:
-ok      hlt 
-error   hlt 
+ok      hlt
+error   hlt
 
 a:
-        push bp               ;def a(x: int) -> bool { (1)
-        mov bp, sp
-        sub sp, 0
-
-        mov ax, word[bp + 4]  ;    return x == 5 (2)
+        push bp                  ;def a(x: int) -> bool { (1)
+        mov  bp, sp
+        sub  sp, 0
+        mov  ax, 5               ;    return x == 5 (2)
         push ax
-        mov ax, 5
-        mov bx, ax
-        pop ax
-        cmp ax, bx
-        pushf 
-        pop ax
-        and ax, 64
-        mov cl, 6
-        shr al, cl
-        jmp rtn
-rtn     mov sp, bp
-        pop bp
-        ret 2
+        mov  ax, word[bp + 4]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        jmp  rtn
+
+rtn     mov  sp, bp
+        pop  bp
+        ret  2
+
 b:
-        push bp               ;def b(x:int) -> bool { (5)
-        mov bp, sp
-        sub sp, 3
+        push bp                  ;def b(x:int) -> bool { (5)
+        mov  bp, sp
+        sub  sp, 3
+        mov  ax, word[bp + 4]    ;    y: int = x (6)
+        mov  word[bp - 2], ax
 
-        mov ax, word[bp + 4]  ;    y: int = x (6)
-        mov word[bp - 2], ax
-
-        mov ax, word[bp - 2]  ;    r: bool =  a(y) (7)
+        mov  ax, word[bp - 2]    ;    r: bool =  a(y) (7)
         push ax
         call a
-        mov byte[bp - 3], al
+        mov  byte[bp - 3], al
 
-        mov ax, 0             ;    return r (8)
-        mov al, byte[bp - 3]
-        jmp rtn1
-rtn1    mov sp, bp
-        pop bp
-        ret 2
+        mov  ax, 0               ;    return r (8)
+        mov  al, byte[bp - 3]
+        jmp  rtn1
+
+rtn1    mov  sp, bp
+        pop  bp
+        ret  2
 
 segment heap
 stack   resw 1024
-dno     db ?
+dno     db   ?
 
-y       resb 1
+y1      resb 1                   ;default
