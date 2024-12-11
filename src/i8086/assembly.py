@@ -31,7 +31,7 @@ class AssemblyTranslator(Translator):
             parts[0] = re.sub(r'\{([a-zA-Z0-9_]+)\}', replace, parts[0])
         
         # Reassemble the string with the semicolon and content after it
-        return ';'.join(parts)
+        return parts[0]
 
     def make(self) -> None:
         self.node: AssemblyNode
