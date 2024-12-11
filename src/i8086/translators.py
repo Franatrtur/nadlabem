@@ -3,7 +3,7 @@ from ..translator import Translator, ProgramTranslator
 from ..nodes.node import AbstractSyntaxTreeNode
 
 from .literal import LiteralTranslator, StringReferenceTranslator
-from .var import VariableDeclarationTranslator, VariableReferenceTranslator, AssignmentTranslator
+from .var import VariableDeclarationTranslator, VariableReferenceTranslator, AssignmentTranslator, IncrementalTranslator
 from .operation import BinaryOperationTranslator, UnaryOperationTranslator
 from .assembly import AssemblyTranslator, AssemblyExpressionTranslator
 from .ifelse import IfTranslator
@@ -22,6 +22,7 @@ TRANSLATORS: list[Type[Translator]] = [
     BinaryOperationTranslator,
     UnaryOperationTranslator,
     VariableReferenceTranslator,
+    IncrementalTranslator,
     AssemblyTranslator,
     AssemblyExpressionTranslator,
     IfTranslator,

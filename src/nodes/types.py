@@ -299,5 +299,5 @@ class Comparator:
 
     @staticmethod
     def increment(var_type: VariableType, node: ASTNode) -> None:
-        if var_type.expression_type not in {Char, Bool, Double}:
-            raise TypeError(f"Cannot increment/decrement type {var_type.expression_type}", node.token.line, allowed={Char, Bool, Double})
+        if var_type.expression_type not in {Char, Int, Double}:
+            raise TypeError(f"Cannot increment/decrement type {var_type.expression_type}", node.token.line, allowed={Char, Int, Double})

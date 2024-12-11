@@ -11,15 +11,11 @@ segment code
         mov  sp, dno
         mov  bp, sp
 
-        mov  ax, 5               ;x:int = -25 // -5 (1)
-        neg  ax
-        push ax
-        mov  ax, 25
-        neg  ax
-        pop  bx
-        cwd
-        idiv bx
+        mov  ax, 5               ;x:int = 5 (1)
         mov  word[x], ax
+        lea  bx, [x]             ;++x (2)
+        inc  word[bx]
+        mov ax, word[x]
 exit:
 ok      hlt
 error   hlt

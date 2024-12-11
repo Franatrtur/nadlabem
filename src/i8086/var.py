@@ -200,7 +200,7 @@ class IncrementalTranslator(Translator):
 
         self.assemble("inc" if IncrementToken.match(self.node.token) else "dec", [f"{prefix}[bx]"])
 
-        variable.store_value(self, "!! ERROR, see i8086/var.py line 195 in incremental translator !!")
+        #variable.store_value(self, "!! ERROR, see i8086/var.py line 195 in incremental translator !!")
 
         self.result[-1]
 

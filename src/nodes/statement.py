@@ -78,13 +78,13 @@ class AssignmentNode(StatementNode):
 
 class IncrementalNode(StatementNode):
     def __init__(self, token: Token, name_token: NameToken, parser: "Parser"):
-        super().__init__(token, [value], parser)
+        super().__init__(token, [], parser)
         self.name_token: NameToken = name_token
 
     def register(self) -> None:
         self.symbol: Symbol = self.scope.resolve_symbol(self.name_token)
         self.symbol.reference(self)
-        var_type: VariableType = symbol.node.node_type
+        var_type: VariableType = self.symbol.node.node_type
         Comparator.increment(var_type, node=self)
 
 
