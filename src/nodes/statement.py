@@ -1,5 +1,5 @@
 from ..tree import Node
-from ..tokenizer import Token, TypeToken
+from ..tokenizer import Token, TypeToken, NameToken
 from .scope import Context, Symbol
 from typing import Type
 from .types import VariableType, FunctionType, Void, Int, Char, Bool, Array, DeclarationType, ExpressionType, ValueType, Comparator
@@ -76,6 +76,18 @@ class AssignmentNode(StatementNode):
         else:
             Comparator.assignment(self.variable.node_type, self.value.node_type, node=self)
 
+class IncrementalNode(StatementNode):
+    def __init__(self, token: Token, name_token: NameToken, parser: "Parser"):
+        super().__init__(token, [value], parser)
+        self.name_token: NameToken = name_token
+
+    def register(self) -> None:
+        self.symbol: Symbol = self.scope.resolve_symbol(self.name_token)
+        self.symbol.reference(self)
+        var_type: VariableType = symbol.node.node_type
+        Comparator.increment(var_type, node=self)
+
+
 class FunctionDefinitonNode(StatementNode):
     def __init__(self, token: Token, arguments: list[ArgumentDeclarationNode], body: CodeBlockNode, return_type: ExpressionType, parser: "Parser"):
         super().__init__(token, [*arguments, body], parser)
@@ -143,6 +155,12 @@ class ForNode(StatementNode):
 
     def verify(self) -> None:
         Comparator.condition(self.condition.node_type, node=self)
+
+class LoopNode(StatementNode):
+    def __init__(self, token: Token, count: ExpressionNode, body: CodeBlockNode, parser: "Parser"):
+        super().__init__(token, [count, body], parser)
+        self.iterations: ExpressionNode = count
+        self.body = body
 
 class FunctionCallStatementNode(StatementNode):
     def __init__(self, token: Token, arguments: list[ExpressionNode], parser: "Parser"):

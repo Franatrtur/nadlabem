@@ -142,3 +142,6 @@ class AssemblyExpressionNode(ExpressionNode):
         super().__init__(token, [], parser)
         self.assembly_expression: str = assembly_expression
         self.node_type = Int
+        if (self.assembly_expression in {"al", "bl", "cl", "dl", "ah", "bh", "ch", "dh"} or
+            self.assembly_expression.startswith("byte[")):
+            self.node_type = Char

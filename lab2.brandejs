@@ -1,0 +1,84 @@
+def put_char(character: char) -> void {
+    $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál
+    $ mov dl, byte[{character}]     ; Bajt, který se má na terminál vypsat
+    $ int 0x21      ; resp. int 33 poskytne službu
+}
+
+def get_char() -> char {
+    $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu
+    $ int 0x21      ; resp. int 33 poskytne službu
+    return $al
+    ; Služba vrací v registru AL načtený bajt. Pokud byl čtením vstup vyčerpán (už nejsou zadané žádné bajty k načtení),
+    ; služba nastaví ZF=1 a AL=0. Pokud je předáván bajt v AL, je ZF=0.
+    ; podporuje i čtení UNICODE znaků v transformaci UTF-8. Pokud je zadán vícebajtový znak,služba předá jen jeden jeho bajt (více se do AL nevejde).
+    ; Dalším int 21h bude předán další bajt téhož znaku. Nedojde ke ztrátě obsahu.
+}
+
+def print(string: @char[]) -> void {
+    i: int = 0
+    byte: char = string[0]
+    while(byte != 0c){
+        put_char(byte)
+        i = i + 1
+        byte = string[i]
+    }
+}
+
+
+def print_formatted(string: @char[], number: int) -> void {
+    i: int = 0
+    byte: char = string[0]
+    while(byte != 0c) {
+        if (byte == '%') {
+            symbol: char = string[i + 1]
+
+            if (symbol == 'd') {
+                print_decimal(number)
+                i = i + 2
+                continue
+            }
+            if (symbol == 'h') {
+                print_hex(number)
+                i = i + 2
+                continue
+            }
+
+            error(*"print_formatted: invalid format")
+        }
+
+        i = i + 1
+    }
+}
+
+def error(message: @char[]) -> void {
+    println(*"Error occured")
+    println(*message)
+    $ jmp error
+}
+
+def print_decimal(number: int) -> void {
+
+}
+
+def print_hex(number: int) -> void {
+    while (number > 0) {
+        put_char(char(number % 16))
+        number = number / 16
+    }
+}
+
+def print_dos(string: char[]*) -> void {
+    $ mov ah, 9	                ; Identifikace služby Vypsat řetězec bajtů na terminál
+    $ mov dx, word[{string}]    ; Offset začátku řetězce v segmentu dle DS
+    $ int 0x21                  ; resp. int 33 poskytne službu
+}
+
+def println(string: @char[]) -> void {
+    print(*string)
+    put_char(10c)   ; 13 - CL
+    put_char(13c)   ; 10 - RF
+}
+
+
+
+println(*"Čeština 😂👍")

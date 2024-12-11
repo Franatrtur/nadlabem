@@ -296,3 +296,8 @@ class Comparator:
     def condition(condition_type: ExpressionType, node: ASTNode) -> None:
         if condition_type is not Bool:
             raise TypeError(f"Expected bool type in condition, got type {condition_type}", node.token.line)
+
+    @staticmethod
+    def increment(var_type: VariableType, node: ASTNode) -> None:
+        if var_type.expression_type not in {Char, Bool, Double}:
+            raise TypeError(f"Cannot increment/decrement type {var_type.expression_type}", node.token.line, allowed={Char, Bool, Double})

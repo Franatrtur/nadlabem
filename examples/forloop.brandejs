@@ -1,6 +1,6 @@
 x: int = 0
 
-for(i: int = 0, i != 15, i = i + 1){
+for(i: int = 0, i < 15, i = i + 1){
     if(i == 10) break       ; end at 10
     if(i == 5) continue     ; skip 5
     x = x + i

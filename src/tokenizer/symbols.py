@@ -21,21 +21,30 @@ class NumberToken(Token):
 class CharLiteralToken(Token):
     def __init__(self, string: str, line: Line):
         super().__init__(string, line)
-        try:
-            evaled = ast.literal_eval(string)
-        except Exception as e:
-            raise SymbolError("Invalid char literal", line)
+        if string.startswith("'"):
+            try:
+                evaled = ast.literal_eval(string)
+            except Exception as e:
+                raise SymbolError("Invalid char literal", line)
 
-        if len(evaled) != 1:
-            raise SymbolError("Char literal must be exactly one character", line)
-        byte = bytes(evaled, encoding='utf8')
-        if len(byte) != 1:
-            raise SymbolError("Invalid ASCII character in char literal", line)
-        self.value = int(byte[0])
+            if len(evaled) != 1:
+                raise SymbolError("Char literal must be exactly one character", line)
+            byte = bytes(evaled, encoding='utf8')
+            if len(byte) != 1:
+                raise SymbolError("Invalid ASCII character in char literal", line)
+            self.value = int(byte[0])
+        
+        else:
+            try:
+                self.value = int(string[:-1])
+            except Exception as e:
+                raise SymbolError("Invalid char literal", line)
+            if not 0 <= self.value <= 255:
+                raise SymbolError("Invalid ASCII character in char literal", line)
 
     @staticmethod
     def detect(string: str) -> bool:
-        return string.startswith("'")
+        return string.startswith("'") or (string.endswith("c") and string[:-1].isnumeric())
 
 
 class StringLiteralToken(Token):
@@ -105,8 +114,15 @@ GreaterThanToken = Token.literal(">", "GreaterThanToken")
 IsLtEqToken = Token.literal("<=", "IsLtEqToken")
 IsGtEqToken = Token.literal(">=", "IsGtEqToken")
 
+SignedLessThanToken = Token.literal("<+", "SignedLessThanToken")
+SignedGreaterThanToken = Token.literal(">+", "SignedGreaterThanToken")
+SignedIsLtEqToken = Token.literal("<~", "SignedIsLtEqToken")
+SignedIsGtEqToken = Token.literal("~>", "SignedIsGtEqToken")
+
 EqualsToken = Token.literal("=", "EqualsToken")
 AtEqualsToken = Token.literal("=@=", "AtEqualsToken")
+IncrementToken = Token.literal("++", "IncrementToken")
+DecrementToken = Token.literal("--", "DecrementToken")
 
 CommaToken = Token.literal(",", "CommaToken")
 ColonToken = Token.literal(":", "ColonToken")
@@ -128,7 +144,7 @@ PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
 StarToken = Token.literal("*", "StarToken")
 DivideToken = Token.literal("/", "DivideToken")
-IntegerDivideToken = Token.literal("//", "IntegerDivideToken")
+SignedDivideToken = Token.literal("//", "SignedDivideToken")
 ModuloToken = Token.literal("%", "ModuloToken")
 
 OpenParenToken = Token.literal("(", "OpenParenToken")
@@ -190,9 +206,15 @@ TOKEN_DETECTORS = [
     IsLtEqToken,
     GreaterThanToken,
     LessThanToken,
+    SignedLessThanToken,
+    SignedGreaterThanToken,
+    SignedIsLtEqToken,
+    SignedIsGtEqToken,
 
     EqualsToken,
     AtEqualsToken,
+    IncrementToken,
+    DecrementToken,
 
     LogicalAndToken,
     LogicalOrToken,
@@ -219,7 +241,7 @@ TOKEN_DETECTORS = [
     MinusToken,
     StarToken,
     DivideToken,
-    IntegerDivideToken,
+    SignedDivideToken,
     ModuloToken,
 
     OpenParenToken,
@@ -256,6 +278,12 @@ KeywordToken = Token.any(
     class_name="KeywordToken"
 )
 
+IncrementalToken = Token.any(
+    IncrementToken,
+    DecrementToken,
+    class_name="IncrementalToken"
+)
+
 LogicalToken = Token.any(
     LogicalAndToken,
     LogicalOrToken,
@@ -270,6 +298,10 @@ ComparisonToken = Token.any(
     IsLtEqToken,
     GreaterThanToken,
     LessThanToken,
+    SignedLessThanToken,
+    SignedGreaterThanToken,
+    SignedIsLtEqToken,
+    SignedIsGtEqToken,
     class_name="ComparisonToken"
 )
 
@@ -293,7 +325,7 @@ AdditiveToken = Token.any(
 MultiplicativeToken = Token.any(
     StarToken,
     DivideToken,
-    IntegerDivideToken,
+    SignedDivideToken,
     ModuloToken,
     class_name="MultiplicativeToken"
 )

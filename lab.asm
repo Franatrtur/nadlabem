@@ -11,72 +11,14 @@ segment code
         mov  sp, dno
         mov  bp, sp
 
-        mov  ax, 0
-        mov  word[x], ax
-        mov  ax, 0
-        mov  word[i], ax
-for     nop
-        mov  ax, 15
+        mov  ax, 5               ;x:int = -25 // -5 (1)
+        neg  ax
         push ax
-        mov  ax, word[i]
+        mov  ax, 25
+        neg  ax
         pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 6
-        shr  ax, cl
-        and  ax, 1
-        xor  ax, 1
-        jz   fout
-        mov  ax, 10
-        push ax
-        mov  ax, word[i]
-        pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 6
-        shr  ax, cl
-        and  ax, 1
-        jz   ifout
-        jmp  fout
-
-ifout   nop
-
-        mov  ax, 5
-        push ax
-        mov  ax, word[i]
-        pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 6
-        shr  ax, cl
-        and  ax, 1
-        jz   ifout1
-        jmp  finc
-
-ifout1  nop
-
-        mov bx, word[i]
-
-        mov  ax, word[i]
-        push ax
-        mov  ax, word[x]
-        pop  bx
-        add  ax, bx
-        mov  word[x], ax
-
-finc    nop
-        mov  ax, 1
-        push ax
-        mov  ax, word[i]
-        pop  bx
-        add  ax, bx
-        mov  word[i], ax
-        jmp  for
-fout    nop
-        mov  ax, word[x]
+        cwd
+        idiv bx
         mov  word[x], ax
 exit:
 ok      hlt
@@ -86,5 +28,4 @@ segment heap
 stack   resw 1024
 dno     db   ?
 
-x       resb 2
-i       resb 2
+x       resb 2                   ;default

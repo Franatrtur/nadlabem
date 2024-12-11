@@ -1,8 +1,8 @@
 from ..translator import Translator, AssemblyInstruction
-from ..nodes.statement import VariableDeclarationNode, AssignmentNode
+from ..nodes.statement import VariableDeclarationNode, AssignmentNode, IncrementalNode
 from ..nodes.expression import VariableReferenceNode, LiteralNode, ArrayLiteralNode
 from .sizeof import sizeof
-from ..tokenizer.symbols import StringLiteralToken, NumberToken
+from ..tokenizer.symbols import StringLiteralToken, NumberToken, IncrementToken, DecrementToken
 from ..nodes.types import Int, Bool, Array, Double
 from .allocator import Variable, StackFrame
 from ..errors import NotImplementedError, NadLabemError
@@ -178,5 +178,30 @@ class VariableReferenceTranslator(Translator):
                 self.assemble("push", ["dx"])
         
 
+
+class IncrementalTranslator(Translator):
+
+    node_type = IncrementalNode
+
+    def make(self) -> None:
+        self.node: IncrementalNode
+
+        variable: Variable = Variable.variables[self.node.symbol]
+        self.variable: Variable = variable
+
+        if variable.var_type.expression_type is Double:
+            raise NotImplementedError("Incrementing type double not supported yet in i8086", self.node.token.line)
+
+        #TODO: add support for indexes
+
+        variable.load_pointer(self, "bx", "")
+
+        prefix = "word" if sizeof(variable.var_type.expression_type) == 2 else "byte"
+
+        self.assemble("inc" if IncrementToken.match(self.node.token) else "dec", [f"{prefix}[bx]"])
+
+        variable.store_value(self, "!! ERROR, see i8086/var.py line 195 in incremental translator !!")
+
+        self.result[-1]
 
 

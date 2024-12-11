@@ -1,13 +1,13 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
                         OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, AtToken, DefinitionToken, DoToken,
-                        ColonToken, DollarToken, AtEqualsToken, ArrayBeginToken, ArrayEndToken,
-                        ReturnToken, BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, BinaryToken, ArrowToken)
+                        ColonToken, DollarToken, AtEqualsToken, ArrayBeginToken, ArrayEndToken, IncrementalToken,
+                        BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, ArrowToken, ReturnToken)
 from typing import Type
 from .expression import ExpressionParser
 from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
                     CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
-                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode)
+                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode, IncrementalNode)
 
 from .types import TypeParser
 from ..errors import SyntaxError
@@ -101,6 +101,14 @@ class ForParser(Parser):
         self.devour(CloseParenToken)
         body = CodeBlockParser(parent=self).parse()
         return ForNode(tok, initialization, condition, update, body, parser=self)
+
+
+class IncrementalParser(Parser):
+
+    def parse(self) -> ASTNode:
+        token = self.devour(IncrementalToken)
+        name_token = self.devour(NameToken)
+        return IncrementalNode(token, name_token, parser=self)
 
 
 class AssignmentParser(Parser):
@@ -235,7 +243,8 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     BreakToken: BreakParser,
     PassToken: PassParser,
     DollarToken: AssemblyParser,
-    DefinitionToken: FunctionDefinitionParser
+    DefinitionToken: FunctionDefinitionParser,
+    IncrementalToken: IncrementalParser
 }
 
 class StatementParser(Parser):

@@ -8,7 +8,7 @@ from ..ui import progress_bar
 
 def split_tokens(line_string: str) -> list[str]:
     # Regular expression to match words, numbers, and punctuation, newly also strings and comments
-    pattern = r""";.*|>=|==|!=|<=|<<|>>|<<<|>>>|->|=@=|"(?:\\"|[^"])*"|'(?:\\'|[^'])*'|\b\w+\b|[^\w\s]"""
+    pattern = r""";.*|<\+|\+>|<~|~>|\+\+|--|//|==|!=|>=|<=|<<|>>|<<<|>>>|->|=@=|"(?:\\"|[^"])*"|'(?:\\'|[^'])*'|\b\w+\b|[^\w\s]"""
     tokens = re.findall(pattern, line_string)
 
     return tokens

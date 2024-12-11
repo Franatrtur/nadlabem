@@ -52,6 +52,11 @@ class Optimizer:
 
             # 2) ... ?
 
+            # ideas:
+            #  - labeled nops: nops can be removed and their label given to the next instruction
+            #    if it is unlabeled
+            #  - things like mov ax, val   and then   mov bx, ax
+
             self.add(op) # add to result unmodified if we didnt skip and continue
 
 

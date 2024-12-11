@@ -122,14 +122,19 @@ class Variable:
 
     def load_pointer(self, translator: Translator, target_register: str = "bx", index_register: str = ""):
         index_modifier = f" + {index_register}" if index_register else ""
-        translator.assemble("lea", [target_register, f"[{self.location()}{index_modifier}]"])
+        if self.is_reference:
+            self._dereference(translator, Pointer(self.var_type.expression_type), self.location(), target_register)
+            if index_modifier:
+                translator.assemble("add", [target_register, index_register])
+        else:
+            translator.assemble("lea", [target_register, f"[{self.location()}{index_modifier}]"])
 
     def load_dereference(self, translator: Translator, as_type: ExpressionType, target_register: str, index_register: str = ""):
         target_type: ValueType = self.var_type.expression_type
         if isinstance(self.var_type.expression_type, Array):
             target_type = target_type.element_type
         assert isinstance(target_type, Pointer), "Cannot dereference non-pointer variable "+self.symbol.id
-        self.load_value(translator, "bx", "")
+        self.load_value(translator, Pointer(self.var_type.expression_type), "bx", "")
         self._dereference(translator, as_type, target_type, "bx", target_register, index_register)
 
 
@@ -141,8 +146,8 @@ class Variable:
     def store_value(self, translator: Translator, source_register: str = "bx", index_register: str = ""):
         
         if self.is_reference:
-            self.load_pointer(translator, "di", "")
-            self._store(translator, self.var_type.expression_type, "di", source_register, index_register)
+            self.load_pointer(translator, "bx", "")
+            self._store(translator, self.var_type.expression_type, "bx", source_register, index_register)
         else:
             self._store(translator, self.var_type.expression_type, self.location(), source_register, index_register)
 

@@ -13,7 +13,7 @@ segment code
 
         mov  ax, 0               ;x: int = 0 (1)
         mov  word[x], ax
-        mov  ax, 0               ;for(i: int = 0, i != 15, i = i + 1){ (3)
+        mov  ax, 0               ;for(i: int = 0, i < 15, i = i + 1){ (3)
         mov  word[i], ax
 for     nop
         mov  ax, 15
@@ -23,10 +23,9 @@ for     nop
         cmp  ax, bx
         pushf
         pop  ax
-        mov  cl, 6
-        shr  ax, cl
+        mov  cl, 7
+        shr  al, cl
         and  ax, 1
-        xor  ax, 1
         jz   fout
         mov  ax, 10              ;    if(i == 10) break       ; end at 10 (4)
         push ax
