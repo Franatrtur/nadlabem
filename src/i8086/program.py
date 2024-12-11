@@ -13,9 +13,8 @@ class CodeBlockTranslator(Translator):
 
     def make(self):
         for child in self.node.children:
-            self.blank_line()
             self.add(child)
-            #self.blank_line()
+            self.blank_line()
 
 
 class ProgramI8086Translator(ProgramTranslator):
@@ -53,8 +52,8 @@ class ProgramI8086Translator(ProgramTranslator):
                     progress_bar("Translating", children_done, len(self.node.children))
 
         self.special("exit:")
-        self.assemble("hlt", label=self.node.context.generate_id("ok"))
-        self.assemble("hlt", label=self.node.context.generate_id("error"))
+        self.assemble("hlt", label="ok")
+        self.assemble("hlt", label="error")
 
 
         for child in self.node.children:
@@ -92,34 +91,3 @@ class ProgramI8086Translator(ProgramTranslator):
 
     def optimize(self) -> None:
         self.result = Optimizer(self.config, self.result, self.program_begin, self.program_end).optimize()
-
-
-    """def optimize_old(self):
-        self.result: list[str]
-
-        code: list[str] = []
-
-        i = 0
-        while i < len(self.result):
-            if self.is_instruction(i, 'push') and not self.is_instruction(i, 'pushf') and self.is_instruction(i + 1, 'pop'):
-                push_reg = self.get_operand(i)
-                pop_reg = self.get_operand(i + 1)
-
-                if push_reg != pop_reg:
-                    code.append(self.result[i].replace('push', 'mov').replace(push_reg, f'{pop_reg}, {push_reg}'))
-                i += 2
-                continue
-    
-            code.append(self.result[i])
-            i += 1
-
-        self.result = code
-
-
-    def is_instruction(self, index: int, instruction: str) -> bool:
-        return self.result[index].strip().startswith(instruction)
-
-
-    def get_operand(self, index: int) -> str:
-        return self.result[index].strip().split()[1]
-"""

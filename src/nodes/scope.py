@@ -83,5 +83,5 @@ class Symbol:
 RESERVED_NAMES: set[str] = {
     "dno", "code", "..start", "stack", "data", "sp", "bp",
     "di", "ax", "bx", "cx", "dx", "cs", "ss", "ds", "cpu",
-    "segment", "exit", "heap"
+    "segment", "exit", "heap", "ok", "error"
 }

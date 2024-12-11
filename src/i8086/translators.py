@@ -7,7 +7,7 @@ from .var import VariableDeclarationTranslator, VariableReferenceTranslator, Ass
 from .operation import BinaryOperationTranslator, UnaryOperationTranslator
 from .assembly import AssemblyTranslator, AssemblyExpressionTranslator
 from .ifelse import IfTranslator
-from .loops import WhileTranslator, ForTranslator, PassTranslator
+from .loops import WhileTranslator, ForTranslator, PassTranslator, ContinueTranslator, BreakTranslator
 from .fun import FunctionCallTranslator, FunctionCallStatementTranslator, FunctionDefinitionTranslator, ReturnTranslator
 from .cast import CastTranslator
 
@@ -28,6 +28,8 @@ TRANSLATORS: list[Type[Translator]] = [
     CodeBlockTranslator,
     WhileTranslator,
     ForTranslator,
+    ContinueTranslator,
+    BreakTranslator,
     PassTranslator,
     AssignmentTranslator,
     FunctionCallTranslator,

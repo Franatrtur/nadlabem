@@ -11,62 +11,78 @@ segment code
         mov sp, dno
         mov bp, sp
 
-        lea ax, [_str]           ;print(*"Ahoj") (10)
-        push ax
-        call print
-        mov ax, 2                ;a: int = 5 + 2 (12)
-        push ax
-        mov ax, 5
-        pop bx
-        add ax, bx
-        mov word[a], ax
-exit:
-ok      hlt 
-error   hlt 
-
-print:
-        push bp                  ;def print(string: @char[]) -> void { (1)
-        mov bp, sp
-        sub sp, 2
-        mov ax, 0                ;    for(i: int = 0, i == 10, i = i + 1){ (2)
-        mov word[bp - 2], ax
+        mov ax, 0                ;x: int = 0 (1)
+        mov word[x], ax
+        mov ax, 0                ;for(i: int = 0, i != 15, i = i + 1){ (2)
+        mov word[i], ax
 for     nop 
-        mov ax, 10
+        mov ax, 15
         push ax
-        mov ax, word[bp - 2]
+        mov ax, word[i]
         pop bx
         cmp ax, bx
         pushf 
         pop ax
-        and ax, 64
         mov cl, 6
-        shr al, cl
+        shr ax, cl
+        and ax, 1
+        xor ax, 1
         jz fout
-        mov ax, word[bp - 2]     ;        printchar(string[i]) (3)
-        mov si, ax
-        lea bx, [bp + 4]
-        mov ax, 0
-        mov al, byte[bx + si]
+        mov ax, 10               ;    if(i == 10) break (3)
         push ax
-        call printchar
+        mov ax, word[i]
+        pop bx
+        cmp ax, bx
+        pushf 
+        pop ax
+        mov cl, 6
+        shr ax, cl
+        and ax, 1
+        jz ifout
+        jmp fout
+
+ifout   nop 
+
+        mov ax, 5                ;    if(i == 5) continue (4)
+        push ax
+        mov ax, word[i]
+        pop bx
+        cmp ax, bx
+        pushf 
+        pop ax
+        mov cl, 6
+        shr ax, cl
+        and ax, 1
+        jz ifout1
+        jmp finc
+
+ifout1  nop 
+
+        mov ax, word[i]          ;    x = x + i (5)
+        push ax
+        mov ax, word[x]
+        pop bx
+        add ax, bx
+        mov word[x], ax
+
+finc    nop 
+        mov ax, 1
+        push ax
+        mov ax, word[i]
+        pop bx
+        add ax, bx
+        mov word[i], ax
         jmp for
 fout    nop 
-rtn     mov sp, bp
-        pop bp
-        ret 2
-
-printchar:
-        push bp                  ;def printchar(byte: char) -> void { (6)
-        mov bp, sp
-        sub sp, 0
-        nop                      ;    pass (7)
-rtn1    mov sp, bp
-        pop bp
-        ret 2
+        mov ax, word[x]          ;x = x (7)
+        mov word[x], ax
+exit:
+ok      hlt 
+error   hlt 
 
 segment heap
 stack   resw 1024
 dno     db ?
 
-_str    db "Ahoj", 0
-a       resb 2                   ;default
+x       resb 2                   ;default
+i       resb 2                   ;default

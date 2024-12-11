@@ -14,55 +14,15 @@ class Optimizer:
 
         self.config = config
         self.code: list[AssemblyInstruction] = instructions
+        self.result: list[AssemblyInstruction] = []
         self.program_begin: int = program_begin
         self.program_end: int = program_end
         self.iteration: int = 1
-
-    def optimize(self) -> list[AssemblyInstruction]:
-        
-        last_length: int = len(self.code)
-
-        # iterate until no more optimizations are possible
-        while(self.iteration):
-            result = self.optimize_round()
-            if last_length <= len(result):
-                break
-            self.code = result
-            last_length = len(self.code)
-            self.iteration += 1
-            
-            if self.config.verbose:
-                time.sleep(0.1)
-
-        print()     # flush the last progress bar
-
-        return self.code
-
-    
-    def optimize_round(self) -> list[AssemblyInstruction]:
         self.i: int = 0
-
-        result: list[AssemblyInstruction] = []
-
-        def get_last() -> AssemblyInstruction | None:
-            if self.i > 0 and result[-1].assembled:
-                return result[-1]
-            return None
-
-        def add(operation: AssemblyInstruction) -> None:
-            result.append(operation)
-            self.i += 1
-
-        def skip() -> None:
-            self.i += 1
-
-        
-        while self.i < self.program_begin:
-            add(self.code[self.i])
-
-
-        #################### OPTIMIZATION BEGIN ####################
-
+    
+    def optimize_round(self) -> None:
+        self.i: int = self.program_begin
+        self.result = self.code[0:self.program_begin]
 
         while self.i < self.program_end:
 
@@ -71,36 +31,65 @@ class Optimizer:
 
             op = self.code[self.i]
 
-            last: AssemblyInstruction | None = get_last()
+            last: AssemblyInstruction | None = self.get_last()
 
             # skip special instructions
             if not op.assembled:
-                add(op)
+                self.add(op)
                 continue
 
             # 1) Handle push-then-pop operations
             if last and last.operation == "push" and op.operation == "pop":
                 if last.arguments == op.arguments:
-                    result.pop()
-                    skip()
+                    self.result.pop()
+                    self.skip()
                     continue
                 else:
-                    result[-1].operation = "mov"
-                    result[-1].arguments.insert(0, op.arguments[0])
-                    skip()
+                    self.result[-1].operation = "mov"
+                    self.result[-1].arguments.insert(0, op.arguments[0])
+                    self.skip()
                     continue
 
-            # 2) ... ? 
+            # 2) ... ?
 
-            add(op) # add to result unmodified if we didnt skip and continue
+            self.add(op) # add to result unmodified if we didnt skip and continue
 
+
+        self.program_end = len(self.result)
+
+        self.result.extend(self.code[self.i:])
+
+    def optimize(self) -> list[AssemblyInstruction]:
+        
+        last_length: int = len(self.code)
+
+        # iterate until no more optimizations are possible
+        while(self.iteration):
             
-        #################### OPTIMIZATION END ####################
+            self.optimize_round()
+            
+            if last_length <= len(self.result):
+                break
+            
+            self.code = self.result
+            last_length = len(self.code)
+            self.iteration += 1
+            
+            if self.config.verbose:
+                time.sleep(0.1)
 
+        print()     # flush the last progress bar
 
-        self.program_end = len(result)
+        return self.result
 
-        while self.i < len(self.code):
-            add(self.code[self.i])
+    def get_last(self) -> AssemblyInstruction | None:
+        if self.i > 0 and self.result[-1].assembled:
+            return self.result[-1]
+        return None
 
-        return result
+    def add(self, operation: AssemblyInstruction) -> None:
+        self.result.append(operation)
+        self.i += 1
+
+    def skip(self) -> None:
+        self.i += 1
