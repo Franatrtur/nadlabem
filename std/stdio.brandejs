@@ -1,10 +1,10 @@
-def put_char(character: char) -> void {
+def putchar(character: char) -> void {
     $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál
     $ mov dl, byte[{character}]     ; Bajt, který se má na terminál vypsat
     $ int 0x21      ; resp. int 33 poskytne službu
 }
 
-def get_char() -> char {
+def getchar() -> char {
     $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu
     $ int 0x21      ; resp. int 33 poskytne službu
     return $al
@@ -18,7 +18,7 @@ def print(string: @char[]) -> void {
     i: int = 0
     byte: char = string[0]
     while(byte != 0c){
-        put_char(byte)
+        putchar(byte)
         i = i + 1
         byte = string[i]
     }
@@ -32,6 +32,6 @@ def print_dos(string: char[]*) -> void {
 
 def println(string: @char[]) -> void {
     print(*string)
-    put_char(10c)   ; 13 - CL
-    put_char(13c)   ; 10 - RF
+    putchar(10c)   ; 13 - CL
+    putchar(13c)   ; 10 - RF
 }

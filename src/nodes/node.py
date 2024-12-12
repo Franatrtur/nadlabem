@@ -59,11 +59,19 @@ class AbstractSyntaxTreeNode(Node):
     def prune(self) -> bool:
         return False
 
-    def prune_children(self) -> None:
+    def prune_children(self) -> bool:
+        removed: bool = False
         for child in self.children:
             child.prune_children()
             if child.prune():
                 self.children.remove(child)
+                child.parent = None
+                removed = True
+        return removed
+
+    @property
+    def is_connected(self) -> bool:
+        return self.is_root or self.parent is not None and self.parent.is_connected
 
     def verify(self) -> None:
         pass
@@ -100,4 +108,6 @@ class ProgramNode(AbstractSyntaxTreeNode):
     def validate(self):
         self.link(parent=None)
         self.register_children()  # registers and validates tree
-        self.prune_children()
+        while self.prune_children():
+            pass
+        

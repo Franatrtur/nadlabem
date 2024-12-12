@@ -74,6 +74,15 @@ class Symbol:
     def reference(self, node: "Node"):
         self.references.append(node)
 
+    @property
+    def is_relevant(self):
+        for node in self.references:
+            if node.is_connected and node is not self.node:
+                print(self, "is relevant, referenced by", node)
+                return True
+        print(self, "is not relevant")
+        return False
+
     def __str__(self):
         return f"Symbol({repr(self.name)})"
     def __repr__(self):

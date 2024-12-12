@@ -12,8 +12,8 @@ segment code
         mov  bp, sp
 
         jmp  over
-put_char:
-        push bp                  ;def put_char(character: char) -> void { (examples/../std/stdio.brandejs:1)
+putchar:
+        push bp                  ;def putchar(character: char) -> void { (examples/../std/stdio.brandejs:1)
         mov  bp, sp
         sub  sp, 0
         mov ah, 2                ;    $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál (examples/../std/stdio.brandejs:2)
@@ -28,24 +28,6 @@ rtn     mov  sp, bp
 over    nop
 
         jmp  over1
-get_char:
-        push bp                  ;def get_char() -> char { (examples/../std/stdio.brandejs:7)
-        mov  bp, sp
-        sub  sp, 0
-        mov ah, 1                ;    $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu (examples/../std/stdio.brandejs:8)
-
-        int 0x21                 ;    $ int 0x21      ; resp. int 33 poskytne službu (examples/../std/stdio.brandejs:9)
-
-        mov  al, al              ;    return $al (examples/../std/stdio.brandejs:10)
-        mov  ah, 0
-        jmp  rtn1
-
-rtn1    mov  sp, bp
-        pop  bp
-        ret  0
-over1   nop
-
-        jmp  over2
 print:
         push bp                  ;def print(string: @char[]) -> void { (examples/../std/stdio.brandejs:17)
         mov  bp, sp
@@ -74,10 +56,10 @@ while   nop                      ;    while(byte != 0c){ (examples/../std/stdio.
         and  ax, 1
         xor  ax, 1
         jz   wout
-        mov  ax, 0               ;        put_char(byte) (examples/../std/stdio.brandejs:21)
+        mov  ax, 0               ;        putchar(byte) (examples/../std/stdio.brandejs:21)
         mov  al, byte[bp - 3]
         push ax
-        call put_char
+        call putchar
 
         mov  ax, 1               ;        i = i + 1 (examples/../std/stdio.brandejs:22)
         push ax
@@ -96,28 +78,12 @@ while   nop                      ;    while(byte != 0c){ (examples/../std/stdio.
         jmp  while
 wout    nop
 
-rtn2    mov  sp, bp
+rtn1    mov  sp, bp
         pop  bp
         ret  2
-over2   nop
+over1   nop
 
-        jmp  over3
-print_dos:
-        push bp                  ;def print_dos(string: char[]*) -> void { (examples/../std/stdio.brandejs:27)
-        mov  bp, sp
-        sub  sp, 0
-        mov ah, 9                ;    $ mov ah, 9	                ; Identifikace služby Vypsat řetězec bajtů na terminál (examples/../std/stdio.brandejs:28)
-
-        mov dx, word[bp + 4]     ;    $ mov dx, word[{string}]    ; Offset začátku řetězce v segmentu dle DS (examples/../std/stdio.brandejs:29)
-
-        int 0x21                 ;    $ int 0x21                  ; resp. int 33 poskytne službu (examples/../std/stdio.brandejs:30)
-
-rtn3    mov  sp, bp
-        pop  bp
-        ret  2
-over3   nop
-
-        jmp  over4
+        jmp  over2
 println:
         push bp                  ;def println(string: @char[]) -> void { (examples/../std/stdio.brandejs:33)
         mov  bp, sp
@@ -126,18 +92,18 @@ println:
         push ax
         call print
 
-        mov  ax, 10              ;    put_char(10c)   ; 13 - CL (examples/../std/stdio.brandejs:35)
+        mov  ax, 10              ;    putchar(10c)   ; 13 - CL (examples/../std/stdio.brandejs:35)
         push ax
-        call put_char
+        call putchar
 
-        mov  ax, 13              ;    put_char(13c)   ; 10 - RF (examples/../std/stdio.brandejs:36)
+        mov  ax, 13              ;    putchar(13c)   ; 10 - RF (examples/../std/stdio.brandejs:36)
         push ax
-        call put_char
+        call putchar
 
-rtn4    mov  sp, bp
+rtn2    mov  sp, bp
         pop  bp
         ret  2
-over4   nop
+over2   nop
 
         lea  ax, [_str]          ;fn(*"AAAAA", *"BBBBBB") (examples/multiple_args.brandejs:10)
         push ax
@@ -148,7 +114,7 @@ exit:
 ok      hlt
 error   hlt
 
-        jmp  over5
+        jmp  over3
 fn:
         push bp                  ;def fn(a: @char[], b: @char[]) -> void{ (examples/multiple_args.brandejs:3)
         mov  bp, sp
@@ -169,10 +135,10 @@ fn:
         push ax
         call println
 
-rtn5    mov  sp, bp
+rtn3    mov  sp, bp
         pop  bp
         ret  4
-over5   nop
+over3   nop
 
 segment heap
 stack   resw 1024

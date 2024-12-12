@@ -34,9 +34,11 @@ class VariableDeclarationNode(StatementNode):
         self.by_reference: bool = var_type.is_reference
 
     def register(self) -> None:
-        symbol = Symbol(self.name_token, node=self)
-        self.context.register_symbol(symbol)
-        self.symbol: Symbol = symbol
+        self.symbol = Symbol(self.name_token, node=self)
+        self.context.register_symbol(self.symbol)
+
+    def prune(self) -> bool:
+        return not self.symbol.is_relevant
 
     def verify(self) -> None:
         if self.by_reference:
@@ -49,6 +51,9 @@ class ArgumentDeclarationNode(StatementNode):
         super().__init__(name_token, [], parser)
         self.name_token = name_token
         self.node_type: VariableType = var_type
+
+    def prune(self) -> bool:
+        return not self.symbol.is_relevant
 
     def register(self) -> None:
         symbol = Symbol(self.name_token, node=self)
@@ -101,6 +106,9 @@ class FunctionDefinitonNode(StatementNode):
     def register(self) -> None:
         self.symbol: Symbol = Symbol(self.name_token, node=self)
         self.scope.register_symbol(self.symbol)
+
+    def prune(self) -> bool:
+        return not self.symbol.is_relevant
 
     def verify(self) -> None:
         if not self.return_nodes and self.node_type.return_type is not Void:
