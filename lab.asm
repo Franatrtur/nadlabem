@@ -11,11 +11,377 @@ segment code
         mov  sp, dno
         mov  bp, sp
 
-        mov  ax, 5               ;x:int = 5 (1)
-        mov  word[x], ax
-        lea  bx, [x]             ;++x (2)
-        inc  word[bx]
-        mov ax, word[x]
+        nop                      ;include "lab.brandejs" (lab2.brandejs:1)
+
+        jmp  over
+put_char:
+        push bp                  ;def put_char(character: char) -> void { (lab2.brandejs:3)
+        mov  bp, sp
+        sub  sp, 0
+        mov ah, 2                ;    $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál (lab2.brandejs:4)
+
+        mov dl, byte[bp + 4]     ;    $ mov dl, byte[{character}]     ; Bajt, který se má na terminál vypsat (lab2.brandejs:5)
+
+        int 0x21                 ;    $ int 0x21      ; resp. int 33 poskytne službu (lab2.brandejs:6)
+
+rtn     mov  sp, bp
+        pop  bp
+        ret  2
+over    nop
+
+        jmp  over1
+get_char:
+        push bp                  ;def get_char() -> char { (lab2.brandejs:9)
+        mov  bp, sp
+        sub  sp, 0
+        mov ah, 1                ;    $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu (lab2.brandejs:10)
+
+        int 0x21                 ;    $ int 0x21      ; resp. int 33 poskytne službu (lab2.brandejs:11)
+
+        mov  al, al              ;    return $al (lab2.brandejs:12)
+        mov  ah, 0
+        jmp  rtn1
+
+rtn1    mov  sp, bp
+        pop  bp
+        ret  0
+over1   nop
+
+        jmp  over2
+print:
+        push bp                  ;def print(string: @char[]) -> void { (lab2.brandejs:19)
+        mov  bp, sp
+        sub  sp, 3
+        mov  ax, 0               ;    i: int = 0 (lab2.brandejs:20)
+        mov  word[bp - 2], ax
+
+        mov  ax, 0               ;    byte: char = string[0] (lab2.brandejs:21)
+        mov  si, ax
+        mov  bx, word[bp + 4]
+        mov  ax, 0
+        mov  al, byte[bx + si]
+        mov  byte[bp - 3], al
+
+while   nop                      ;    while(byte != 0c){ (lab2.brandejs:22)
+        mov  ax, 0
+        push ax
+        mov  ax, 0
+        mov  al, byte[bp - 3]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        xor  ax, 1
+        jz   wout
+        mov  ax, 0               ;        put_char(byte) (lab2.brandejs:23)
+        mov  al, byte[bp - 3]
+        push ax
+        push ax
+        call put_char
+
+        mov  ax, 1               ;        i = i + 1 (lab2.brandejs:24)
+        push ax
+        mov  ax, word[bp - 2]
+        pop  bx
+        add  ax, bx
+        mov  word[bp - 2], ax
+
+        mov  ax, word[bp - 2]    ;        byte = string[i] (lab2.brandejs:25)
+        mov  si, ax
+        mov  bx, word[bp + 4]
+        mov  ax, 0
+        mov  al, byte[bx + si]
+        mov  byte[bp - 3], al
+
+        jmp  while
+wout    nop
+
+rtn2    mov  sp, bp
+        pop  bp
+        ret  2
+over2   nop
+
+        jmp  over3
+printf:
+        push bp                  ;def printf(string: @char[], number: int) -> void { (lab2.brandejs:30)
+        mov  bp, sp
+        sub  sp, 4
+        mov  ax, 0               ;    i: int = 0 (lab2.brandejs:31)
+        mov  word[bp - 2], ax
+
+        mov  ax, 0               ;    byte: char = string[0] (lab2.brandejs:32)
+        mov  si, ax
+        mov  bx, word[bp + 4]
+        mov  ax, 0
+        mov  al, byte[bx + si]
+        mov  byte[bp - 3], al
+
+while1  nop                      ;    while(byte != 0c) { (lab2.brandejs:33)
+        mov  ax, 0
+        push ax
+        mov  ax, 0
+        mov  al, byte[bp - 3]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        xor  ax, 1
+        jz   wout1
+        mov  ax, 37              ;        if (byte == '%') { (lab2.brandejs:34)
+        push ax
+        mov  ax, 0
+        mov  al, byte[bp - 3]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        jz   ifout
+        mov  ax, 1               ;            symbol: char = string[i + 1] (lab2.brandejs:35)
+        push ax
+        mov  ax, word[bp - 2]
+        pop  bx
+        add  ax, bx
+        mov  si, ax
+        mov  bx, word[bp + 4]
+        mov  ax, 0
+        mov  al, byte[bx + si]
+        mov  byte[bp - 4], al
+
+        mov  ax, 100             ;            if (symbol == 'd') { (lab2.brandejs:37)
+        push ax
+        mov  ax, 0
+        mov  al, byte[bp - 4]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        jz   ifout1
+        mov  ax, word[bp + 6]    ;                print_decimal(number) (lab2.brandejs:38)
+        push ax
+        push ax
+        call print_decimal
+
+        mov  ax, 2               ;                i = i + 2 (lab2.brandejs:39)
+        push ax
+        mov  ax, word[bp - 2]
+        pop  bx
+        add  ax, bx
+        mov  word[bp - 2], ax
+
+        jmp  while1              ;                continue (lab2.brandejs:40)
+
+ifout1  nop
+
+        mov  ax, 104             ;            if (symbol == 'h') { (lab2.brandejs:42)
+        push ax
+        mov  ax, 0
+        mov  al, byte[bp - 4]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        jz   ifout2
+        mov  ax, word[bp + 6]    ;                print_hex(number) (lab2.brandejs:43)
+        push ax
+        push ax
+        call print_hex
+
+        mov  ax, 2               ;                i = i + 2 (lab2.brandejs:44)
+        push ax
+        mov  ax, word[bp - 2]
+        pop  bx
+        add  ax, bx
+        mov  word[bp - 2], ax
+
+        jmp  while1              ;                continue (lab2.brandejs:45)
+
+ifout2  nop
+
+        lea  ax, [_str]          ;            error(*"printf: invalid format") (lab2.brandejs:48)
+        push ax
+        push ax
+        call error1
+
+ifout   nop
+
+        mov  ax, 1               ;        i = i + 1 (lab2.brandejs:51)
+        push ax
+        mov  ax, word[bp - 2]
+        pop  bx
+        add  ax, bx
+        mov  word[bp - 2], ax
+
+        jmp  while1
+wout1   nop
+
+rtn3    mov  sp, bp
+        pop  bp
+        ret  4
+over3   nop
+
+        jmp  over4
+assert:
+        push bp                  ;def assert(condition: bool, message: @char[]) -> void { (lab2.brandejs:55)
+        mov  bp, sp
+        sub  sp, 0
+        mov  ax, 0               ;    if (not condition) error(*message) (lab2.brandejs:56)
+        mov  al, byte[bp + 4]
+        cmp  ax, 0
+        sete al
+        jz   ifout3
+        mov  ax, word[bp + 6]
+        push ax
+        call error1
+
+ifout3  nop
+
+rtn4    mov  sp, bp
+        pop  bp
+        ret  4
+over4   nop
+
+        jmp  over5
+error1:
+        push bp                  ;def error(message: @char[]) -> void { (lab2.brandejs:59)
+        mov  bp, sp
+        sub  sp, 0
+        lea  ax, [_str1]         ;    println(*"Error occured:") (lab2.brandejs:60)
+        push ax
+        push ax
+        call println
+
+        mov  ax, word[bp + 4]    ;    println(*message) (lab2.brandejs:61)
+        push ax
+        call println
+
+        jmp error                ;    $ jmp error (lab2.brandejs:62)
+
+rtn5    mov  sp, bp
+        pop  bp
+        ret  2
+over5   nop
+
+        jmp  over6
+print_decimal:
+        push bp                  ;def print_decimal(number: int) -> void { (lab2.brandejs:65)
+        mov  bp, sp
+        sub  sp, 0
+rtn6    mov  sp, bp
+        pop  bp
+        ret  2
+over6   nop
+
+        jmp  over7
+print_hex:
+        push bp                  ;def print_hex(number: int) -> void { (lab2.brandejs:69)
+        mov  bp, sp
+        sub  sp, 0
+while2  nop                      ;    while (number != 0) { (lab2.brandejs:70)
+        mov  ax, 0
+        push ax
+        mov  ax, word[bp + 4]
+        pop  bx
+        cmp  ax, bx
+        pushf
+        pop  ax
+        mov  cl, 6
+        shr  ax, cl
+        and  ax, 1
+        xor  ax, 1
+        jz   wout2
+        mov  ax, 16              ;        put_char(char(number % 16)) ;TODO: musis to zase shiftnout podle A nebo podle 0 (lab2.brandejs:71)
+        push ax
+        mov  ax, word[bp + 4]
+        pop  bx
+        mov  dx, 0
+        div  bx
+        mov  ax, dx
+        mov  ah, 0
+        push ax
+        push ax
+        call put_char
+
+        mov  ax, 16              ;        number = number / 16 (lab2.brandejs:72)
+        push ax
+        mov  ax, word[bp + 4]
+        pop  bx
+        mov  dx, 0
+        div  bx
+        mov  word[bp + 4], ax
+
+        jmp  while2
+wout2   nop
+
+rtn7    mov  sp, bp
+        pop  bp
+        ret  2
+over7   nop
+
+        jmp  over8
+print_dos:
+        push bp                  ;def print_dos(string: char[]*) -> void { (lab2.brandejs:76)
+        mov  bp, sp
+        sub  sp, 0
+        mov ah, 9                ;    $ mov ah, 9	                ; Identifikace služby Vypsat řetězec bajtů na terminál (lab2.brandejs:77)
+
+        mov dx, word[bp + 4]     ;    $ mov dx, word[{string}]    ; Offset začátku řetězce v segmentu dle DS (lab2.brandejs:78)
+
+        int 0x21                 ;    $ int 0x21                  ; resp. int 33 poskytne službu (lab2.brandejs:79)
+
+rtn8    mov  sp, bp
+        pop  bp
+        ret  2
+over8   nop
+
+        jmp  over9
+println:
+        push bp                  ;def println(string: @char[]) -> void { (lab2.brandejs:82)
+        mov  bp, sp
+        sub  sp, 0
+        mov  ax, word[bp + 4]    ;    print(*string) (lab2.brandejs:83)
+        push ax
+        call print
+
+        mov  ax, 10              ;    put_char(10c)   ; 13 - CL (lab2.brandejs:84)
+        push ax
+        push ax
+        call put_char
+
+        mov  ax, 13              ;    put_char(13c)   ; 10 - RF (lab2.brandejs:85)
+        push ax
+        push ax
+        call put_char
+
+rtn9    mov  sp, bp
+        pop  bp
+        ret  2
+over9   nop
+
+        lea  ax, [_str2]         ;println(*"Čeština 😂👍") (lab2.brandejs:90)
+        push ax
+        push ax
+        call println
+
+        mov  ax, 69              ;    a: int = 69 (lab.brandejs:4)
+        mov  word[a], ax
+
+        mov  ax, 420             ;a = 420 (lab.brandejs:7)
+        mov  word[a], ax
 exit:
 ok      hlt
 error   hlt
@@ -24,4 +390,7 @@ segment heap
 stack   resw 1024
 dno     db   ?
 
-x       resb 2                   ;default
+_str    db   "printf: invalid format", 0
+_str1   db   "Error occured:", 0
+_str2   db   196, 140, "e", 197, 161, "tina ", 240, 159, 152, 130, 240, 159, 145, 141, 0
+a       resb 2                   ;default

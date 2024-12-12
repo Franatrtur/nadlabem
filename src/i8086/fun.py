@@ -33,9 +33,11 @@ class FunctionDefinitionTranslator(Translator):
 
         self.fn_label: str = self.node.symbol.id
         self.ret_label: str = self.node.scope.generate_id("rtn")
+        self.over_label: str = self.node.scope.generate_id("over")
 
         self.frame = StackFrame.frames[self.node.context]
 
+        self.assemble("jmp", [self.over_label], mapping = False)
         self.special(f"{self.fn_label}:")
         self.assemble("push", ["bp"])
         self.assemble("mov", ["bp", "sp"])
@@ -46,6 +48,7 @@ class FunctionDefinitionTranslator(Translator):
         self.assemble("mov", ["sp", "bp"], label=self.ret_label)
         self.assemble("pop", ["bp"])
         self.assemble("ret", [str(self.frame.arg_bytes)])
+        self.assemble("nop", label=self.over_label)
 
 
 class FunctionCallStatementTranslator(Translator):
@@ -57,7 +60,7 @@ class FunctionCallStatementTranslator(Translator):
 
         for arg in reversed(self.node.arguments):
             self.add(arg)
-            self.assemble("push", ["ax"])
+            #self.assemble("push", ["ax"])
 
         self.assemble("call", [self.node.symbol.id])
 

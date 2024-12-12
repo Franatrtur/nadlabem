@@ -2,8 +2,10 @@ from .errors import NadLabemError
 from .config import CompilationConfig
 from .tokenizer import Tokenizer
 from .parser.program import ProgramParser
-from .targets import TARGETS, Translator, ProgramTranslator, CompilationTarget
 from typing import Type
+from .tree import Node
+from pathlib import Path
+from .targets import CompilationTarget
 
 class Compiler:
 
@@ -12,10 +14,10 @@ class Compiler:
         self.config.compiler = self
         self.warnings: list[NadLabemError] = []
 
-        if self.config.target_cpu not in TARGETS:
-            raise NadLabemError(f"Invalid target CPU: {self.config.target_cpu}", line="in the compilation config")
+        if self.config.target not in CompilationTarget.targets:
+            raise NadLabemError(f"Invalid compilation target: {self.config.target_cpu}", line="in the compilation config")
 
-        self.target: CompilationTarget = TARGETS[self.config.target_cpu]
+        self.target: CompilationTarget = CompilationTarget.targets[self.config.target]
 
     def compile(self, source_code: str) -> str:
         self.load(source_code)
@@ -24,15 +26,18 @@ class Compiler:
         self.translate()
         return self.export()
 
-    def load(self, source_code: str) -> None:
+    def load(self, source_code: str | Path) -> None:
+        if isinstance(source_code, Path):
+            self.location = source_code
+            source_code = source_code.read_text()
         self.source_code = source_code
         return self
 
     def tokenize(self) -> None:
-        self.tokens = Tokenizer(compiler=self).tokenize(self.source_code)
+        self.tokens = Tokenizer(config=self.config, location=self.config.location).tokenize(self.source_code)
 
     def parse(self) -> None:
-        self.tree = ProgramParser(self.tokens, compiler=self).parse()
+        self.tree = ProgramParser(self.tokens, config=self.config).parse()
         self.tree.validate()
 
     def translate(self) -> None:

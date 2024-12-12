@@ -5,7 +5,7 @@ from pathlib import Path
 import sys, os
 
 from src.config import CompilationConfig
-from src.compiler import Compiler, TARGETS
+from src.compiler import Compiler, CompilationTarget
 
 
 parser = argparse.ArgumentParser()
@@ -43,11 +43,12 @@ def main() -> None:
     with file_path.open() as file:
         code = file.read()
 
-        if args.target not in TARGETS:
+        if args.target not in CompilationTarget.targets:
             raise ValueError(f"Unknown target processor {args.target}!")
 
         config = CompilationConfig(
-            target_cpu = args.target,
+            location = Path(file_path),
+            target = args.target,
             strict = not args.forgive,
             generate_mapping = not args.nomapping,
             erase_comments = args.nocomments,

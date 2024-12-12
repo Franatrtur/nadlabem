@@ -1,2 +1,37 @@
-x:int = 5
-++x
+
+def printf(string: @char[], number: int) -> void {
+    i: int = 0
+    byte: char = string[0]
+    while(byte > 0c) {
+        if (byte == '%') {
+            symbol: char = string[i + 1]
+
+            if (symbol == 'd') {
+                print_decimal(number)
+                i = i + 2
+                continue
+            }
+            if (symbol == 'h') {
+                print_hex(number)
+                i = i + 2
+                continue
+            }
+
+            error(*"printf: invalid format")
+        }
+
+        i = i + 1
+    }
+}
+
+
+def print_decimal(number: int) -> void {
+
+}
+
+def print_hex(number: int) -> void {
+    while (number != 0) {
+        put_char(char(number % 16)) ;TODO: musis to zase shiftnout podle A nebo podle 0
+        number = number / 16
+    }
+}

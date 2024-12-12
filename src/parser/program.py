@@ -1,23 +1,27 @@
-from ..tokenizer import Token, NewLineToken, OpenParenToken, CloseParenToken, ArrayBeginToken, ArrayEndToken
-from ..errors import SyntaxError
+from ..tokenizer import Token, NewLineToken, OpenParenToken, CloseParenToken, ArrayBeginToken, ArrayEndToken, StringLiteralToken
+from ..errors import SyntaxError, NadLabemError
 from ..ui import progress_bar
-from typing import Type, Union
+from typing import Type
+from ..config import CompilationConfig
 from .parsing import Parser
 from .statement import CodeBlockParser
 from ..nodes.node import ProgramNode
 from .suggestions import find_suggestion
+from pathlib import Path
+from ..tokenizer import Tokenizer
 
 class ProgramParser(Parser):
 
-    def __init__(self, tokens: list[Token], compiler: Union["Compiler", None] = None):
+    def __init__(self, tokens: list[Token], config: CompilationConfig):
         self.tokens = tokens
         self.i: int = 0
         self.root = self  # this is the top level parser
         self.parent = None
-        self.compiler = compiler
         self.nested: int = 0
         self.children = []
-        self.config = compiler.config
+        self.config: CompilationConfig = config
+
+        self.modules: set[Path] = {self.config.location}
 
     def parse(self) -> ProgramNode:
         program_block = CodeBlockParser(parent=self, force_multiline=True).parse()
@@ -25,7 +29,7 @@ class ProgramParser(Parser):
 
     def devour(self, token_type: Type[Token], parser: Parser | None) -> Token:
         if self.is_done:
-            raise SyntaxError(f"Unexpected end of input, expected {token_type.__name__} but got nothing", line=self.tokens[self.i].line, parser=parser)
+            raise SyntaxError(f"Unexpected end of input, expected {token_type.__name__} but got nothing", line=self.tokens[self.i - 1].line, parser=parser)
 
         skip_newline = self.nested > 0
 
@@ -45,7 +49,7 @@ class ProgramParser(Parser):
         if token_type.match(self.tokens[self.i]):
             self.i += 1
 
-            if self.compiler is not None and self.compiler.config.verbose:
+            if self.config.verbose:
                 progress_bar("Parsing", self.i, len(self.tokens))
 
             return token
@@ -71,3 +75,6 @@ class ProgramParser(Parser):
     @property
     def is_done(self) -> bool:
         return self.i >= len(self.tokens)
+
+    def include(self, tokens: list[Token]) -> None:
+        self.tokens = self.tokens[0:self.i] + tokens + self.tokens[self.i:]

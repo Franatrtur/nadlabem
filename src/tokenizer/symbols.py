@@ -70,6 +70,8 @@ class CommentToken(Token):
         return string.startswith(";")
 
 
+IncludeToken = Token.literal("include", "IncludeToken")
+
 IfToken = Token.literal("if", "IfToken")
 ElseToken = Token.literal("else", "ElseToken")
 DoToken = Token.literal("do", "DoToken")
@@ -177,6 +179,8 @@ TOKEN_DETECTORS = [
 
     BoolLiteralToken,
 
+    IncludeToken,
+
     IfToken,
     ElseToken,
     DoToken,
@@ -275,6 +279,7 @@ KeywordToken = Token.any(
     ContinueToken,
     PassToken,
     DefinitionToken,
+    IncludeToken,
     class_name="KeywordToken"
 )
 

@@ -83,7 +83,7 @@ class Translator(Node):
         map_target: Line = self.node.token.line if self.node.token is not None else None
         if mapping and map_target is not None and map_target not in self.program.mapped and not self.config.erase_comments:
             self.program.mapped.add(map_target)
-            map_content = map_target.string + f" ({map_target.number})" if self.config.generate_mapping else map_target.comment
+            map_content = map_target.string + f" ({map_target.location}:{map_target.number})" if self.config.generate_mapping else map_target.comment
 
         instruction = AssemblyInstruction(self.config, operation, arguments, label, map_content)
         instruction.assembled = True

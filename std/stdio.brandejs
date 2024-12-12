@@ -1,10 +1,10 @@
-def PutChar(character: char) -> void {
+def put_char(character: char) -> void {
     $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál
     $ mov dl, byte[{character}]     ; Bajt, který se má na terminál vypsat
     $ int 0x21      ; resp. int 33 poskytne službu
 }
 
-def GetChar() -> char {
+def get_char() -> char {
     $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu
     $ int 0x21      ; resp. int 33 poskytne službu
     return $al
@@ -14,24 +14,24 @@ def GetChar() -> char {
     ; Dalším int 21h bude předán další bajt téhož znaku. Nedojde ke ztrátě obsahu.
 }
 
-def Print(string: @char[]) -> void {
+def print(string: @char[]) -> void {
     i: int = 0
     byte: char = string[0]
     while(byte != 0c){
-        PutChar(byte)
+        put_char(byte)
         i = i + 1
         byte = string[i]
     }
 }
 
-def PrintDos(string: char[]*) -> void {
+def print_dos(string: char[]*) -> void {
     $ mov ah, 9	                ; Identifikace služby Vypsat řetězec bajtů na terminál
     $ mov dx, word[{string}]    ; Offset začátku řetězce v segmentu dle DS
     $ int 0x21                  ; resp. int 33 poskytne službu
 }
 
-def PrintLine(string: @char[]) -> void {
-    Print(*string)
-    PutChar(10c)   ; 13 - CL
-    PutChar(13c)   ; 10 - RF
+def println(string: @char[]) -> void {
+    print(*string)
+    put_char(10c)   ; 13 - CL
+    put_char(13c)   ; 10 - RF
 }

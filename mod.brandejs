@@ -1,0 +1,3 @@
+include "lab2.brandejs"
+
+a: int = 69

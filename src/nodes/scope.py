@@ -5,7 +5,7 @@ from typing import Union
 
 class Context(Node):
 
-    def __init__(self, node: "Parser", parent: Union["Context", None] = None):
+    def __init__(self, node: "ASTNode", parent: Union["Context", None] = None):
         super().__init__(parent)
         self.parent: Context
         self.node = node
@@ -13,9 +13,9 @@ class Context(Node):
         self.ids: set[str] = set()
 
     def register_symbol(self, symbol: "Symbol", local: bool = True):
-        #TODO: set bubble up to false when not strict config
+        #TODO: set bubble up to false when not strict config - done?
         #this would allow local variables to override globals when not in strict mode
-        found = self.has_name(symbol.name, bubble_up= not local)
+        found = self.has_name(symbol.name, bubble_up = self.node.config.strict)
         if found is not None:
             raise NameError(f"Cannot redefine name '{symbol.name}'", symbol.node.token.line, defined_at=found.node.token.line)
         symbol.scope = self

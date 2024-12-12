@@ -172,10 +172,10 @@ class VariableReferenceTranslator(Translator):
         else:
             variable.load_value(translator=self, as_type=self.node.node_type, target_register=target_reg, index_register=index_reg)
             
-            self.assemble("push", ["ax"])
+        self.assemble("push", ["ax"])
 
-            if "dx" in target_reg:
-                self.assemble("push", ["dx"])
+        if "dx" in target_reg:
+            self.assemble("push", ["dx"])
         
 
 

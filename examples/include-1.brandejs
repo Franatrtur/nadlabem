@@ -1,0 +1,6 @@
+include "../std/stdio.brandejs"
+
+
+println(*"import test1")
+
+include "include-2.brandejs"

@@ -112,7 +112,7 @@ class BinaryOperationTranslator(Translator):
         ################################################## unsigned comparison follows
 
         elif GreaterThanToken.match(self.node.token):  # Greater than: ax > bx
-            assert False, "Unsigned GTEQ not implemented yet"
+            raise NotImplementedError("Unsigned GTEQ not implemented yet", self.node.token.line)
             self.assemble("cmp", ["ax", "bx"])
             self.assemble("pushf")
             self.assemble("pop", ["ax"])
@@ -237,8 +237,7 @@ class UnaryOperationTranslator(Translator):
         elif LogicalNotToken.match(self.node.token):
             self.add(self.node.operand)
             self.assemble("pop", ["ax"])
-            self.assemble("cmp", ["ax", "0"])
-            self.assemble("sete", ["al"])
+            self.assemble("xor", ["ax", "1"])
             self.assemble("push", ["ax"])
 
         else:

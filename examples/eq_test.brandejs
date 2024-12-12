@@ -1,0 +1,13 @@
+include "../std/stdlib.brandejs"
+
+def main() -> void {
+    assert(0 < 10, *FAIL_MSG)
+    assert(not (5 < 1), *FAIL_MSG)
+    assert(not (10 < 10), *FAIL_MSG)
+
+    println(*"lower_than_test_success")
+}
+
+FAIL_MSG: char[] = "lower_than_test_fail"
+
+main()

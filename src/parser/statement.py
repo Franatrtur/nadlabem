@@ -1,5 +1,6 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
+                         StringLiteralToken, IncludeToken,
                         OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, AtToken, DefinitionToken, DoToken,
                         ColonToken, DollarToken, AtEqualsToken, ArrayBeginToken, ArrayEndToken, IncrementalToken,
                         BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, ArrowToken, ReturnToken)
@@ -8,9 +9,10 @@ from .expression import ExpressionParser
 from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
                     CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
                     WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode, IncrementalNode)
-
+from pathlib import Path
 from .types import TypeParser
-from ..errors import SyntaxError
+from ..errors import SyntaxError, NadLabemError
+from ..tokenizer import Tokenizer
 
 
 class CodeBlockParser(Parser):
@@ -25,7 +27,7 @@ class CodeBlockParser(Parser):
             return self.is_done
         return self.is_ahead(CloseBraceToken)
 
-    def parse(self) -> StatementNode:
+    def parse(self) -> CodeBlockNode:
         if not self.force_multiline and not self.is_ahead(OpenBraceToken):
             statement = StatementParser(self).parse()
             return CodeBlockNode(statement.token, [statement], parser=self)
@@ -231,6 +233,39 @@ class AssemblyParser(Parser):
         return AssemblyNode(tok, code, parser=self)
 
 
+class IncludeParser(Parser):
+    def parse(self) -> CodeBlockNode:
+        token = self.devour(IncludeToken)
+        path_string = self.devour(StringLiteralToken).value
+        self.devour(NewLineToken)
+        
+        if self.config.location is None:
+            raise NadLabemError(f"Cannot include from an anonymous program", token.line)
+
+        module_path: Path = token.line.location.parent / path_string
+
+        if not module_path.exists() or not module_path.is_file():
+            raise NadLabemError(f"Cannot find module \"{module_path}\"", path_token.line)
+
+        if module_path in self.root.modules:
+            self.config.warn(NadLabemError(f"Duplicate include of module \"{module_path}\"", token.line, suggestion="Keep tree structure, don't include submodules which are included by your modules"))
+            self.root.include([NewLineToken("\n", "Virtual Import Line")])
+            return PassNode(token, parser=self)
+
+        self.root.modules.add(module_path)
+
+        tokens = [OpenBraceToken("{", "Virtual Import Line"), NewLineToken("\n", "Virtual Import Line")] + Tokenizer(config=self.config, location=module_path).tokenize(
+            source_code=module_path.read_text()
+        ) + [CloseBraceToken("}", "Virtual Import Line"), NewLineToken("\n", "Virtual Import Line")]
+
+        self.root.include(tokens)
+
+        module_parser = CodeBlockParser(parent=self.parent, force_multiline=False)
+        module: CodeBlockNode = module_parser.parse()
+
+        return module
+
+
 STATEMENTS: dict[Type[Token], Type[Parser]] = {
     OpenBraceToken: CodeBlockParser,
     IfToken: IfParser,
@@ -244,7 +279,8 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     PassToken: PassParser,
     DollarToken: AssemblyParser,
     DefinitionToken: FunctionDefinitionParser,
-    IncrementalToken: IncrementalParser
+    IncrementalToken: IncrementalParser,
+    IncludeToken: IncludeParser
 }
 
 class StatementParser(Parser):

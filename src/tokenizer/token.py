@@ -65,14 +65,16 @@ class Token:
 
 class Line:
     
-    def __init__(self, string: str, number: int):
+    def __init__(self, string: str, number: int, location: str | None = None):
         self.string = string
         self.number = number
         self.tokens: list[Token] = []
         self.comment: str = ""
+        self.location: str | None = location
 
     def __str__(self):
-        return f"Line {self.number}: \n{repr(self.string.strip())} ({len(self.tokens)} tokens)"
+        origin = f"File \"{self.location}\"" if self.location is not None else "Anonymous file"
+        return f"Line {self.number}: \n{repr(self.string.strip())}\n{origin}, line {self.number}"
     def __repr__(self):
         tokens_string = ','.join(map(str, self.tokens))
-        return f"Line {self.number}: {repr(self.string)}\""# [{tokens_string}]"
+        return f"Line {self.number}: {repr(self.string)}"# [{tokens_string}]"

@@ -14,7 +14,8 @@ class CodeBlockTranslator(Translator):
     def make(self):
         for child in self.node.children:
             self.add(child)
-            self.blank_line()
+            if not self.config.erase_comments and self.config.generate_mapping:
+                self.blank_line()
 
 
 class ProgramI8086Translator(ProgramTranslator):
