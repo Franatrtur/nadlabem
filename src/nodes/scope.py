@@ -78,9 +78,9 @@ class Symbol:
     def is_relevant(self):
         for node in self.references:
             if node.is_connected and node is not self.node:
-                print(self, "is relevant, referenced by", node)
+                #print(self, "is relevant, referenced by", repr(node))
                 return True
-        print(self, "is not relevant")
+        #print(self, "is not relevant")
         return False
 
     def __str__(self):

@@ -77,7 +77,7 @@ class AbstractSyntaxTreeNode(Node):
         pass
 
     def __str__(self):
-        self_str = f"{self.__class__.__name__}({self.token})" + (" - "+ str(self.node_type) if self.node_type is not None else "")
+        self_str = repr(self)
         
         for index, child in enumerate(self.children):
             is_last_child = (index == len(self.children) - 1)
@@ -93,6 +93,9 @@ class AbstractSyntaxTreeNode(Node):
         if len(self.children) > 2:
             self_str += "\n"
         return self_str
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.token})" + (" - "+ str(self.node_type) if self.node_type is not None else "")
 
 
 class ProgramNode(AbstractSyntaxTreeNode):
