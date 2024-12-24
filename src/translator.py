@@ -7,6 +7,7 @@ from .config import CompilationConfig
 
 
 class AssemblyInstruction:
+
     def __init__(self, config: CompilationConfig, operation: str = "", arguments: list[str] = [], label: str = "", mapping: str = ""):
         self.operation: str | None = operation
         self.arguments: list[str] = arguments
@@ -118,4 +119,4 @@ class ProgramTranslator(Translator):
         for translator_type in self.translators:
             if isinstance(node, translator_type.node_type):
                 return translator_type
-        raise NotImplementedError(f"No translator found for {node.__class__.__name__} in target {self.config.target_cpu}", line=node.token.line)
+        raise NotImplementedError(f"No translator found for {node.__class__.__name__} in target {self.config.target}", line=node.token.line)

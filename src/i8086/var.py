@@ -41,10 +41,10 @@ class VariableDeclarationTranslator(Translator):
             )
 
         self.program: ProgramI8086Translator
-        if not variable.is_global:
+        if not variable.is_static:
             self.program.declare(variable.declaration)
 
-        if not variable.is_global:
+        if not variable.is_static:
             #use the movsb or movsw to move the goddamn data
             self.config.warn(NadLabemError("Using local arrays by value (storing on stack) is extremely inefficient", self.node.token.line))
 

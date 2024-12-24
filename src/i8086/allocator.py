@@ -1,6 +1,6 @@
 from .sizeof import sizeof
 from ..nodes.statement import VariableDeclarationNode, ArgumentDeclarationNode, FunctionDefinitonNode, StatementNode
-from ..nodes.scope import Context, Symbol
+from ..nodes.scope import Context, Symbol, Namespace
 from ..translator import Translator, AssemblyInstruction
 from ..nodes.types import Array, Int, VariableType, ExpressionType, Pointer, ValueType, Double
 from ..errors import NadLabemError, NotImplementedError
@@ -15,42 +15,42 @@ class StackFrame:
         self.variables: list[Variable] = []
         StackFrame.frames[context] = self
 
-        if not context.is_root:
-            self.allocate()
-        else:
+        if isinstance(self.context, Namespace):
             self.declare()
+        else:
+            self.allocate()
 
     def declare(self):
-        self.variables = [Variable(symbol, offset=None) for name, symbol in self.context.symbols.items() if isinstance(symbol.node, VariableDeclarationNode)]
+        self.variables = [
+            Variable(symbol, offset=None) for name, symbol in self.context.symbols.items() if isinstance(symbol.node, VariableDeclarationNode)
+        ]
 
     def allocate(self):
         
         self.var_bytes: int = 0     # forwards (-)
         self.arg_bytes: int = 0     # backwards (+)
 
-        if not self.context.is_root:
+        fn_node: FunctionDefinitonNode = self.context.node
 
-            fn_node: FunctionDefinitonNode = self.context.node
+        for name, symbol in self.context.symbols.items():
 
-            for name, symbol in self.context.symbols.items():
+            if isinstance(symbol.node, VariableDeclarationNode):
 
-                if isinstance(symbol.node, VariableDeclarationNode):
-
-                    self.var_bytes += sizeof(symbol.node.node_type.expression_type)
-                    variable = Variable(symbol, -self.var_bytes)
-                    self.variables.append(variable)
-
-            for arg_node in fn_node.arguments:
-
-                symbol = arg_node.symbol
-
-                self.arg_bytes += 2  # we just dont care
-                variable = Variable(symbol, self.arg_bytes + 2)     # ret addr + old bp = 4
-
-                if arg_node.node_type.expression_type is Double and not arg_node.node_type.is_reference:
-                    self.arg_bytes += 2
-
+                self.var_bytes += sizeof(symbol.node.node_type.expression_type)
+                variable = Variable(symbol, -self.var_bytes)
                 self.variables.append(variable)
+
+        for arg_node in fn_node.arguments:
+
+            symbol = arg_node.symbol
+
+            self.arg_bytes += 2  # we just dont care
+            variable = Variable(symbol, self.arg_bytes + 2)     # ret addr + old bp = 4
+
+            if arg_node.node_type.expression_type is Double and not arg_node.node_type.is_reference:
+                self.arg_bytes += 2
+
+            self.variables.append(variable)
 
 
 class Variable:
@@ -66,14 +66,14 @@ class Variable:
         self.offset: int | None = offset
         self.var_type: VariableType = self.symbol.node.node_type
         self.bytes: int = sizeof(self.var_type)
-        self.is_global: bool = self.symbol.scope.is_root
+        self.is_static: bool = isinstance(self.symbol.scope, Namespace)
         self.is_reference: bool = self.var_type.is_reference
         self.declaration: list[AssemblyInstruction] = [
             AssemblyInstruction(self.symbol.node.config, "resb", [self.bytes], label=self.symbol.id, mapping="default")
         ]
 
     def location(self) -> str:
-        source = self.symbol.id if self.is_global else "bp"
+        source = self.symbol.id if self.is_static else "bp"
         off = ((" + " if self.offset > 0 else " - ") + str(abs(self.offset))) if self.offset else ""
         return source + off
 
@@ -160,12 +160,12 @@ class Allocator:
         self.program: "ProgramTranslator" = program
 
     def allocate(self) -> StackFrame:
-        return self.create_stack_frame(self.program.node.context)
+        return self.create_stack_frames(self.program.node.context)
 
     # recursive
-    def create_stack_frame(self, context: Context) -> StackFrame:
+    def create_stack_frames(self, context: Context) -> StackFrame:
 
         for child in context.children:
-            self.create_stack_frame(child)
+            self.create_stack_frames(child)
 
         return StackFrame(context)

@@ -13,29 +13,27 @@ class Context(Node):
         self.ids: set[str] = set()
 
     def register_symbol(self, symbol: "Symbol", local: bool = True):
-        #TODO: set bubble up to false when not strict config - done?
-        #this would allow local variables to override globals when not in strict mode
-        found = self.has_name(symbol.name, bubble_up = self.node.config.strict)
+        found = self.find_name(symbol.name)
         if found is not None:
-            raise NameError(f"Cannot redefine name '{symbol.name}'", symbol.node.token.line, defined_at=found.node.token.line)
+            raise NameError(f"Cannot redefine name {repr(symbol.name)}", symbol.node.token.line, defined_at=found.node.token.line)
         symbol.scope = self
         self.symbols[symbol.name] = symbol
 
-    def has_name(self, name: str, bubble_up: bool) -> Union["Symbol", None]:
-        if name in self.symbols:
-            return self.symbols[name]
-        if bubble_up and self.parent is not None and not self.is_root:
-            return self.parent.has_name(name, bubble_up)
-        return None
+    def find_name(self, name: str) -> "Symbol | None":
+        return self.symbols.get(name, None)
 
-    def resolve_symbol(self, name_token: NameToken, bubble_up: bool = True) -> "Symbol":
-        name = name_token.string
-        if name in self.symbols:
-            return self.symbols[name]
-        elif bubble_up and self.parent is not None and not self.is_root:
-            return self.parent.resolve_symbol(name_token, bubble_up)
-        else:
-            raise NameError(f"Undefined name '{name}'", name_token.line, context=self, tried_bubble_up=bubble_up)
+    def get_symbol(self, name_token: NameToken) -> "Symbol":
+        return self.resolve_names(name_token, name_token.components)
+
+    def resolve_names(self, name_token: NameToken, components: list[str]):
+        name = components[0]
+
+        if len(components) == 1:
+            found = self.find_name(name)
+            if found is not None:
+                return found
+
+        return self.parent.resolve_names(name_token, components)
 
     def generate_id(self, name_suggestion: str) -> str:
         symbol_id = name_suggestion
@@ -47,9 +45,49 @@ class Context(Node):
         return symbol_id
 
     def __str__(self):
-        return f"Context({self.node.__class__.__name__}({self.node.token.line if self.node.token else 0}))"
+        return f"{self.__class__.__name__}({repr(self.node)})"
     def __repr__(self):
         return str(self)
+
+
+class Namespace(Context):
+
+    def __init__(self, node: "ASTNode", parent: Union["Context", None] = None):
+        super().__init__(node, parent)
+        self.modules: dict[str, Namespace] = {}
+        self.direct: list[Namespace] = []   # ordered so later defined namespaces override earlier ones
+
+    def relate(self, name_token: NameToken | None, namespace: "Namespace"):
+        if name_token is None:
+            self.direct.append(namespace)
+        else:
+            if name_token.string in self.modules:
+                raise NadLabemError(f"Duplicate namespace name {repr(name_token.string)}", line=name_token.line)
+            self.modules[name_token.string] = namespace
+
+    def find_name(self, name: str) -> "Symbol | None":
+        if name in self.symbols:
+            return self.symbols[name]
+        for module in self.direct:
+            attempt: Symbol | None = module.find_name(name)
+            if attempt is not None:
+                return attempt
+        return None
+
+    def resolve_names(self, name_token: NameToken, components: list[str]):
+        name = components[0]
+
+        if len(components) == 1:
+            found = self.find_name(name)
+            if found is None:
+                raise NameError(f"Undefined name {repr(name)}", name_token.line, context=self)
+
+            return found
+
+        elif name in self.modules:
+                return self.modules[name].resolve_names(name_token, components[1:])
+
+        raise NameError(f"Undefined namespace {repr(name)} in {repr(name_token)}", name_token.line, context=self)
 
 
 class Symbol:

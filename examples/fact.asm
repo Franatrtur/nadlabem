@@ -38,9 +38,7 @@ fact:
 
         mov ax, 1             ;        return 1 (3)
         jmp rtn
-ifout   nop 
-
-        mov ax, word[bp + 4]  ;	return num * fact(num - 1) (6)
+ifout   mov ax, word[bp + 4]  ;	return num * fact(num - 1) (6)
         push ax
         mov ax, word[bp + 4]
         push ax

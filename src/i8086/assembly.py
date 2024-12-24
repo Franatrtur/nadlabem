@@ -17,7 +17,7 @@ class AssemblyTranslator(Translator):
         def replace(match) -> str:
             # Extract the placeholder name from the match (i.e., {customer})
             placeholder = match.group(1)
-            symbol = self.node.scope.resolve_symbol(NameToken(placeholder, self.node.token.line))
+            symbol = self.node.scope.get_symbol(NameToken(placeholder, self.node.token.line))
             replacement = Variable.variables.get(symbol, None)
             if replacement is None:
                 raise NameError(f"Variable for placeholder {placeholder} not found in assembly template.", self.node.token.line)

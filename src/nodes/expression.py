@@ -19,7 +19,7 @@ class FunctionCallNode(ExpressionNode):
 
     def register(self) -> None:
 
-        self.symbol = self.scope.resolve_symbol(self.token)
+        self.symbol = self.scope.get_symbol(self.token)
         self.symbol.reference(self)
 
         definition = self.symbol.node
@@ -99,7 +99,7 @@ class VariableReferenceNode(ExpressionNode):
         self.index: ExpressionNode | None = index
 
     def register(self) -> None:
-        symbol = self.scope.resolve_symbol(self.token)
+        symbol = self.scope.get_symbol(self.token)
         self.symbol = symbol
         symbol.reference(self)
         var_type: VariableType = symbol.node.node_type

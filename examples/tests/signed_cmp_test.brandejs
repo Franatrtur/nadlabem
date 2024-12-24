@@ -1,0 +1,47 @@
+include "../../std/stdlib.brandejs"
+
+main()
+
+def signed_lt_test() -> void {
+    assert(-10 <+ 0, *"-10 <+ 0 failed")
+    assert(-0x7fff <+ 0x7ffe, *"-0x7fff <+ 0x7ffe failed")
+    assert(not (5 <+ -1), *"not(5 <+ -1) failed")
+    assert(not (10 <+ 10), *"not(10 <+ 10) failed")
+    println(*"signed_lt_test success!")
+}
+
+def signed_gt_test() -> void {
+    assert(10 +> -10, *"10 +> -10 failed")
+    assert(0x7ffe +> -0x7fff, *"0x7ffe +> -0x7fff failed")
+    assert(not (-1 +> 5), *"not(-1 +> 5) failed")
+    assert(not (10 +> 10), *"not(10 +> 10) failed")
+    println(*"signed_gt_test success!")
+}
+
+def signed_gte_test() -> void {
+    assert(10 ~> -10, *"10 ~> -10 failed")
+    assert(-10 ~> -10, *"-10 ~> -10 failed")
+    assert(0x7ffe ~> -0x7fff, *"0x7ffe ~> -0x7fff failed")
+    assert(-0x7fff ~> -0x7fff, *"-0x7fff ~> -0x7fff failed")
+    assert(not (-1 ~> 5), *"not(-1 ~> 5) failed")
+    assert(10 ~> 10, *"10 ~> 10 failed")
+    println(*"signed_gte_test success!")
+}
+
+def signed_lte_test() -> void {
+    assert(-10 <~ 10, *"-10 <~ 10 failed")
+    assert(-10 <~ -10, *"-10 <~ -10 failed")
+    assert(-0x7fff <~ 0x7ffe, *"-0x7fff <~ 0x7ffe failed")
+    assert(-0x7fff <~ -0x7fff, *"-0x7fff <~ -0x7fff failed")
+    assert(not (5 <~ -1), *"not(5 <~ -1) failed")
+    assert(10 <~ 10, *"10 <~ 10 failed")
+    println(*"signed_lte_test success!")
+}
+
+def main() -> void {
+    signed_lt_test()
+    signed_gt_test()
+    signed_gte_test()
+    signed_lte_test()
+    println(*"COMPLETE signed comparison test success!")
+}

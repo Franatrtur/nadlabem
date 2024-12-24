@@ -1,6 +1,6 @@
 from ..translator import Translator, ProgramTranslator, AssemblyInstruction
 from .sizeof import sizeof
-from ..nodes.statement import VariableDeclarationNode, CodeBlockNode, FunctionDefinitonNode
+from ..nodes.statement import VariableDeclarationNode, CodeBlockNode, FunctionDefinitonNode, ModuleNode
 from .allocator import Allocator, Variable
 import re
 from ..ui import progress_bar
@@ -16,6 +16,10 @@ class CodeBlockTranslator(Translator):
             self.add(child)
             if not self.config.erase_comments and self.config.generate_mapping:
                 self.blank_line()
+
+
+class ModuleTranslator(CodeBlockTranslator):
+    node_type = ModuleNode
 
 
 class ProgramI8086Translator(ProgramTranslator):

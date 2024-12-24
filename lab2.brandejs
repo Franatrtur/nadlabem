@@ -1,0 +1,5 @@
+a: int = 5
+
+def fn(a: int, b: int) -> void{
+    pass
+}

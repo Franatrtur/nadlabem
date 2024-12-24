@@ -1,29 +1,54 @@
 from ..tree import Node
 from ..tokenizer import Token, TypeToken, NameToken
-from .scope import Context, Symbol
+from .scope import Context, Symbol, Namespace
 from typing import Type
 from .types import VariableType, FunctionType, Void, Int, Char, Bool, Array, DeclarationType, ExpressionType, ValueType, Comparator
 from .node import AbstractSyntaxTreeNode as ASTNode
 from .expression import ExpressionNode
-from ..errors import TypeError
+from ..errors import TypeError, NameError
 
 class StatementNode(ASTNode):
     pass
 
 class CodeBlockNode(StatementNode):
-    def __init__(self, token: Token, children: list[StatementNode], parser: "Parser"):
-        super().__init__(token, children, parser)
-        self.statements = children
-
-    def register_children(self):
-        
+    pass
+    #def register_children(self):
         # do the whole layer before nested layers, except blocks in blocks
-        for child in self.children:
-            child.register()
-        for child in self.children:
-            child.register_children()
-        for child in self.children:
-            child.verify()
+        # for child in self.children:
+        #     child.register()
+        # for child in self.children:
+        #     child.register_children()
+        # for child in self.children:
+        #     child.verify()
+
+
+class ModuleNode(StatementNode):
+    def __init__(self, token: Token, name_token: NameToken | None, children: list[StatementNode], parser: "Parser"):
+        super().__init__(token, children, parser)
+        self.context = Namespace(self, parent=self.scope)
+        self.name_token: NameToken | None = name_token
+    
+    def register(self) -> None:
+        if not isinstance(self.scope, Namespace):
+            raise NameError(f"Illegal module declaration outside of a namespace", self.token.line, suggestion="Modules cannot be declared inside functions")
+        self.scope.relate(self.name_token, self.context)
+
+
+class IncludeNode(StatementNode):
+    def __init__(self, token: Token, name_token: NameToken | None, context_to_link: Namespace, parser: "Parser"):
+        super().__init__(token, [], parser)
+        self.context = context_to_link
+        self.name_token: NameToken | None = name_token
+    
+    def register(self) -> None:
+        if not isinstance(self.scope, Namespace):
+            raise NameError(f"Illegal include outside of a namespace", self.token.line, suggestion="Includes cannot be declared inside functions")
+        self.scope.relate(self.name_token, self.context)
+
+    def prune(self) -> bool:
+        return True     # our work is done
+    
+
 
 class VariableDeclarationNode(StatementNode):
     def __init__(self, name: Token, expression_value: ExpressionNode, var_type: VariableType, parser: "Parser"):
@@ -68,7 +93,7 @@ class AssignmentNode(StatementNode):
         self.index: ExpressionNode | None = index
 
     def register(self) -> None:
-        symbol = self.scope.resolve_symbol(self.token)
+        symbol = self.scope.get_symbol(self.token)
         self.symbol = symbol
         self.variable: VariableDeclarationNode = symbol.node
         symbol.reference(self)
@@ -87,7 +112,7 @@ class IncrementalNode(StatementNode):
         self.name_token: NameToken = name_token
 
     def register(self) -> None:
-        self.symbol: Symbol = self.scope.resolve_symbol(self.name_token)
+        self.symbol: Symbol = self.scope.get_symbol(self.name_token)
         self.symbol.reference(self)
         var_type: VariableType = self.symbol.node.node_type
         Comparator.increment(var_type, node=self)
@@ -176,7 +201,7 @@ class FunctionCallStatementNode(StatementNode):
         self.arguments: list[ExpressionNode] = arguments
 
     def register(self) -> None:
-        self.symbol: Symbol = self.scope.resolve_symbol(self.token)
+        self.symbol: Symbol = self.scope.get_symbol(self.token)
         self.symbol.reference(self)
 
     def verify(self) -> None:
@@ -204,6 +229,9 @@ class ContinueNode(StatementNode):
 class PassNode(StatementNode):
     def __init__(self, token: Token, parser: "Parser"):
         super().__init__(token, [], parser)
+
+    def prune(self) -> bool:
+        return True
 
 class AssemblyNode(StatementNode):
     

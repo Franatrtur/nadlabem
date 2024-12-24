@@ -4,6 +4,7 @@ def putchar(character: char) -> void {
     $ int 0x21      ; resp. int 33 poskytne službu
 }
 
+;TODO: do a get_char get_line with a 80 char buffer
 def getchar() -> char {
     $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu
     $ int 0x21      ; resp. int 33 poskytne službu
@@ -14,24 +15,24 @@ def getchar() -> char {
     ; Dalším int 21h bude předán další bajt téhož znaku. Nedojde ke ztrátě obsahu.
 }
 
-def print(string: @char[]) -> void {
+def print(str: @char[]) -> void {
     i: int = 0
-    byte: char = string[0]
-    while(byte != 0c){
-        putchar(byte)
+    character: char = str[0]
+    while(character != 0c){
+        putchar(character)
         i = i + 1
-        byte = string[i]
+        character = str[i]
     }
 }
 
-def print_dos(string: char[]*) -> void {
+def print_dos(str: char[]*) -> void {
     $ mov ah, 9	                ; Identifikace služby Vypsat řetězec bajtů na terminál
-    $ mov dx, word[{string}]    ; Offset začátku řetězce v segmentu dle DS
+    $ mov dx, word[{str}]    ; Offset začátku řetězce v segmentu dle DS
     $ int 0x21                  ; resp. int 33 poskytne službu
 }
 
-def println(string: @char[]) -> void {
-    print(*string)
+def println(str: @char[]) -> void {
+    print(*str)
     putchar(10c)   ; 13 - CL
     putchar(13c)   ; 10 - RF
 }

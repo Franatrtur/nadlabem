@@ -3,6 +3,7 @@ from ..errors import SyntaxError
 from ..tree import Node
 from typing import Type
 from ..nodes.node import AbstractSyntaxTreeNode as ASTNode
+from pathlib import Path
 
 
 class Parser(Node):
@@ -21,6 +22,10 @@ class Parser(Node):
 
     def is_ahead(self, token_type: Type[Token]) -> bool:
         return token_type.match(self.root.look_ahead())
+
+    @property
+    def current_location(self) -> Path:
+        return self.root.tokens[self.root.i].line.location
 
     @property
     def is_done(self) -> bool:

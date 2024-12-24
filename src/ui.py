@@ -11,9 +11,9 @@ def progress_bar(name: str, iteration: int, total: int, length=40, refuse_finish
     
     print(f'\r{extended_name}[{bar}] {percent:.0f}% Complete', end='\r')
     
-    #wait one second total
+    # wait one third of a second total
     time.sleep(0.33 / total)
     
     if iteration == total and not refuse_finish:
-        print()
+        print()     # flush
         time.sleep(0.15)

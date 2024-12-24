@@ -11,7 +11,7 @@ from .loops import WhileTranslator, ForTranslator, PassTranslator, ContinueTrans
 from .fun import FunctionCallTranslator, FunctionCallStatementTranslator, FunctionDefinitionTranslator, ReturnTranslator
 from .cast import CastTranslator
 
-from .program import ProgramI8086Translator, CodeBlockTranslator
+from .program import ProgramI8086Translator, CodeBlockTranslator, ModuleTranslator
 
 
 TRANSLATORS: list[Type[Translator]] = [
@@ -27,6 +27,7 @@ TRANSLATORS: list[Type[Translator]] = [
     AssemblyExpressionTranslator,
     IfTranslator,
     CodeBlockTranslator,
+    ModuleTranslator,
     WhileTranslator,
     ForTranslator,
     ContinueTranslator,

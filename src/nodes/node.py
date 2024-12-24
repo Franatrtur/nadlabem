@@ -1,6 +1,6 @@
 from ..tree import Node
 from ..tokenizer import Token
-from .scope import Context
+from .scope import Context, Namespace
 from typing import Type
 from ..config import CompilationConfig
 from ..errors import NadLabemError
@@ -41,20 +41,24 @@ class AbstractSyntaxTreeNode(Node):
         # do nested layers before current layer
         # postorder traversal style
         # however, we have to make sure that functions
-        # (nodes with their own context) have been registered first
+        # (nodes with their own non-namespace context) have been registered first
         for child in self.children:
-            if child.scope != child.context:
+            if child.has_closure:
                 child.register()
         for child in self.children:
-            if child.scope == child.context:
+            if not child.has_closure:
                 child.register_children()
                 child.register()
         for child in self.children:
-            if child.scope != child.context:
+            if child.has_closure:
                 child.register_children()
 
         for child in self.children:
             child.verify()
+
+    @property       # returns whether a node is masked in first traversal (ie functions)
+    def has_closure(self) -> bool:
+        return self.scope != self.context and not isinstance(self.context, Namespace)
 
     def prune(self) -> bool:
         return False
@@ -95,7 +99,7 @@ class AbstractSyntaxTreeNode(Node):
         return self_str
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.token})" + (" - "+ str(self.node_type) if self.node_type is not None else "")
+        return f"{self.__class__.__name__}({self.token})" + (" - " + str(self.node_type) if self.node_type is not None else "")
 
 
 class ProgramNode(AbstractSyntaxTreeNode):
@@ -105,7 +109,7 @@ class ProgramNode(AbstractSyntaxTreeNode):
         self.parent = None
         self.root = self  # top level node
         self.statements = statements
-        self.context = Context(self, None)
+        self.context = Namespace(self, None)
         self.context.root = self.context.root = self.context  #top level context
     
     def validate(self):

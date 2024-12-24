@@ -5,7 +5,6 @@ from ..errors import SymbolError
 
 
 class NumberToken(Token):
-    """Also represents one char"""
     def __init__(self, string: str, line: Line):
         super().__init__(string, line)
         try:
@@ -71,6 +70,8 @@ class CommentToken(Token):
 
 
 IncludeToken = Token.literal("include", "IncludeToken")
+AsToken = Token.literal("as", "AsToken")
+ModuleToken = Token.literal("module", "ModuleToken")
 
 IfToken = Token.literal("if", "IfToken")
 ElseToken = Token.literal("else", "ElseToken")
@@ -95,6 +96,10 @@ DoubleToken = Token.literal("double", "DoubleToken")
 
 
 class NameToken(Token):
+    def __init__(self, string: str, line: Line):
+        super().__init__(string, line)
+        self.components: list[str] = string.split(".")
+
     @staticmethod
     def detect(string: str) -> bool:
         return string[0].isalpha() or string[0] == "_"
@@ -117,7 +122,7 @@ IsLtEqToken = Token.literal("<=", "IsLtEqToken")
 IsGtEqToken = Token.literal(">=", "IsGtEqToken")
 
 SignedLessThanToken = Token.literal("<+", "SignedLessThanToken")
-SignedGreaterThanToken = Token.literal(">+", "SignedGreaterThanToken")
+SignedGreaterThanToken = Token.literal("+>", "SignedGreaterThanToken")
 SignedIsLtEqToken = Token.literal("<~", "SignedIsLtEqToken")
 SignedIsGtEqToken = Token.literal("~>", "SignedIsGtEqToken")
 
@@ -146,8 +151,9 @@ PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
 StarToken = Token.literal("*", "StarToken")
 DivideToken = Token.literal("/", "DivideToken")
-SignedDivideToken = Token.literal("//", "SignedDivideToken")
+SignedDivideToken = Token.literal("/+", "SignedDivideToken")
 ModuloToken = Token.literal("%", "ModuloToken")
+#TODO: signed modulo
 
 OpenParenToken = Token.literal("(", "OpenParenToken")
 CloseParenToken = Token.literal(")", "CloseParenToken")
@@ -180,6 +186,8 @@ TOKEN_DETECTORS = [
     BoolLiteralToken,
 
     IncludeToken,
+    ModuleToken,
+    AsToken,
 
     IfToken,
     ElseToken,
@@ -280,6 +288,8 @@ KeywordToken = Token.any(
     PassToken,
     DefinitionToken,
     IncludeToken,
+    ModuleToken,
+    AsToken,
     class_name="KeywordToken"
 )
 

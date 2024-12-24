@@ -11,6 +11,8 @@ SUGGESTIONS: dict[tuple[Type[Token], Type[Token]], str] = {
     
 }
 
+#TODO: select suggestion based on the current parser as well
+
 def find_suggestion(expected: Type[Token], got: Token, parser: "Parser") -> str | None:
     for (expected_class, got_class), suggestion in SUGGESTIONS.items():
         # if the expected class in in the tuple or is a subclass of any in the tuple

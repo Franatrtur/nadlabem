@@ -1,6 +1,7 @@
 import re, ast
 from typing import Type
 from ..errors import SymbolError, NadLabemError
+from pathlib import Path
 
 
 class Token:
@@ -9,7 +10,7 @@ class Token:
         self.line = line
 
     def __str__(self):
-        return f"{self.__class__.__name__}({repr(self.string)})"
+        return f"{self.__class__.__name__}({repr(self.string)}, {self.line.brief})"
     
     def __repr__(self):
         return str(self)
@@ -65,16 +66,19 @@ class Token:
 
 class Line:
     
-    def __init__(self, string: str, number: int, location: str | None = None):
+    def __init__(self, string: str, number: int, location: Path | None = None):
         self.string = string
         self.number = number
         self.tokens: list[Token] = []
         self.comment: str = ""
-        self.location: str | None = location
+        self.location: Path | None = location
+        self.file: str = f"File \"{self.location}\"" if self.location is not None else "Anonymous file"
+
+    @property
+    def brief(self) -> str:
+        return f"{self.location}:{self.number}"
 
     def __str__(self):
-        origin = f"File \"{self.location}\"" if self.location is not None else "Anonymous file"
-        return f"Line {self.number}: \n{repr(self.string.strip())}\n{origin}, line {self.number}"
+        return f"Line {self.number}: \n{repr(self.string.strip())}\n{self.file}, line {self.number}"
     def __repr__(self):
-        tokens_string = ','.join(map(str, self.tokens))
-        return f"Line {self.number}: {repr(self.string)}"# [{tokens_string}]"
+        return f"Line({self.brief}): {repr(self.string.strip())}"# [{tokens_string}]"

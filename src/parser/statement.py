@@ -1,15 +1,16 @@
 from .parsing import Parser
 from ..tokenizer import (Token, NameToken, OpenParenToken, CloseParenToken, TypeToken, IfToken, ForToken, ElseToken,
-                         StringLiteralToken, IncludeToken,
+                         StringLiteralToken, IncludeToken, ModuleToken, AsToken, LogicalNotToken,
                         OpenBraceToken, CloseBraceToken, WhileToken, EqualsToken, AtToken, DefinitionToken, DoToken,
                         ColonToken, DollarToken, AtEqualsToken, ArrayBeginToken, ArrayEndToken, IncrementalToken,
                         BreakToken, ContinueToken, PassToken, CommaToken, NewLineToken, ArrowToken, ReturnToken)
 from typing import Type
 from .expression import ExpressionParser
 from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, StatementNode, ArgumentDeclarationNode,
-                    CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode,
-                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode, IncrementalNode)
+                    CodeBlockNode, ForNode, PassNode, ReturnNode, ForNode, ContinueNode, BreakNode, AssemblyNode, IncludeNode,
+                    WhileNode, AssignmentNode, VariableDeclarationNode, FunctionDefinitonNode, IncrementalNode, ModuleNode)
 from pathlib import Path
+from .dependency import Dependency
 from .types import TypeParser
 from ..errors import SyntaxError, NadLabemError
 from ..tokenizer import Tokenizer
@@ -50,6 +51,30 @@ class CodeBlockParser(Parser):
         start_token = statements[0].token if statements else None
         return CodeBlockNode(start_token, statements, parser=self)
             
+
+class ModuleParser(Parser):
+
+    def __init__(self, parent: Parser, started: Token | None = None):
+        super().__init__(parent)
+        self.started: Token | None = started
+    
+    def parse(self) -> ModuleNode:
+
+        token = self.started if self.started is not None else self.devour(ModuleToken)
+
+        name_token: NameToken | None = None
+        if self.is_ahead(NameToken):
+            name_token = self.devour(NameToken)
+            parent = self
+        else:
+            parent = self.parent
+        
+        body: list[StatementNode] = CodeBlockParser(parent=parent).parse().children
+
+        module_node = ModuleNode(token, name_token, body, parser=self)
+
+        return module_node
+
 
 class IfParser(Parser):
 
@@ -158,14 +183,14 @@ class AssignmentParser(Parser):
 
         if var_type.is_reference:
             if not self.is_ahead(AtEqualsToken):
-                raise SyntaxError(f"Declaration of \"{name_token.string}\" by reference must assign a reference", name_token.line)
+                raise SyntaxError(f"Declaration of {repr(name_token.string)} by reference must assign a reference", name_token.line)
             self.devour(AtEqualsToken)
             expression = ExpressionParser(parent=self).parse()
             return VariableDeclarationNode(name_token, expression, var_type, parser=self)
 
         # else
         if not self.is_ahead(EqualsToken):
-            raise SyntaxError(f"Declaration of \"{name_token.string}\" by value must assign a value", name_token.line)
+            raise SyntaxError(f"Declaration of {repr(name_token.string)} by value must assign a value", name_token.line)
     
         self.devour(EqualsToken)
         expression = ExpressionParser(parent=self).parse()
@@ -234,36 +259,79 @@ class AssemblyParser(Parser):
 
 
 class IncludeParser(Parser):
+
     def parse(self) -> CodeBlockNode:
-        token = self.devour(IncludeToken)
-        path_string = self.devour(StringLiteralToken).value
-        self.devour(NewLineToken)
         
         if self.config.location is None:
             raise NadLabemError(f"Cannot include from an anonymous program", token.line)
 
+        origin = self.root.current_location
+
+        token = self.devour(IncludeToken)
+        path_token = self.devour(StringLiteralToken)
+        path_string = path_token.value
+
         module_path: Path = token.line.location.parent / path_string
 
         if not module_path.exists() or not module_path.is_file():
-            raise NadLabemError(f"Cannot find module \"{module_path}\"", path_token.line)
+            raise NadLabemError(f"Cannot find module {module_path}", path_token.line)
 
-        if module_path in self.root.modules:
-            self.config.warn(NadLabemError(f"Duplicate include of module \"{module_path}\"", token.line, suggestion="Keep tree structure, don't include submodules which are included by your modules"))
-            self.root.include([NewLineToken("\n", "Virtual Import Line")])
+        current_dependency: Dependency = self.root.dependencies[origin]
+
+        if current_dependency.is_upstream(module_path):
+            raise NadLabemError(f"Circular include of module {module_path} detected", token.line, suggestion="Keep tree structure when imporing")
+        
+        if self.is_ahead(LogicalNotToken):  # not as module
+            self.devour(LogicalNotToken)
+            self.devour(AsToken)
+            self.devour(ModuleToken)
+            self.config.warn(NadLabemError(f"Direct code includes (not as module) are dangerous", token.line))
+
+            if module_path in self.root.dependencies:
+                raise NadLabemError(f"Cannot directly include modularly loaded code from file {module_path}", token.line)
+
+            tokens = Tokenizer(config=self.config, location=module_path).tokenize(
+                source_code=module_path.read_text()
+            )
+
+            self.root.inject(tokens, next_line=True)
             return PassNode(token, parser=self)
 
-        self.root.modules.add(module_path)
 
-        tokens = [OpenBraceToken("{", "Virtual Import Line"), NewLineToken("\n", "Virtual Import Line")] + Tokenizer(config=self.config, location=module_path).tokenize(
+        module_name: NameToken | None = None
+        if self.is_ahead(AsToken):
+            self.devour(AsToken)
+            module_name = self.devour(NameToken)
+
+        if module_path in self.root.dependencies:
+            dependency: Dependency = self.root.dependencies[module_path]
+            return IncludeNode(token, module_name, dependency.module.context, parser=self)
+        
+        dependency = Dependency(location=module_path, parent=current_dependency)
+        self.root.dependencies[module_path] = dependency
+
+        tokens = [
+            OpenBraceToken("<virtual>", token.line),
+            NewLineToken("<virtual>", token.line)
+        ] + Tokenizer(config=self.config, location=module_path).tokenize(
             source_code=module_path.read_text()
-        ) + [CloseBraceToken("}", "Virtual Import Line"), NewLineToken("\n", "Virtual Import Line")]
+        ) + [
+            CloseBraceToken("<virtual>", token.line),
+            NewLineToken("<virtual>", token.line)
+        ]
 
-        self.root.include(tokens)
+        if module_name is not None:
+            tokens.insert(0, module_name)
 
-        module_parser = CodeBlockParser(parent=self.parent, force_multiline=False)
-        module: CodeBlockNode = module_parser.parse()
+        self.root.inject(tokens, next_line=True)
 
-        return module
+        self.devour(NewLineToken)
+        
+        module_node = ModuleParser(parent=self, started=token).parse()
+
+        dependency.module = module_node
+
+        return module_node
 
 
 STATEMENTS: dict[Type[Token], Type[Parser]] = {
@@ -280,7 +348,8 @@ STATEMENTS: dict[Type[Token], Type[Parser]] = {
     DollarToken: AssemblyParser,
     DefinitionToken: FunctionDefinitionParser,
     IncrementalToken: IncrementalParser,
-    IncludeToken: IncludeParser
+    IncludeToken: IncludeParser,
+    ModuleToken: ModuleParser
 }
 
 class StatementParser(Parser):

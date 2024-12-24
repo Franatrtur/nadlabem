@@ -7,7 +7,7 @@ from ..tokenizer.symbols import (PlusToken, MinusToken, DivideToken, SignedDivid
                                 IsLtEqToken, IsGtEqToken, IsNotEqualToken, SignedIsLtEqToken, SignedIsGtEqToken,
                                 SignedGreaterThanToken, SignedLessThanToken)
 from .sizeof import sizeof
-from ..nodes.types import Double, Char, Int, Bool
+from ..nodes.types import Double, Char, Int, Bool, ValueType
 from .allocator import Variable
 from ..errors import NotImplementedError
 
@@ -15,11 +15,47 @@ class BinaryOperationTranslator(Translator):
 
     node_type = BinaryOperationNode
 
+    def _load_operands(self, flipped: bool = False):
+        if flipped:
+            self.add(self.node.left)
+            self.add(self.node.right)
+        else:
+            self.add(self.node.right)
+            self.add(self.node.left)
+            
+        if self.node.left.node_type is Double:
+            #TODO: redirect to a different method in this if clause so we dont have clutter
+            raise NotImplementedError("Double operations not implemented yet for i8086", self.node.token.line)
+
+        self.assemble("pop", ["ax"], mapping=True)
+        self.assemble("pop", ["bx"])
+
+    def _make_ordered_comp(self, signed: bool, flipped: bool, inverted: bool) -> None:
+        self._load_operands(flipped)
+        self.assemble("cmp", ["ax", "bx"])
+        self.assemble("pushf")
+        self.assemble("pop", ["ax"])
+
+        if signed:
+            # Signed less than (SF ≠ OF)
+            self.assemble("mov", ["cl", "11"]) # OF is bit 11, SF is bit 7
+            self.assemble("shr", ["ax", "cl"]) # Shift OF to bit 0 and SF to bit 4 
+            self.assemble("and", ["ax", "0x11"]) # Isolate OF and SF
+            self.assemble("xor", ["ax", "0x10"]) # Check if SF ≠ OF (xor with 0x10)
+            self.assemble("mov", ["cl", "4"])
+            self.assemble("shr", ["ax", "cl"]) # shift right to get the result in bit 0
+
+        else:
+            # Unsigned less than (CF = 1)
+            self.assemble("mov", ["cl", "7"]) # CF is bit 7
+            self.assemble("shr", ["ax", "cl"])
+            self.assemble("and", ["ax", "1"])
+
+        if inverted:
+            self.assemble("xor", ["ax", "1"])
+
     def make(self) -> None:
         self.node: BinaryOperationNode
-
-        self.add(self.node.right)
-        self.add(self.node.left)
 
         # A = "ax" if sizeof(self.node.left.node_type) == 2 else "al"
         # B = "bx" if sizeof(self.node.right.node_type) == 2 else "bl"
@@ -28,27 +64,29 @@ class BinaryOperationTranslator(Translator):
             #TODO: redirect to a different method in this if clause so we dont have clutter
             raise NotImplementedError("Double operations not implemented yet for i8086", self.node.token.line)
 
-        self.assemble("pop", ["ax"], mapping=True)
-        self.assemble("pop", ["bx"])
-
         # if sizeof(self.node.left.node_type) == 1:
         #     self.assemble("mov", ["ah", "0"])
         # if sizeof(self.node.right.node_type) == 1:
         #     self.assemble("mov", ["bh", "0"])
 
         if PlusToken.match(self.node.token):
+            self._load_operands()
             self.assemble("add", ["ax", "bx"])
     
         elif MinusToken.match(self.node.token):
+            self._load_operands()
             self.assemble("sub", ["ax", "bx"])
 
         elif StarToken.match(self.node.token):
+            self._load_operands()
             self.assemble("mul", ["bx"])
 
         elif LogicalNotToken.match(self.node.token):
+            self._load_operands()
             self.assemble("xor", ["ax", "1"])
     
         elif Token.any(IsEqualToken, IsNotEqualToken).match(self.node.token):
+            self._load_operands()
             self.assemble("cmp", ["ax", "bx"])
             self.assemble("pushf")
             self.assemble("pop", ["ax"])
@@ -59,97 +97,48 @@ class BinaryOperationTranslator(Translator):
                 self.assemble("xor", ["ax", "1"])  # Invert the equality
 
         elif SignedGreaterThanToken.match(self.node.token):  # Greater than: ax +> bx
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-
-            self.assemble("mov", ["cl", "6"])
-            self.assemble("shr", ["ax", "cl"])
-            self.assemble("and", ["al", "1"])
-            self.assemble("mov", ["dl", "al"])
-
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("and", ["ax", "1"])
-
-            self.assemble("or", ["al", "dl"])
-            self.assemble("xor", ["ax", "1"])
+            raise NotImplementedError("Signed GT not implemented yet", self.node.token.line)
+            self._make_ordered_comp(signed=True, flipped=True, inverted=False)
 
         elif SignedLessThanToken.match(self.node.token):  # Less than: ax <+ bx 
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("mov", ["cl", "7"])  # CF
-            self.assemble("shr", ["al", "cl"])
-            self.assemble("and", ["ax", "1"])
+            raise NotImplementedError("Signed LT not implemented yet", self.node.token.line)
+            self._make_ordered_comp(signed=True, flipped=False, inverted=False)
 
         elif SignedIsGtEqToken.match(self.node.token):  # Greater or equal: ax ~> bx
-            # works 100 % for ints
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("mov", ["cl", "7"])  # CF
-            self.assemble("shr", ["al", "cl"])
-            self.assemble("and", ["ax", "1"])
-            self.assemble("xor", ["ax", "1"])  # Invert CF for signed comparison
+            raise NotImplementedError("Signed GTEQ not implemented yet", self.node.token.line)
+            self._make_ordered_comp(signed=True, flipped=False, inverted=True)
 
         elif SignedIsLtEqToken.match(self.node.token):  # Less or equal: ax <~ bx
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
+            raise NotImplementedError("Signed LTEQ not implemented yet", self.node.token.line)
+            self._make_ordered_comp(signed=True, flipped=True, inverted=True)
 
-            self.assemble("mov", ["cl", "6"])
-            self.assemble("shr", ["ax", "cl"])
-            self.assemble("and", ["al", "1"])
-            self.assemble("mov", ["dl", "al"])
+            # self.assemble("mov", ["cl", "6"])
+            # self.assemble("shr", ["ax", "cl"])
+            # self.assemble("and", ["al", "1"])
+            # self.assemble("mov", ["dl", "al"])
 
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("and", ["ax", "1"])
+            # self.assemble("pushf")
+            # self.assemble("pop", ["ax"])
+            # self.assemble("and", ["ax", "1"])
 
-            self.assemble("or", ["al", "dl"])
+            # self.assemble("or", ["al", "dl"])
 
         ################################################## unsigned comparison follows
 
         elif GreaterThanToken.match(self.node.token):  # Greater than: ax > bx
-            raise NotImplementedError("Unsigned GTEQ not implemented yet", self.node.token.line)
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("mov", ["cl", "7"])  # CF (Carry Flag)
-            self.assemble("shr", ["al", "cl"])
-            self.assemble("and", ["al", "1"])
-            #self.assemble("xor", ["al", "1"])  # CF inverted for unsigned greater than
-            self.assemble("mov", ["ah", "0"])
+            #raise NotImplementedError("Unsigned GT not implemented yet", self.node.token.line)
+            self._make_ordered_comp(signed=False, flipped=True, inverted=False)
 
         elif LessThanToken.match(self.node.token):  # Less than: ax < bx 
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("mov", ["cl", "7"])  # CF (Carry Flag)
-            self.assemble("shr", ["al", "cl"])
-            self.assemble("and", ["al", "1"])
-            self.assemble("mov", ["ah", "0"])
+            self._make_ordered_comp(signed=False, flipped=False, inverted=False)
 
         elif IsGtEqToken.match(self.node.token):  # Greater or equal: ax >= bx
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("mov", ["cl", "7"])  # CF (Carry Flag)
-            self.assemble("shr", ["al", "cl"])
-            self.assemble("and", ["al", "1"])
-            self.assemble("xor", ["al", "1"])  # CF inverted for unsigned greater than
-            self.assemble("mov", ["ah", "0"])
+            raise NotImplementedError("Unsigned GTEQ not implemented yet", self.node.token.line)
+            self._make_ordered_comp(signed=False, flipped=False, inverted=True)
 
         elif IsLtEqToken.match(self.node.token):  # Less or equal: ax <= bx
-            assert False, "Template only, unsigned IsLtEqToken not implemented yet"
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("mov", ["cl", "6"])  # SF
-            self.assemble("shr", ["al", "cl"])
-            self.assemble("and", ["ax", "1"])
-            self.assemble("xor", ["ax", "1"])  # Invert SF for signed comparison
+            #raise NotImplementedError("Unsigned LTEQ not implemented yet", self.node.token.line)
+            self._make_ordered_comp(signed=False, flipped=True, inverted=True)
 
 
         elif BinaryAndToken.match(self.node.token):

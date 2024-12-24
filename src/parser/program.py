@@ -7,6 +7,7 @@ from .parsing import Parser
 from .statement import CodeBlockParser
 from ..nodes.node import ProgramNode
 from .suggestions import find_suggestion
+from .dependency import Dependency
 from pathlib import Path
 from ..tokenizer import Tokenizer
 
@@ -21,7 +22,9 @@ class ProgramParser(Parser):
         self.children = []
         self.config: CompilationConfig = config
 
-        self.modules: set[Path] = {self.config.location}
+        self.dependencies: dict[Path, Dependency] = {
+            self.config.location: Dependency(self.config.location, parent=None)
+        }
 
     def parse(self) -> ProgramNode:
         program_block = CodeBlockParser(parent=self, force_multiline=True).parse()
@@ -76,5 +79,6 @@ class ProgramParser(Parser):
     def is_done(self) -> bool:
         return self.i >= len(self.tokens)
 
-    def include(self, tokens: list[Token]) -> None:
-        self.tokens = self.tokens[0:self.i] + tokens + self.tokens[self.i:]
+    def inject(self, tokens: list[Token], next_line: bool) -> None:
+        offset = 1 if next_line else 0
+        self.tokens = self.tokens[:(self.i + offset)] + tokens + self.tokens[(self.i + offset):]
