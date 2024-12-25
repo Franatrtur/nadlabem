@@ -63,7 +63,7 @@ class VariableDeclarationNode(StatementNode):
         self.context.register_symbol(self.symbol)
 
     def prune(self) -> bool:
-        return not self.symbol.is_relevant
+        return not self.symbol.is_relevant and isinstance(self.scope, Namespace)
 
     def verify(self) -> None:
         if self.by_reference:

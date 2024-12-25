@@ -1,0 +1,4 @@
+x: int = 0xabc % 16
+x=x
+y: bool = x < 10
+y =y

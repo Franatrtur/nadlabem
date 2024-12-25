@@ -66,7 +66,7 @@ class AbstractSyntaxTreeNode(Node):
     def prune_children(self) -> bool:
         removed: bool = False
         for child in self.children:
-            child.prune_children()
+            removed = removed or child.prune_children()
             if child.prune():
                 self.children.remove(child)
                 child.parent = None

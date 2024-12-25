@@ -93,7 +93,7 @@ class Variable:
             translator.assemble("mov", [low, f"word[{source}{index_modifier}]"])
             translator.assemble("mov", [high, f"word[{source}{index_modifier} + 2]"])
         else:
-            raise NadLabemError(f"Cannot load type {self.var_type} as {as_type} of size {value_size} bytes into register {target_register} - too big", self.symbol.node.token.line)
+            raise NadLabemError(f"Cannot load type {self.var_type} as {as_type} of size {value_size} bytes into register {target_register} - too big", translator.node.token.line)
 
     def _store(self, translator: Translator, as_type: ExpressionType, target: str, source_register: str, index_register: str = "") -> None:
         index_modifier = f" + {index_register}" if index_register else ""
@@ -109,7 +109,7 @@ class Variable:
             translator.assemble("mov", [f"word[{target}{index_modifier}]", low])
             translator.assemble("mov", [f"word[{target}{index_modifier} + 2]", high])
         else:
-            raise NadLabemError(f"Cannot store type {self.var_type} as {as_type} of size {value_size} bytes from register {source_register} - too big", self.symbol.node.token.line)
+            raise NadLabemError(f"Cannot store type {self.var_type} as {as_type} of size {value_size} bytes from register {source_register} - too big", translator.node.token.line)
 
     def load_value(self, translator: Translator, as_type: ExpressionType,  target_register: str, index_register: str = "") -> None:
         
@@ -143,13 +143,13 @@ class Variable:
         assert self.var_type.is_reference, "Cannot store pointer to non-reference variable "+self.symbol.id
         translator.assemble("mov", [f"word[{self.location()}{index_modifier}]", source_register])
         
-    def store_value(self, translator: Translator, source_register: str = "bx", index_register: str = ""):
-        
+    def store_value(self, translator: Translator, as_type: ExpressionType, source_register: str = "bx", index_register: str = ""):
+
         if self.is_reference:
             self.load_pointer(translator, "bx", "")
-            self._store(translator, self.var_type.expression_type, "bx", source_register, index_register)
+            self._store(translator, as_type, "bx", source_register, index_register)
         else:
-            self._store(translator, self.var_type.expression_type, self.location(), source_register, index_register)
+            self._store(translator, as_type, self.location(), source_register, index_register)
 
 
 

@@ -117,6 +117,9 @@ class BinaryTranslator(BinaryOperationTranslator):
         
         self._load_operands()
 
+        if self.node.node_type is Double:
+            raise NotImplementedError("Double binary operations not yet implemented for i8086", self.node.token.line)
+
         if BinaryAndToken.match(self.node.token):
             self.assemble("and", ["ax", "bx"])
 

@@ -82,8 +82,10 @@ class ProgramI8086Translator(ProgramTranslator):
             self.result.extend(macro)
 
         self.assemble("mov", ["ax", "1"], label="true")
+        self.assemble("or", ["ax", "ax"])
         self.assemble("ret")
         self.assemble("mov", ["ax", "0"], label="false")
+        self.assemble("or", ["ax", "ax"])
         self.assemble("ret")
         
         self.blank_line()

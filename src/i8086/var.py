@@ -81,7 +81,7 @@ class VariableDeclarationTranslator(Translator):
 
         else:
             src_reg: str = ""
-            bytelen = sizeof(self.node.node_type.expression_type)
+            bytelen = sizeof(self.node.assignment.node_type)
             if bytelen == 1:
                 src_reg = "al"
             elif bytelen == 2:
@@ -92,7 +92,7 @@ class VariableDeclarationTranslator(Translator):
             
             self.assemble("pop", ["ax"])
 
-            variable.store_value(translator=self, source_register=src_reg)
+            variable.store_value(translator=self, as_type=self.node.assignment.node_type, source_register=src_reg)
 
 
 class AssignmentTranslator(Translator):
@@ -105,13 +105,14 @@ class AssignmentTranslator(Translator):
         variable: Variable = Variable.variables[self.node.symbol]
         self.variable: Variable = variable
 
-        self.add(self.node.value)
-
         target_index: str = ""
 
         if self.node.index is not None:
             self.add(self.node.index)
+            self.assemble("pop", ["si"])
             target_index = "si"
+
+        self.add(self.node.value)
 
         if self.node.by_reference:
             self.assemble("pop", ["ax"])
@@ -119,7 +120,7 @@ class AssignmentTranslator(Translator):
 
         else:
             src_reg: str = ""
-            bytelen = sizeof(self.node.variable.node_type.expression_type)
+            bytelen = sizeof(self.node.value.node_type)
             if bytelen == 1:
                 src_reg = "al"
             elif bytelen == 2:
@@ -130,7 +131,7 @@ class AssignmentTranslator(Translator):
 
             self.assemble("pop", ["ax"])
         
-        Variable.variables[self.node.variable.symbol].store_value(self, source_register=src_reg, index_register=target_index)
+        Variable.variables[self.node.variable.symbol].store_value(self, as_type=self.node.value.node_type, source_register=src_reg, index_register=target_index)
 
 
 class VariableReferenceTranslator(Translator):

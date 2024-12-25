@@ -1,5 +1,6 @@
-a: int = 5
+include "std/io.brandejs"
 
-def fn(a: int, b: int) -> void {
-    pass
-}
+num: int = 0x1a2b
+print(*"number is: ")
+print_hex(num)
+

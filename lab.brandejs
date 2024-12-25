@@ -44,10 +44,3 @@ def myfn(){
 ; def print_decimal(number: int) -> void {
 
 ; }
-
-; def print_hex(number: int) -> void {
-;     while (number != 0) {
-;         put_char(char(number % 16)) ;TODO: musis to zase shiftnout podle A nebo podle 0
-;         number = number / 16
-;     }
-; }

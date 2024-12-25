@@ -37,6 +37,32 @@ def get_line() -> char[80]* {
 ; a: char[]* = get_line()
 ; a = a
 
+HEX_OUTPUT_BUFFER: char[5] = "0000"
+
+def print_hex(number: int) -> void {
+    if (number == 0) {
+        put_char('0')
+        return
+    }
+
+    i: int = 0
+    while (number > 0) {
+        last: int = (number % 16)
+
+        if (last < 10) {
+            last = last + 0x30
+        } else {
+            last = last + 0x37
+        }
+
+        HEX_OUTPUT_BUFFER[3 - i] = (last :: char)
+        number = number >> 4
+        i = i + 1
+    }
+
+    print(*HEX_OUTPUT_BUFFER)
+}
+
 def print(str: @char[]) -> void {
     i: int = 0
     character: char = str[0]
@@ -55,6 +81,6 @@ def print_dos(str: char[]*) -> void {
 
 def println(str: @char[]) -> void {
     print(*str)
-    put_char(10c)   ; 13 - CL
-    put_char(13c)   ; 10 - RF
+    put_char(13c)   ; 13 - CR
+    put_char(10c)   ; 10 - LF
 }
