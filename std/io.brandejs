@@ -1,11 +1,11 @@
-def putchar(character: char) -> void {
+def put_char(character: char) -> void {
     $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál
     $ mov dl, byte[{character}]     ; Bajt, který se má na terminál vypsat
     $ int 0x21      ; resp. int 33 poskytne službu
 }
 
 ;TODO: do a get_char get_line with a 80 char buffer
-def getchar() -> char {
+def get_char() -> char {
     $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu
     $ int 0x21      ; resp. int 33 poskytne službu
     return $al
@@ -15,11 +15,33 @@ def getchar() -> char {
     ; Dalším int 21h bude předán další bajt téhož znaku. Nedojde ke ztrátě obsahu.
 }
 
+; Nejprve musíte v paměti rezervovat "buffer", do kterého bude služba načtené bajty vkládat. V datovém segmentu vytvořte něco jako:
+
+; nacteno	db 80, ?
+; 	resb 80
+; Buffer nechť obsahuje tři složky: první bajt je vámi zadaná délka bufferu, 
+; který dáváte službě k dispozici. V bajtu zadáváte číslo bez znaménka. 
+; Číslo odpovídá počtu bajtů, který může služba maximálně načíst. 
+; Služba načte jeden celý řádek až do maximální zadané délky.
+
+INPUT_BUFFER: char[82] = [80c]
+INPUT: @char[80] =@= (*INPUT_BUFFER::int - 2) :: char[]*
+
+def get_line() -> char[80]* {
+    $ mov ah, 0x0a	            ; Identifikace služby Načíst řádek z terminálu
+    $ mov dx, {INPUT_BUFFER}	; Offset začátku bufferu v segmentu dle DS
+    $ int 0x21		            ; resp. int 33 poskytne službu
+    return *INPUT
+}
+; usage
+; a: char[]* = get_line()
+; a = a
+
 def print(str: @char[]) -> void {
     i: int = 0
     character: char = str[0]
     while(character != 0c){
-        putchar(character)
+        put_char(character)
         i = i + 1
         character = str[i]
     }
@@ -33,6 +55,6 @@ def print_dos(str: char[]*) -> void {
 
 def println(str: @char[]) -> void {
     print(*str)
-    putchar(10c)   ; 13 - CL
-    putchar(13c)   ; 10 - RF
+    put_char(10c)   ; 13 - CL
+    put_char(13c)   ; 10 - RF
 }

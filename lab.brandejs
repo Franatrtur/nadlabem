@@ -1,11 +1,14 @@
 include "lab2.brandejs" as my_name
-
+include "lab2.brandejs"
 
 my_name.fn(
     my_name.a,
-    my_name.a + my_name.a
+    a + my_name.a
 )
 
+def myfn(){
+    include "inline.brandejs" not as module
+}
 
 
 

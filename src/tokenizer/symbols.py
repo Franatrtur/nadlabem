@@ -133,6 +133,7 @@ DecrementToken = Token.literal("--", "DecrementToken")
 
 CommaToken = Token.literal(",", "CommaToken")
 ColonToken = Token.literal(":", "ColonToken")
+DoubleColonToken = Token.literal("::", "DoubleColonToken")
 HashToken = Token.literal("#", "HashToken")
 AtToken = Token.literal("@", "AtToken")
 ArrowToken = Token.literal("->", "ArrowToken")
@@ -234,6 +235,7 @@ TOKEN_DETECTORS = [
 
     CommaToken,
     ColonToken,
+    DoubleColonToken,
     HashToken,
     AtToken,
     ArrowToken,

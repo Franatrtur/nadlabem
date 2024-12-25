@@ -9,6 +9,16 @@ from ..errors import TypeError
 class TypeParser(Parser):
 
     def value_type(self) -> ValueType:
+        token = self.look_ahead()
+        result: ExpressionType = self.expression_type()
+
+        if not isinstance(result, ValueType):
+            raise TypeError("Expected a value type, but got a complex expression type", token.line, allowed=VALUE_TYPES)
+
+        return result
+
+
+    def expression_type(self) -> ExpressionType:
         type_token = self.devour(TypeToken)
         result: ValueType = None
 
@@ -20,12 +30,6 @@ class TypeParser(Parser):
         while self.is_ahead(StarToken):
             self.devour(StarToken)
             result = Pointer(result)
-
-        return result
-
-
-    def expression_type(self) -> ExpressionType:
-        result: ValueType = self.value_type()
 
         #handle arrays
         if self.is_ahead(ArrayBeginToken):

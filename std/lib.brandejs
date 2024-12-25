@@ -1,4 +1,4 @@
-include "io.brjs" as io
+include "io.brandejs" as io
 
 def assert(condition: bool, message: @char[]) -> void {
     if (not condition) error(*message)

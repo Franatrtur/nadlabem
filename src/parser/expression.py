@@ -1,6 +1,6 @@
 from .parsing import Parser
-from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken, StringLiteralToken,
-                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, DollarToken, AtToken, BinaryXorToken,
+from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken, StringLiteralToken, DoubleColonToken,
+                        UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, DollarToken, AtToken, PlusToken,
                         ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken, TypeToken, StarToken)
 from typing import Type
 from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, CastNode,
@@ -95,7 +95,20 @@ class ExpressionParser(Parser):
             operand = self.unary()
             return UnaryOperationNode(operator, operand, parser=self)
         
-        return self.primary()
+        result = self.primary()
+
+        while self.is_ahead(DoubleColonToken):
+            signed: bool = False
+            if self.is_ahead(PlusToken):
+                self.devour(PlusToken)
+                signed = True
+            
+            token = self.devour(DoubleColonToken)
+            value_type = TypeParser(parent=self).value_type()
+
+            result = CastNode(token, value_type, result, signed, parser=self)
+
+        return result
     
     def primary(self) -> ExpressionNode:
 
@@ -134,7 +147,7 @@ class ExpressionParser(Parser):
             name_token = self.devour(NameToken)
 
             if self.is_ahead(OpenParenToken):
-                #function call
+                # function call
                 self.devour(OpenParenToken)
                 arguments = []
 
@@ -163,17 +176,6 @@ class ExpressionParser(Parser):
                 return VariableReferenceNode(name_token, pointer, dereference, index, parser=self)
             
             return VariableReferenceNode(name_token, pointer, dereference, index=None, parser=self)
-
-        
-        elif self.is_ahead(TypeToken):
-            token = self.look_ahead()
-            value_type = TypeParser(parent=self).value_type()
-            signed: bool = False
-            if self.is_ahead(BinaryXorToken):
-                self.devour(BinaryXorToken)
-                signed = True
-            expr = self.primary()
-            return CastNode(token, value_type, expr, signed, parser=self)
 
         
         elif self.is_ahead(OpenParenToken):

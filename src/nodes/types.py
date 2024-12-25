@@ -143,8 +143,8 @@ class Comparator:
     def cast(from_type: ExpressionType, to_type: ValueType, node: ASTNode) -> ValueType:
         if not isinstance(from_type, ValueType) or not isinstance(to_type, ValueType):
             raise TypeError(f"Cannot cast {from_type} to {to_type}", node.token.line)
-        if isinstance(to_type, Pointer):
-            node.config.warn(TypeError(f"Pointer casting is dangerous", node.token.line))
+        # if isinstance(to_type, Pointer):
+        #     node.config.warn(TypeError(f"Pointer casting is dangerous", node.token.line))
         if from_type is to_type:
             node.config.warn(TypeError(f"Casting {from_type} to {to_type} is pointless", node.token.line))
         return to_type
@@ -289,7 +289,7 @@ class Comparator:
 
     @staticmethod
     def return_value(value_type: ValueType | NoType, function_type: FunctionType, node: ASTNode) -> None:
-        if value_type is not function_type.return_type:
+        if not Comparator.match(value_type, function_type.return_type):
             raise TypeError(f"Cannot return value of type {value_type} from function of type {function_type}", node.token.line)
 
     @staticmethod
