@@ -1,4 +1,4 @@
-from ..translator import Translator, AssemblyInstruction
+from ..translator import Translator, Assembly
 from ..nodes.statement import VariableDeclarationNode, AssignmentNode, IncrementalNode
 from ..nodes.expression import VariableReferenceNode, LiteralNode, ArrayLiteralNode
 from .sizeof import sizeof
@@ -33,11 +33,11 @@ class VariableDeclarationTranslator(Translator):
 
         #TODO: handle dynamic expressions in arrays
         variable.declaration = [
-            AssemblyInstruction(self.config, "d"+elem_option, vals, label=variable.symbol.id)
+            Assembly(self.config, "d"+elem_option, vals, label=variable.symbol.id)
         ]
         if lenval < variable.var_type.expression_type.size:
             variable.declaration.append(
-                AssemblyInstruction(self.config, "res"+elem_option, [str(variable.var_type.expression_type.size - len(vals))])
+                Assembly(self.config, "res"+elem_option, [str(variable.var_type.expression_type.size - len(vals))])
             )
 
         self.program: ProgramI8086Translator
@@ -63,6 +63,9 @@ class VariableDeclarationTranslator(Translator):
 
         variable: Variable = Variable.variables[self.node.symbol]
         self.variable: Variable = variable
+
+        if self.variable.is_static:
+            self.program.variables.append(variable)
 
         # if isinstance(self.node.assignment, LiteralNode):
         #     pass

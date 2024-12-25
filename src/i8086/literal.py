@@ -1,5 +1,5 @@
 from .program import ProgramTranslator
-from ..translator import Translator, AssemblyInstruction
+from ..translator import Translator, Assembly
 from ..nodes.node import AbstractSyntaxTreeNode as ASTNode
 from ..nodes.expression import LiteralNode, StringReferenceNode
 from .sizeof import sizeof
@@ -47,7 +47,7 @@ class StringReferenceTranslator(Translator):
         literal_label = self.node.scope.generate_id("_str")
 
         declaration = [
-            AssemblyInstruction(self.config, "db", vals, label=literal_label)
+            Assembly(self.config, "db", vals, label=literal_label)
         ]
 
         self.assemble("lea", ["ax", f"[{literal_label}]"])

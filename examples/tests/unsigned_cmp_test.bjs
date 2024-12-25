@@ -1,5 +1,5 @@
-include "../../std/stdlib.brandejs" as std
-
+include "../../std/lib.brandejs"
+include "../../std/io.brjs"
 
 main()
 
@@ -13,34 +13,34 @@ def unsigned_lt_test() -> void {
 }
 
 def unsigned_gt_test() -> void {
-    println(*"skipping unsigned_gt_test!!!!!!")
-    ; assert(10 > 0, *"10 > 0 failed")
-    ; assert(0xfffe > 0xefff, *"0xfffe > 0xefff failed")
-    ; assert(not (1 > 5), *"not(1 > 5) failed")
-    ; assert(not (10 > 10), *"not(10 > 10) failed")
-    ; println(*"unsigned_gt_test success!")
+    ; println(*"skipping unsigned_gt_test!!!!!!")
+    assert(10 > 0, *"10 > 0 failed")
+    assert(0xfffe > 0xefff, *"0xfffe > 0xefff failed")
+    assert(not (1 > 5), *"not(1 > 5) failed")
+    assert(not (10 > 10), *"not(10 > 10) failed")
+    println(*"unsigned_gt_test success!")
 }
 
 def unsigned_gte_test() -> void {
-    println(*"skipping unsigned_gte_test!!!!!!")
-    ; assert(10 >= 0, *"10 >= 0 failed")
-    ; assert(0 >= 0, *"0 >= 0 failed")
-    ; assert(0xfffe >= 0xefff, *"0xfffe >= 0xefff failed")
-    ; assert(0xefff >= 0xefff, *"0xefff >= 0xefff failed")
-    ; assert(not (1 >= 5), *"not(1 >= 5) failed")
-    ; assert(10 >= 10, *"10 >= 10 failed")
-    ; println(*"unsigned_gte_test success!")
+    ; println(*"skipping unsigned_gte_test!!!!!!")
+    assert(10 >= 0, *"10 >= 0 failed")
+    assert(0 >= 0, *"0 >= 0 failed")
+    assert(0xfffe >= 0xefff, *"0xfffe >= 0xefff failed")
+    assert(0xefff >= 0xefff, *"0xefff >= 0xefff failed")
+    assert(not (1 >= 5), *"not(1 >= 5) failed")
+    assert(10 >= 10, *"10 >= 10 failed")
+    println(*"unsigned_gte_test success!")
 }
 
 def unsigned_lte_test() -> void {
-    println(*"skipping unsigned_lte_test!!!!!!")
-    ; assert(0 <= 10, *"0 <= 10 failed")
-    ; assert(0 <= 0, *"0 <= 0 failed")
-    ; assert(0xefff <= 0xfffe, *"0xefff <= 0xfffe failed")
-    ; assert(0xefff <= 0xefff, *"0xefff <= 0xefff failed")
-    ; assert(not (5 <= 1), *"not(5 <= 1) failed")
-    ; assert(10 <= 10, *"10 <= 10 failed")
-    ; println(*"unsigned_lte_test success!")
+    ; println(*"skipping unsigned_lte_test!!!!!!")
+    assert(0 <= 10, *"0 <= 10 failed")
+    assert(0 <= 0, *"0 <= 0 failed")
+    assert(0xefff <= 0xfffe, *"0xefff <= 0xfffe failed")
+    assert(0xefff <= 0xefff, *"0xefff <= 0xefff failed")
+    assert(not (5 <= 1), *"not(5 <= 1) failed")
+    assert(10 <= 10, *"10 <= 10 failed")
+    println(*"unsigned_lte_test success!")
 }
 
 def main() -> void {

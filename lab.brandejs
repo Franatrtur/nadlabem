@@ -1,9 +1,9 @@
 include "lab2.brandejs" as my_name
-include "lab2.brandejs" not as module
+
 
 my_name.fn(
     my_name.a,
-    vv.a
+    my_name.a + my_name.a
 )
 
 

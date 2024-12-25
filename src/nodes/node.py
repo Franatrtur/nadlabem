@@ -108,9 +108,9 @@ class ProgramNode(AbstractSyntaxTreeNode):
         super().__init__(None, statements, parser)
         self.parent = None
         self.root = self  # top level node
-        self.statements = statements
         self.context = Namespace(self, None)
-        self.context.root = self.context.root = self.context  #top level context
+        self.context.root = self.context  #top level context
+        self.functions: list[AbstractSyntaxTreeNode] = []
     
     def validate(self):
         self.link(parent=None)

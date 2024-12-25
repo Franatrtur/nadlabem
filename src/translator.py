@@ -6,7 +6,7 @@ from .errors import NotImplementedError
 from .config import CompilationConfig
 
 
-class AssemblyInstruction:
+class Assembly:
 
     def __init__(self, config: CompilationConfig, operation: str = "", arguments: list[str] = [], label: str = "", mapping: str = ""):
         self.operation: str | None = operation
@@ -42,7 +42,7 @@ class AssemblyInstruction:
         return superlabel + line_string + mapstr + ending
 
 
-class SpecialInstruction(AssemblyInstruction):
+class SpecialInstruction(Assembly):
 
     def __init__(self, config: CompilationConfig, string: str):
         super().__init__(config)
@@ -63,7 +63,7 @@ class Translator(Node):
         if self.node is not None:
             self.node.translator = self
         self.program: ProgramTranslator = self.root
-        self.result: list[AssemblyInstruction] = []
+        self.result: list[Assembly] = []
         self.make()
 
     def make(self) -> None:
@@ -86,14 +86,14 @@ class Translator(Node):
             self.program.mapped.add(map_target)
             map_content = map_target.string + f" ({map_target.location}:{map_target.number})" if self.config.generate_mapping else map_target.comment
 
-        instruction = AssemblyInstruction(self.config, operation, arguments, label, map_content)
+        instruction = Assembly(self.config, operation, arguments, label, map_content)
         instruction.assembled = True
         self.result.append(instruction)
 
     def special(self, string: str) -> None:
         self.result.append(SpecialInstruction(self.config, string))
 
-    def translate(self) -> list[AssemblyInstruction]:
+    def translate(self) -> list[Assembly]:
         return self.result
 
     

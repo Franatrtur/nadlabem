@@ -16,7 +16,7 @@ segment code
 
         jmp  over
 fn:
-        push bp                  ;def fn(a: int, b: int) -> void{ (lab2.brandejs:3)
+        push bp                  ;def fn(a: int, b: int) -> void { (lab2.brandejs:3)
         mov  bp, sp
         sub  sp, 0
 rtn     mov  sp, bp
@@ -24,7 +24,11 @@ rtn     mov  sp, bp
         ret  4
 over    nop
 
-        mov  ax, word[a1]        ;    vv.a (lab.brandejs:6)
+        mov  ax, word[a1]        ;    my_name.a + my_name.a (lab.brandejs:6)
+        push ax
+        mov  ax, word[a1]
+        pop  bx
+        add  ax, bx
         push ax
         mov  ax, word[a1]        ;    my_name.a, (lab.brandejs:5)
         push ax
@@ -33,6 +37,13 @@ exit:
 ok      hlt
 error   hlt
 
+true    mov  ax, 1
+        ret
+false   mov  ax, 0
+        ret
+
 segment heap
 stack   resw 1024
 dno     db   ?
+
+a1      resb 2                   ;default

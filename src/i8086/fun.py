@@ -60,7 +60,6 @@ class FunctionCallStatementTranslator(Translator):
 
         for arg in reversed(self.node.arguments):
             self.add(arg)
-            #self.assemble("push", ["ax"])
 
         self.assemble("call", [self.node.symbol.id])
 

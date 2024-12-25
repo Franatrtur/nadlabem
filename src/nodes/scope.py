@@ -87,7 +87,7 @@ class Namespace(Context):
         elif name in self.modules:
                 return self.modules[name].resolve_names(name_token, components[1:])
 
-        raise NameError(f"Undefined namespace {repr(name)} in {repr(name_token)}", name_token.line, context=self)
+        raise NameError(f"Undefined namespace {repr(name)} in compound term {repr(name_token.string)}", name_token.line, context=self)
 
 
 class Symbol:
@@ -116,9 +116,9 @@ class Symbol:
     def is_relevant(self):
         for node in self.references:
             if node.is_connected and node is not self.node:
-                #print(self, "is relevant, referenced by", repr(node))
+                # print(self, "is relevant, referenced by", repr(node))
                 return True
-        #print(self, "is not relevant")
+        # print(self, "is not relevant")
         return False
 
     def __str__(self):
@@ -128,7 +128,7 @@ class Symbol:
 
 
 RESERVED_NAMES: set[str] = {
-    "dno", "code", "..start", "stack", "data", "sp", "bp",
+    "dno", "code", "start", "stack", "data", "sp", "bp",
     "di", "ax", "bx", "cx", "dx", "cs", "ss", "ds", "cpu",
-    "segment", "exit", "heap", "ok", "error"
+    "segment", "exit", "heap", "ok", "error", "true", "false"
 }

@@ -27,7 +27,7 @@ def print(str: @char[]) -> void {
 
 def print_dos(str: char[]*) -> void {
     $ mov ah, 9	                ; Identifikace služby Vypsat řetězec bajtů na terminál
-    $ mov dx, word[{str}]    ; Offset začátku řetězce v segmentu dle DS
+    $ mov dx, word[{str}]       ; Offset začátku řetězce v segmentu dle DS
     $ int 0x21                  ; resp. int 33 poskytne službu
 }
 

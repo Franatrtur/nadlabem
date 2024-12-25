@@ -1,4 +1,4 @@
-from ..translator import Translator, ProgramTranslator, AssemblyInstruction
+from ..translator import Translator, ProgramTranslator, Assembly
 from .sizeof import sizeof
 from ..nodes.statement import VariableDeclarationNode, CodeBlockNode, FunctionDefinitonNode, ModuleNode
 from .allocator import Allocator, Variable
@@ -27,10 +27,11 @@ class ProgramI8086Translator(ProgramTranslator):
     def make(self):
         # decide offset for all local vars on stack
         self.frame = Allocator(self).allocate()
-        self.variables: list[Variable] = self.frame.variables
-        self.declarations: list[list[AssemblyInstruction]] = []
+        self.variables: list[Variable] = []
+        self.declarations: list[list[Assembly]] = []
+        self.macros: dict[str, list[Assembly]] = {}
 
-        data_segment = "heap" if self.config.generate_mapping else "data"
+        data_segment = "heap" if self.config.generate_mapping else "data"   # cheeky
 
         self.special("cpu 8086")
         self.special("segment code")
@@ -49,6 +50,11 @@ class ProgramI8086Translator(ProgramTranslator):
 
         children_done = 0
 
+        #TODO: in nodes, add global function registration
+        # and rework function translation so the translator in-place translates to nothing
+        # but here we will call it in the second loop
+        # ahead fn registration is so that we know how many there are for the progress bar
+
         for child in self.node.children:
             if not isinstance(child, FunctionDefinitonNode):
                 self.add(child)
@@ -60,6 +66,7 @@ class ProgramI8086Translator(ProgramTranslator):
         self.assemble("hlt", label="ok")
         self.assemble("hlt", label="error")
 
+        self.blank_line()
 
         for child in self.node.children:
             if isinstance(child, FunctionDefinitonNode):
@@ -68,10 +75,18 @@ class ProgramI8086Translator(ProgramTranslator):
                 children_done += 1
                 if self.compiler.config.verbose:
                     progress_bar("Translating", children_done, len(self.node.children))
-        
-        self.blank_line()
 
         self.program_end: int = len(self.result)
+
+        for macro in self.macros.values():
+            self.result.extend(macro)
+
+        self.assemble("mov", ["ax", "1"], label="true")
+        self.assemble("ret")
+        self.assemble("mov", ["ax", "0"], label="false")
+        self.assemble("ret")
+        
+        self.blank_line()
 
         self.special(f"segment {data_segment}")
         
@@ -90,9 +105,19 @@ class ProgramI8086Translator(ProgramTranslator):
         self.optimize()
 
     
-    def declare(self, variable_declaration: list[AssemblyInstruction]) -> None:
+    def declare(self, variable_declaration: list[Assembly]) -> None:
         self.declarations.append(variable_declaration)
 
+    def activate(self, tag: str, macro: list[Assembly]) -> str:
+        if tag not in self.macros:
+            label = self.node.context.generate_id(tag)
+            macro[0].label = label
+            self.macros[tag] = macro
+            return label
+        else:
+            return self.macros[tag][0].label
 
     def optimize(self) -> None:
         self.result = Optimizer(self.config, self.result, self.program_begin, self.program_end).optimize()
+
+

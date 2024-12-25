@@ -12,7 +12,7 @@ from ..nodes.statement import (FunctionCallStatementNode, ASTNode, IfNode, State
 from pathlib import Path
 from .dependency import Dependency
 from .types import TypeParser
-from ..errors import SyntaxError, NadLabemError
+from ..errors import SyntaxError, NadLabemError, NameError
 from ..tokenizer import Tokenizer
 
 
@@ -178,6 +178,10 @@ class AssignmentParser(Parser):
         return FunctionCallStatementNode(name_token, args, parser=self)
 
     def parse_declaration(self, name_token: NameToken) -> VariableDeclarationNode:
+
+        if len(name_token.components) != 1:
+            raise NameError(f"Invalid variable name {repr(fn_name_token.string)}", name_token.line)
+
         self.devour(ColonToken)
         var_type = TypeParser(parent=self).variable_type()
 
@@ -207,7 +211,10 @@ class FunctionDefinitionParser(Parser):
 
     def parse(self) -> FunctionDefinitonNode:
         self.devour(DefinitionToken)
-        fn_name_token = self.devour(NameToken)
+        fn_name_token: NameToken = self.devour(NameToken)
+
+        if len(fn_name_token.components) != 1:
+            raise NameError(f"Invalid function name {repr(fn_name_token.string)}", fn_name_token.line)
 
         self.devour(OpenParenToken)
         params: list[ArgumentDeclarationNode] = []

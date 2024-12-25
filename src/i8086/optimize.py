@@ -1,4 +1,4 @@
-from ..translator import AssemblyInstruction
+from ..translator import Assembly
 from ..errors import NadLabemError
 from ..config import CompilationConfig
 from ..ui import progress_bar
@@ -8,18 +8,18 @@ class Optimizer:
 
     def __init__(self,
             config: CompilationConfig,
-            instructions: list[AssemblyInstruction],
+            instructions: list[Assembly],
             program_begin: int,
             program_end: int):
 
         self.config = config
-        self.code: list[AssemblyInstruction] = instructions
-        self.result: list[AssemblyInstruction] = []
+        self.code: list[Assembly] = instructions
+        self.result: list[Assembly] = []
         self.program_begin: int = program_begin
         self.program_end: int = program_end
         self.iteration: int = 1
         self.i: int = 0
-    
+
     def optimize_round(self) -> None:
         self.i: int = self.program_begin
         self.result = self.code[0:self.program_begin]
@@ -31,7 +31,7 @@ class Optimizer:
 
             op = self.code[self.i]
 
-            last: AssemblyInstruction | None = self.get_last()
+            last: Assembly | None = self.get_last()
 
             # skip special instructions
             if not op.assembled:
@@ -56,6 +56,7 @@ class Optimizer:
             #  - labeled nops: nops can be removed and their label given to the next instruction
             #    if it is unlabeled
             #  - things like mov ax, val   and then   mov bx, ax
+            #  - things like sub  sp, 0
 
             self.add(op) # add to result unmodified if we didnt skip and continue
 
@@ -64,7 +65,7 @@ class Optimizer:
 
         self.result.extend(self.code[self.i:])
 
-    def optimize(self) -> list[AssemblyInstruction]:
+    def optimize(self) -> list[Assembly]:
         
         last_length: int = len(self.code)
 
@@ -88,12 +89,12 @@ class Optimizer:
 
         return self.result
 
-    def get_last(self) -> AssemblyInstruction | None:
+    def get_last(self) -> Assembly | None:
         if self.i > 0 and self.result[-1].assembled:
             return self.result[-1]
         return None
 
-    def add(self, operation: AssemblyInstruction) -> None:
+    def add(self, operation: Assembly) -> None:
         self.result.append(operation)
         self.i += 1
 

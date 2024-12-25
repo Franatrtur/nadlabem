@@ -1,14 +1,11 @@
-include "stdio.bjs" as io
+include "io.brjs" as io
 
-;module stdlib {
+def assert(condition: bool, message: @char[]) -> void {
+    if (not condition) error(*message)
+}
 
-    def assert(condition: bool, message: @char[]) -> void {
-        if (not condition) error(*message)
-    }
-
-    def error(message: @char[]) -> void {
-        io.println(*"Error occured:")
-        io.println(*message)
-        $ jmp error
-    }
-;}
+def error(message: @char[]) -> void {
+    io.println(*"Error occured:")
+    io.println(*message)
+    $ jmp error
+}

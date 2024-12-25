@@ -11,21 +11,16 @@ segment code
         mov  sp, dno
         mov  bp, sp
 
-        call main                ;main() (examples/tests/unsigned_cmp_test.brandejs:4)
-exit:
-ok      hlt
-error   hlt
-
         jmp  over
 putchar:
-        push bp                  ;def putchar(character: char) -> void { (examples/tests/../../std/stdio.brandejs:1)
+        push bp                  ;def putchar(character: char) -> void { (examples/tests/../../std/io.brjs:1)
         mov  bp, sp
         sub  sp, 0
-        mov ah, 2                ;    $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál (examples/tests/../../std/stdio.brandejs:2)
+        mov ah, 2                ;    $ mov ah, 2     ; Identifikace služby Vypsat jeden bajt na terminál (examples/tests/../../std/io.brjs:2)
 
-        mov dl, byte[bp + 4]     ;    $ mov dl, byte[{character}]     ; Bajt, který se má na terminál vypsat (examples/tests/../../std/stdio.brandejs:3)
+        mov dl, byte[bp + 4]     ;    $ mov dl, byte[{character}]     ; Bajt, který se má na terminál vypsat (examples/tests/../../std/io.brjs:3)
 
-        int 0x21                 ;    $ int 0x21      ; resp. int 33 poskytne službu (examples/tests/../../std/stdio.brandejs:4)
+        int 0x21                 ;    $ int 0x21      ; resp. int 33 poskytne službu (examples/tests/../../std/io.brjs:4)
 
 rtn     mov  sp, bp
         pop  bp
@@ -34,46 +29,41 @@ over    nop
 
         jmp  over1
 print:
-        push bp                  ;def print(str: @char[]) -> void { (examples/tests/../../std/stdio.brandejs:17)
+        push bp                  ;def print(str: @char[]) -> void { (examples/tests/../../std/io.brjs:18)
         mov  bp, sp
         sub  sp, 3
-        mov  ax, 0               ;    i: int = 0 (examples/tests/../../std/stdio.brandejs:18)
+        mov  ax, 0               ;    i: int = 0 (examples/tests/../../std/io.brjs:19)
         mov  word[bp - 2], ax
 
-        mov  ax, 0               ;    character: char = str[0] (examples/tests/../../std/stdio.brandejs:19)
+        mov  ax, 0               ;    character: char = str[0] (examples/tests/../../std/io.brjs:20)
         mov  si, ax
         mov  bx, word[bp + 4]
         mov  ax, 0
         mov  al, byte[bx + si]
         mov  byte[bp - 3], al
 
-while   nop                      ;    while(character != 0c){ (examples/tests/../../std/stdio.brandejs:20)
-        mov  ax, 0
-        push ax
+while   nop                      ;    while(character != 0c){ (examples/tests/../../std/io.brjs:21)
         mov  ax, 0
         mov  al, byte[bp - 3]
+        push ax
+        mov  ax, 0
         pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 6
-        shr  ax, cl
-        and  ax, 1
+        call _qbcmp
         xor  ax, 1
         jz   wout
-        mov  ax, 0               ;        putchar(character) (examples/tests/../../std/stdio.brandejs:21)
+        mov  ax, 0               ;        putchar(character) (examples/tests/../../std/io.brjs:22)
         mov  al, byte[bp - 3]
         push ax
         call putchar
 
-        mov  ax, 1               ;        i = i + 1 (examples/tests/../../std/stdio.brandejs:22)
+        mov  ax, 1               ;        i = i + 1 (examples/tests/../../std/io.brjs:23)
         push ax
         mov  ax, word[bp - 2]
         pop  bx
         add  ax, bx
         mov  word[bp - 2], ax
 
-        mov  ax, word[bp - 2]    ;        character = str[i] (examples/tests/../../std/stdio.brandejs:23)
+        mov  ax, word[bp - 2]    ;        character = str[i] (examples/tests/../../std/io.brjs:24)
         mov  si, ax
         mov  bx, word[bp + 4]
         mov  ax, 0
@@ -90,18 +80,18 @@ over1   nop
 
         jmp  over2
 println:
-        push bp                  ;def println(str: @char[]) -> void { (examples/tests/../../std/stdio.brandejs:33)
+        push bp                  ;def println(str: @char[]) -> void { (examples/tests/../../std/io.brjs:34)
         mov  bp, sp
         sub  sp, 0
-        mov  ax, word[bp + 4]    ;    print(*str) (examples/tests/../../std/stdio.brandejs:34)
+        mov  ax, word[bp + 4]    ;    print(*str) (examples/tests/../../std/io.brjs:35)
         push ax
         call print
 
-        mov  ax, 10              ;    putchar(10c)   ; 13 - CL (examples/tests/../../std/stdio.brandejs:35)
+        mov  ax, 10              ;    putchar(10c)   ; 13 - CL (examples/tests/../../std/io.brjs:36)
         push ax
         call putchar
 
-        mov  ax, 13              ;    putchar(13c)   ; 10 - RF (examples/tests/../../std/stdio.brandejs:36)
+        mov  ax, 13              ;    putchar(13c)   ; 10 - RF (examples/tests/../../std/io.brjs:37)
         push ax
         call putchar
 
@@ -112,10 +102,10 @@ over2   nop
 
         jmp  over3
 assert:
-        push bp                  ;    def assert(condition: bool, message: @char[]) -> void { (examples/tests/../../std/stdlib.brandejs:5)
+        push bp                  ;def assert(condition: bool, message: @char[]) -> void { (examples/tests/../../std/lib.brandejs:3)
         mov  bp, sp
         sub  sp, 0
-        mov  ax, 0               ;        if (not condition) error(*message) (examples/tests/../../std/stdlib.brandejs:6)
+        mov  ax, 0               ;    if (not condition) error(*message) (examples/tests/../../std/lib.brandejs:4)
         mov  al, byte[bp + 4]
         xor  ax, 1
         jz   ifout
@@ -132,92 +122,77 @@ over3   nop
 
         jmp  over4
 error1:
-        push bp                  ;    def error(message: @char[]) -> void { (examples/tests/../../std/stdlib.brandejs:9)
+        push bp                  ;def error(message: @char[]) -> void { (examples/tests/../../std/lib.brandejs:7)
         mov  bp, sp
         sub  sp, 0
-        lea  ax, [_str]          ;        println(*"Error occured:") (examples/tests/../../std/stdlib.brandejs:10)
+        lea  ax, [_str]          ;    io.println(*"Error occured:") (examples/tests/../../std/lib.brandejs:8)
         push ax
         call println
 
-        mov  ax, word[bp + 4]    ;        println(*message) (examples/tests/../../std/stdlib.brandejs:11)
+        mov  ax, word[bp + 4]    ;    io.println(*message) (examples/tests/../../std/lib.brandejs:9)
         push ax
         call println
 
-        jmp error                ;        $ jmp error (examples/tests/../../std/stdlib.brandejs:12)
+        jmp error                ;    $ jmp error (examples/tests/../../std/lib.brandejs:10)
 
 rtn4    mov  sp, bp
         pop  bp
         ret  2
 over4   nop
 
+        call main                ;main() (examples/tests/unsigned_cmp_test.bjs:4)
+exit:
+ok      hlt
+error   hlt
+
         jmp  over5
 unsigned_lt_test:
-        push bp                  ;def unsigned_lt_test() -> void { (examples/tests/unsigned_cmp_test.brandejs:7)
+        push bp                  ;def unsigned_lt_test() -> void { (examples/tests/unsigned_cmp_test.bjs:7)
         mov  bp, sp
         sub  sp, 0
-        lea  ax, [_str1]         ;    assert(0 < 10, *"0 < 10 failed") (examples/tests/unsigned_cmp_test.brandejs:8)
+        lea  ax, [_str1]         ;    assert(0 < 10, *"0 < 10 failed") (examples/tests/unsigned_cmp_test.bjs:8)
         push ax
         mov  ax, 10
         push ax
         mov  ax, 0
         pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 7
-        shr  ax, cl
-        and  ax, 1
+        call _uwcmp
         push ax
         call assert
 
-        lea  ax, [_str2]         ;    assert(0xefff < 0xfffe, *"0xefff < 0xfffe failed") (examples/tests/unsigned_cmp_test.brandejs:9)
+        lea  ax, [_str2]         ;    assert(0xefff < 0xfffe, *"0xefff < 0xfffe failed") (examples/tests/unsigned_cmp_test.bjs:9)
         push ax
         mov  ax, 65534
         push ax
         mov  ax, 61439
         pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 7
-        shr  ax, cl
-        and  ax, 1
+        call _uwcmp
         push ax
         call assert
 
-        lea  ax, [_str3]         ;    assert(not (5 < 1), *"not(5 < 1) failed") (examples/tests/unsigned_cmp_test.brandejs:10)
+        lea  ax, [_str3]         ;    assert(not (5 < 1), *"not(5 < 1) failed") (examples/tests/unsigned_cmp_test.bjs:10)
         push ax
         mov  ax, 1
         push ax
         mov  ax, 5
         pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 7
-        shr  ax, cl
-        and  ax, 1
+        call _uwcmp
         xor  ax, 1
         push ax
         call assert
 
-        lea  ax, [_str4]         ;    assert(not (10 < 10), *"not(10 < 10) failed") (examples/tests/unsigned_cmp_test.brandejs:11)
+        lea  ax, [_str4]         ;    assert(not (10 < 10), *"not(10 < 10) failed") (examples/tests/unsigned_cmp_test.bjs:11)
         push ax
         mov  ax, 10
         push ax
         mov  ax, 10
         pop  bx
-        cmp  ax, bx
-        pushf
-        pop  ax
-        mov  cl, 7
-        shr  ax, cl
-        and  ax, 1
+        call _uwcmp
         xor  ax, 1
         push ax
         call assert
 
-        lea  ax, [_str5]         ;    println(*"unsigned_lt_test success!") (examples/tests/unsigned_cmp_test.brandejs:12)
+        lea  ax, [_str5]         ;    println(*"unsigned_lt_test success!") (examples/tests/unsigned_cmp_test.bjs:12)
         push ax
         call println
 
@@ -228,10 +203,52 @@ over5   nop
 
         jmp  over6
 unsigned_gt_test:
-        push bp                  ;def unsigned_gt_test() -> void { (examples/tests/unsigned_cmp_test.brandejs:15)
+        push bp                  ;def unsigned_gt_test() -> void { (examples/tests/unsigned_cmp_test.bjs:15)
         mov  bp, sp
         sub  sp, 0
-        lea  ax, [_str6]         ;    println(*"skipping unsigned_gt_test!!!!!!") (examples/tests/unsigned_cmp_test.brandejs:16)
+        lea  ax, [_str6]         ;    assert(10 > 0, *"10 > 0 failed") (examples/tests/unsigned_cmp_test.bjs:17)
+        push ax
+        mov  ax, 10
+        push ax
+        mov  ax, 0
+        pop  bx
+        call _uwcmp
+        push ax
+        call assert
+
+        lea  ax, [_str7]         ;    assert(0xfffe > 0xefff, *"0xfffe > 0xefff failed") (examples/tests/unsigned_cmp_test.bjs:18)
+        push ax
+        mov  ax, 65534
+        push ax
+        mov  ax, 61439
+        pop  bx
+        call _uwcmp
+        push ax
+        call assert
+
+        lea  ax, [_str8]         ;    assert(not (1 > 5), *"not(1 > 5) failed") (examples/tests/unsigned_cmp_test.bjs:19)
+        push ax
+        mov  ax, 1
+        push ax
+        mov  ax, 5
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str9]         ;    assert(not (10 > 10), *"not(10 > 10) failed") (examples/tests/unsigned_cmp_test.bjs:20)
+        push ax
+        mov  ax, 10
+        push ax
+        mov  ax, 10
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str10]        ;    println(*"unsigned_gt_test success!") (examples/tests/unsigned_cmp_test.bjs:21)
         push ax
         call println
 
@@ -242,10 +259,77 @@ over6   nop
 
         jmp  over7
 unsigned_gte_test:
-        push bp                  ;def unsigned_gte_test() -> void { (examples/tests/unsigned_cmp_test.brandejs:24)
+        push bp                  ;def unsigned_gte_test() -> void { (examples/tests/unsigned_cmp_test.bjs:24)
         mov  bp, sp
         sub  sp, 0
-        lea  ax, [_str7]         ;    println(*"skipping unsigned_gte_test!!!!!!") (examples/tests/unsigned_cmp_test.brandejs:25)
+        lea  ax, [_str11]        ;    assert(10 >= 0, *"10 >= 0 failed") (examples/tests/unsigned_cmp_test.bjs:26)
+        push ax
+        mov  ax, 0
+        push ax
+        mov  ax, 10
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str12]        ;    assert(0 >= 0, *"0 >= 0 failed") (examples/tests/unsigned_cmp_test.bjs:27)
+        push ax
+        mov  ax, 0
+        push ax
+        mov  ax, 0
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str13]        ;    assert(0xfffe >= 0xefff, *"0xfffe >= 0xefff failed") (examples/tests/unsigned_cmp_test.bjs:28)
+        push ax
+        mov  ax, 61439
+        push ax
+        mov  ax, 65534
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str14]        ;    assert(0xefff >= 0xefff, *"0xefff >= 0xefff failed") (examples/tests/unsigned_cmp_test.bjs:29)
+        push ax
+        mov  ax, 61439
+        push ax
+        mov  ax, 61439
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str15]        ;    assert(not (1 >= 5), *"not(1 >= 5) failed") (examples/tests/unsigned_cmp_test.bjs:30)
+        push ax
+        mov  ax, 5
+        push ax
+        mov  ax, 1
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str16]        ;    assert(10 >= 10, *"10 >= 10 failed") (examples/tests/unsigned_cmp_test.bjs:31)
+        push ax
+        mov  ax, 10
+        push ax
+        mov  ax, 10
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str17]        ;    println(*"unsigned_gte_test success!") (examples/tests/unsigned_cmp_test.bjs:32)
         push ax
         call println
 
@@ -256,10 +340,77 @@ over7   nop
 
         jmp  over8
 unsigned_lte_test:
-        push bp                  ;def unsigned_lte_test() -> void { (examples/tests/unsigned_cmp_test.brandejs:35)
+        push bp                  ;def unsigned_lte_test() -> void { (examples/tests/unsigned_cmp_test.bjs:35)
         mov  bp, sp
         sub  sp, 0
-        lea  ax, [_str8]         ;    println(*"skipping unsigned_lte_test!!!!!!") (examples/tests/unsigned_cmp_test.brandejs:36)
+        lea  ax, [_str18]        ;    assert(0 <= 10, *"0 <= 10 failed") (examples/tests/unsigned_cmp_test.bjs:37)
+        push ax
+        mov  ax, 0
+        push ax
+        mov  ax, 10
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str19]        ;    assert(0 <= 0, *"0 <= 0 failed") (examples/tests/unsigned_cmp_test.bjs:38)
+        push ax
+        mov  ax, 0
+        push ax
+        mov  ax, 0
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str20]        ;    assert(0xefff <= 0xfffe, *"0xefff <= 0xfffe failed") (examples/tests/unsigned_cmp_test.bjs:39)
+        push ax
+        mov  ax, 61439
+        push ax
+        mov  ax, 65534
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str21]        ;    assert(0xefff <= 0xefff, *"0xefff <= 0xefff failed") (examples/tests/unsigned_cmp_test.bjs:40)
+        push ax
+        mov  ax, 61439
+        push ax
+        mov  ax, 61439
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str22]        ;    assert(not (5 <= 1), *"not(5 <= 1) failed") (examples/tests/unsigned_cmp_test.bjs:41)
+        push ax
+        mov  ax, 5
+        push ax
+        mov  ax, 1
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str23]        ;    assert(10 <= 10, *"10 <= 10 failed") (examples/tests/unsigned_cmp_test.bjs:42)
+        push ax
+        mov  ax, 10
+        push ax
+        mov  ax, 10
+        pop  bx
+        call _uwcmp
+        xor  ax, 1
+        push ax
+        call assert
+
+        lea  ax, [_str24]        ;    println(*"unsigned_lte_test success!") (examples/tests/unsigned_cmp_test.bjs:43)
         push ax
         call println
 
@@ -270,18 +421,18 @@ over8   nop
 
         jmp  over9
 main:
-        push bp                  ;def main() -> void { (examples/tests/unsigned_cmp_test.brandejs:46)
+        push bp                  ;def main() -> void { (examples/tests/unsigned_cmp_test.bjs:46)
         mov  bp, sp
         sub  sp, 0
-        call unsigned_lt_test    ;    unsigned_lt_test() (examples/tests/unsigned_cmp_test.brandejs:47)
+        call unsigned_lt_test    ;    unsigned_lt_test() (examples/tests/unsigned_cmp_test.bjs:47)
 
-        call unsigned_gt_test    ;    unsigned_gt_test() (examples/tests/unsigned_cmp_test.brandejs:48)
+        call unsigned_gt_test    ;    unsigned_gt_test() (examples/tests/unsigned_cmp_test.bjs:48)
 
-        call unsigned_gte_test   ;    unsigned_gte_test() (examples/tests/unsigned_cmp_test.brandejs:49)
+        call unsigned_gte_test   ;    unsigned_gte_test() (examples/tests/unsigned_cmp_test.bjs:49)
 
-        call unsigned_lte_test   ;    unsigned_lte_test() (examples/tests/unsigned_cmp_test.brandejs:50)
+        call unsigned_lte_test   ;    unsigned_lte_test() (examples/tests/unsigned_cmp_test.bjs:50)
 
-        lea  ax, [_str9]         ;    println(*"COMPLETE unsigned comparison test success!") (examples/tests/unsigned_cmp_test.brandejs:51)
+        lea  ax, [_str25]        ;    println(*"COMPLETE unsigned comparison test success!") (examples/tests/unsigned_cmp_test.bjs:51)
         push ax
         call println
 
@@ -289,6 +440,16 @@ rtn9    mov  sp, bp
         pop  bp
         ret  0
 over9   nop
+_qbcmp  cmp  al, bl
+        je   true
+        jmp  false
+_uwcmp  cmp  ax, bx
+        jb   true
+        jmp  false
+true    mov  ax, 1
+        ret
+false   mov  ax, 0
+        ret
 
 segment heap
 stack   resw 1024
@@ -300,7 +461,23 @@ _str2   db   "0xefff < 0xfffe failed", 0
 _str3   db   "not(5 < 1) failed", 0
 _str4   db   "not(10 < 10) failed", 0
 _str5   db   "unsigned_lt_test success!", 0
-_str6   db   "skipping unsigned_gt_test!!!!!!", 0
-_str7   db   "skipping unsigned_gte_test!!!!!!", 0
-_str8   db   "skipping unsigned_lte_test!!!!!!", 0
-_str9   db   "COMPLETE unsigned comparison test success!", 0
+_str6   db   "10 > 0 failed", 0
+_str7   db   "0xfffe > 0xefff failed", 0
+_str8   db   "not(1 > 5) failed", 0
+_str9   db   "not(10 > 10) failed", 0
+_str10  db   "unsigned_gt_test success!", 0
+_str11  db   "10 >= 0 failed", 0
+_str12  db   "0 >= 0 failed", 0
+_str13  db   "0xfffe >= 0xefff failed", 0
+_str14  db   "0xefff >= 0xefff failed", 0
+_str15  db   "not(1 >= 5) failed", 0
+_str16  db   "10 >= 10 failed", 0
+_str17  db   "unsigned_gte_test success!", 0
+_str18  db   "0 <= 10 failed", 0
+_str19  db   "0 <= 0 failed", 0
+_str20  db   "0xefff <= 0xfffe failed", 0
+_str21  db   "0xefff <= 0xefff failed", 0
+_str22  db   "not(5 <= 1) failed", 0
+_str23  db   "10 <= 10 failed", 0
+_str24  db   "unsigned_lte_test success!", 0
+_str25  db   "COMPLETE unsigned comparison test success!", 0

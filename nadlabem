@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+import sys
+from main import main  # Assuming your compiler's entry point function is `main`
+
+if __name__ == "__main__":
+    sys.exit(main())

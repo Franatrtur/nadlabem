@@ -1,7 +1,7 @@
 from .sizeof import sizeof
 from ..nodes.statement import VariableDeclarationNode, ArgumentDeclarationNode, FunctionDefinitonNode, StatementNode
 from ..nodes.scope import Context, Symbol, Namespace
-from ..translator import Translator, AssemblyInstruction
+from ..translator import Translator, Assembly
 from ..nodes.types import Array, Int, VariableType, ExpressionType, Pointer, ValueType, Double
 from ..errors import NadLabemError, NotImplementedError
 from typing import Literal
@@ -68,8 +68,8 @@ class Variable:
         self.bytes: int = sizeof(self.var_type)
         self.is_static: bool = isinstance(self.symbol.scope, Namespace)
         self.is_reference: bool = self.var_type.is_reference
-        self.declaration: list[AssemblyInstruction] = [
-            AssemblyInstruction(self.symbol.node.config, "resb", [self.bytes], label=self.symbol.id, mapping="default")
+        self.declaration: list[Assembly] = [
+            Assembly(self.symbol.node.config, "resb", [self.bytes], label=self.symbol.id, mapping="default")
         ]
 
     def location(self) -> str:

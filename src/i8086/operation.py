@@ -1,5 +1,5 @@
-from ..translator import Translator
-from ..nodes.expression import BinaryOperationNode, UnaryOperationNode
+from ..translator import Translator, Assembly
+from ..nodes.expression import (BinaryOperationNode, UnaryOperationNode, AdditiveNode, MultiplicativeNode, BinaryNode, ComparisonNode)
 from ..tokenizer.symbols import (PlusToken, MinusToken, DivideToken, SignedDivideToken, ModuloToken, Token,
                                 StarToken, BinaryNotToken, LogicalNotToken, IsEqualToken,
                                 BinaryAndToken, BinaryOrToken, BinaryXorToken, BinaryRotateRightToken,
@@ -13,135 +13,111 @@ from ..errors import NotImplementedError
 
 class BinaryOperationTranslator(Translator):
 
-    node_type = BinaryOperationNode
+    # node_type = BinaryOperationNode
 
-    def _load_operands(self, flipped: bool = False):
-        if flipped:
+    def _load_operands(self, swap: bool = False):
+
+        if swap:
             self.add(self.node.left)
             self.add(self.node.right)
         else:
             self.add(self.node.right)
             self.add(self.node.left)
-            
+
         if self.node.left.node_type is Double:
-            #TODO: redirect to a different method in this if clause so we dont have clutter
-            raise NotImplementedError("Double operations not implemented yet for i8086", self.node.token.line)
-
-        self.assemble("pop", ["ax"], mapping=True)
-        self.assemble("pop", ["bx"])
-
-    def _make_ordered_comp(self, signed: bool, flipped: bool, inverted: bool) -> None:
-        self._load_operands(flipped)
-        self.assemble("cmp", ["ax", "bx"])
-        self.assemble("pushf")
-        self.assemble("pop", ["ax"])
-
-        if signed:
-            # Signed less than (SF ≠ OF)
-            self.assemble("mov", ["cl", "11"]) # OF is bit 11, SF is bit 7
-            self.assemble("shr", ["ax", "cl"]) # Shift OF to bit 0 and SF to bit 4 
-            self.assemble("and", ["ax", "0x11"]) # Isolate OF and SF
-            self.assemble("xor", ["ax", "0x10"]) # Check if SF ≠ OF (xor with 0x10)
-            self.assemble("mov", ["cl", "4"])
-            self.assemble("shr", ["ax", "cl"]) # shift right to get the result in bit 0
-
+            self.assemble("pop", ["dx"])
+            self.assemble("pop", ["ax"])
+            self.assemble("pop", ["cx"])
+            self.assemble("pop", ["bx"])
         else:
-            # Unsigned less than (CF = 1)
-            self.assemble("mov", ["cl", "7"]) # CF is bit 7
-            self.assemble("shr", ["ax", "cl"])
-            self.assemble("and", ["ax", "1"])
+            self.assemble("pop", ["ax"])
+            self.assemble("pop", ["bx"])
+
+    def _save_result(self):
+        
+        self.assemble("push", ["ax"])
+        if self.node.node_type is Double:
+            self.assemble("push", ["dx"])
+
+
+class ComparisonTranslator(BinaryOperationTranslator):
+
+    node_type = ComparisonNode
+
+    def make(self) -> None:
+        self.node: ComparisonNode
+
+        equality = Token.any(IsEqualToken, IsNotEqualToken).match(self.node.token)
+
+        signed = Token.any(SignedGreaterThanToken, SignedIsGtEqToken, SignedLessThanToken, SignedIsLtEqToken).match(self.node.token)
+
+        swapped = not Token.any(LessThanToken, IsGtEqToken, SignedLessThanToken, SignedIsGtEqToken).match(self.node.token)
+
+        inverted = Token.any(IsNotEqualToken, IsGtEqToken, IsLtEqToken, SignedIsGtEqToken, SignedIsLtEqToken).match(self.node.token)
+
+        self._load_operands(swapped)
+
+        if self.node.left.node_type is Double:
+            raise NotImplementedError("Double comparison not yet implemented for i8086", self.node.token.line)
+
+        A = "ax" if sizeof(self.node.left.node_type) == 2 else "al"
+        B = "bx" if sizeof(self.node.right.node_type) == 2 else "bl"
+        
+        # why not all 8 possibilites of conditional jumps?
+        # would pollute code with too many macros
+        macro: list[Assembly] = [
+            Assembly(self.config, "cmp", [A, B]),
+            Assembly(self.config, "je" if equality else ("jl" if signed else "jb"), ["true"]),
+            Assembly(self.config, "jmp", ["false"]),
+        ]
+        
+        name: str = "q" if equality else ("s" if signed else "u")
+        sizename: str = "b" if self.node.left.node_type is Char else "w"
+        macro_label: str = self.program.activate("_" + name + sizename + "cmp", macro)
+
+        self.assemble("call", [macro_label])
 
         if inverted:
             self.assemble("xor", ["ax", "1"])
 
+        self._save_result()
+
+
+class AdditiveTranslator(BinaryOperationTranslator):
+
+    node_type = AdditiveNode
+
     def make(self) -> None:
-        self.node: BinaryOperationNode
-
-        # A = "ax" if sizeof(self.node.left.node_type) == 2 else "al"
-        # B = "bx" if sizeof(self.node.right.node_type) == 2 else "bl"
-
-        if self.node.left.node_type is Double:
-            #TODO: redirect to a different method in this if clause so we dont have clutter
-            raise NotImplementedError("Double operations not implemented yet for i8086", self.node.token.line)
-
-        # if sizeof(self.node.left.node_type) == 1:
-        #     self.assemble("mov", ["ah", "0"])
-        # if sizeof(self.node.right.node_type) == 1:
-        #     self.assemble("mov", ["bh", "0"])
+        self.node: AdditiveNode
+        
+        self._load_operands()
 
         if PlusToken.match(self.node.token):
-            self._load_operands()
             self.assemble("add", ["ax", "bx"])
+            if self.node.left.node_type is Double:
+                self.assemble("adc", ["dx", "cx"])
     
         elif MinusToken.match(self.node.token):
-            self._load_operands()
             self.assemble("sub", ["ax", "bx"])
+            if self.node.left.node_type is Double:
+                raise NotImplementedError("How to do subtraction for doubles?", self.node.token.line)
+        
+        else:
+            raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
 
-        elif StarToken.match(self.node.token):
-            self._load_operands()
-            self.assemble("mul", ["bx"])
-
-        elif LogicalNotToken.match(self.node.token):
-            self._load_operands()
-            self.assemble("xor", ["ax", "1"])
-    
-        elif Token.any(IsEqualToken, IsNotEqualToken).match(self.node.token):
-            self._load_operands()
-            self.assemble("cmp", ["ax", "bx"])
-            self.assemble("pushf")
-            self.assemble("pop", ["ax"])
-            self.assemble("mov", ["cl", "6"])
-            self.assemble("shr", ["ax", "cl"])
-            self.assemble("and", ["ax", "1"])
-            if IsNotEqualToken.match(self.node.token):
-                self.assemble("xor", ["ax", "1"])  # Invert the equality
-
-        elif SignedGreaterThanToken.match(self.node.token):  # Greater than: ax +> bx
-            raise NotImplementedError("Signed GT not implemented yet", self.node.token.line)
-            self._make_ordered_comp(signed=True, flipped=True, inverted=False)
-
-        elif SignedLessThanToken.match(self.node.token):  # Less than: ax <+ bx 
-            raise NotImplementedError("Signed LT not implemented yet", self.node.token.line)
-            self._make_ordered_comp(signed=True, flipped=False, inverted=False)
-
-        elif SignedIsGtEqToken.match(self.node.token):  # Greater or equal: ax ~> bx
-            raise NotImplementedError("Signed GTEQ not implemented yet", self.node.token.line)
-            self._make_ordered_comp(signed=True, flipped=False, inverted=True)
-
-        elif SignedIsLtEqToken.match(self.node.token):  # Less or equal: ax <~ bx
-            raise NotImplementedError("Signed LTEQ not implemented yet", self.node.token.line)
-            self._make_ordered_comp(signed=True, flipped=True, inverted=True)
-
-            # self.assemble("mov", ["cl", "6"])
-            # self.assemble("shr", ["ax", "cl"])
-            # self.assemble("and", ["al", "1"])
-            # self.assemble("mov", ["dl", "al"])
-
-            # self.assemble("pushf")
-            # self.assemble("pop", ["ax"])
-            # self.assemble("and", ["ax", "1"])
-
-            # self.assemble("or", ["al", "dl"])
-
-        ################################################## unsigned comparison follows
-
-        elif GreaterThanToken.match(self.node.token):  # Greater than: ax > bx
-            #raise NotImplementedError("Unsigned GT not implemented yet", self.node.token.line)
-            self._make_ordered_comp(signed=False, flipped=True, inverted=False)
-
-        elif LessThanToken.match(self.node.token):  # Less than: ax < bx 
-            self._make_ordered_comp(signed=False, flipped=False, inverted=False)
-
-        elif IsGtEqToken.match(self.node.token):  # Greater or equal: ax >= bx
-            raise NotImplementedError("Unsigned GTEQ not implemented yet", self.node.token.line)
-            self._make_ordered_comp(signed=False, flipped=False, inverted=True)
-
-        elif IsLtEqToken.match(self.node.token):  # Less or equal: ax <= bx
-            #raise NotImplementedError("Unsigned LTEQ not implemented yet", self.node.token.line)
-            self._make_ordered_comp(signed=False, flipped=True, inverted=True)
+        self._save_result()
 
 
-        elif BinaryAndToken.match(self.node.token):
+class BinaryTranslator(BinaryOperationTranslator):
+
+    node_type = BinaryNode
+
+    def make(self) -> None:
+        self.node: BinaryNode
+        
+        self._load_operands()
+
+        if BinaryAndToken.match(self.node.token):
             self.assemble("and", ["ax", "bx"])
 
         elif BinaryOrToken.match(self.node.token):
@@ -161,7 +137,27 @@ class BinaryOperationTranslator(Translator):
         elif BinaryShiftRightToken.match(self.node.token):
             self.assemble("mov", ["cx", "bx"])
             self.assemble("shr", ["ax" if sizeof(self.node.left.node_type) == 2 else "al", "cl"])
+        
+        else:
+            raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
 
+        self._save_result()
+
+
+class MultiplicativeTranslator(BinaryOperationTranslator):
+
+    node_type = MultiplicativeNode
+
+    def make(self) -> None:
+        self.node: MultiplicativeNode
+        
+        self._load_operands()
+
+        if self.node.node_type is Double:
+            raise NotImplementedError("Double multiplicative node ops not yet implemented for i8086", self.node.token.line)
+
+        if StarToken.match(self.node.token):
+            self.assemble("mul", ["bx"])
 
         elif DivideToken.match(self.node.token):
             if self.node.left.node_type is Int:
@@ -172,7 +168,6 @@ class BinaryOperationTranslator(Translator):
                 self.assemble("xor", ["ah", "ah"])
     
         elif SignedDivideToken.match(self.node.token):
-            #raise NotImplementedError("Template only, unsigned division not implemented yet", self.node.token.line)
             if self.node.left.node_type is Int:
                 self.assemble("cwd")
                 self.assemble("idiv", ["bx"])
@@ -187,50 +182,69 @@ class BinaryOperationTranslator(Translator):
                 self.assemble("mov", ["ax", "dx"])
             else:
                 self.assemble("div", ["bl"])
-                self.assemble("xor", ["ah", "ah"]) 
+                self.assemble("xor", ["ah", "ah"])
 
         else:
             raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
 
-        self.assemble("push", ["ax"])
+        self._save_result()
 
 
 class UnaryOperationTranslator(Translator):
 
     node_type = UnaryOperationNode
 
+    def _load_operand(self) -> None:
+        self.add(self.node.operand)
+        if self.node.operand.node_type is Double:
+            self.assemble("pop", ["dx"])
+        self.assemble("pop", ["ax"])
+
+    def _save_operand(self) -> None:
+        self.assemble("push", ["ax"])
+        if self.node.operand.node_type is Double:
+            self.assemble("push", ["dx"])
+
     def make(self) -> None:
         self.node: UnaryOperationNode
 
-        if self.node.operand is Double:
-            raise NotImplementedError("Double operations not implemented yet for i8086", self.node.token.line)
+        if self.node.operand.node_type is Double:
+            raise NotImplementedError("Double unary operations not implemented yet for i8086", self.node.token.line)
 
-        if StarToken.match(self.node.token):
-            
-            Variable.variables[self.node.operand.symbol].load_pointer(translator=self, target_register="a")
-            self.assemble("push", ["ax"])
+        self._load_operand()
 
-        elif MinusToken.match(self.node.token):
-            self.add(self.node.operand)
-            #TODO: handle bytes differently than ints
-            self.assemble("pop", ["ax"])
-            self.assemble("neg", ["ax"])
-            self.assemble("push", ["ax"])
+        if MinusToken.match(self.node.token):
+            if self.node.operand.node_type is Char:
+                self.assemble("neg", ["al"])
+            elif self.node.operand.node_type is Int:
+                self.assemble("neg", ["ax"])
+            else:
+                macro: list[Assembly] = [
+                    Assembly(self.config, "not", ["ax"]),
+                    Assembly(self.config, "not", ["dx"]),
+                    Assembly(self.config, "add", ["ax", "1"]),
+                    Assembly(self.config, "adc", ["dx", "0"]),
+                    Assembly(self.config, "ret")
+                ]
+                label = self.program.activate("_dwnot", macro)
+                self.assemble("call", [label])
 
         elif BinaryNotToken.match(self.node.token):
-            self.add(self.node.operand)
-            self.assemble("pop", ["ax"])
-            self.assemble("not", ["ax"])
-            self.assemble("push", ["ax"])
+            if self.node.operand.node_type is Char:
+                self.assemble("not", ["al"])
+            elif self.node.operand.node_type is Int:
+                self.assemble("not", ["ax"])
+            else:
+                self.assemble("not", ["ax"])
+                self.assemble("not", ["dx"])
 
         elif LogicalNotToken.match(self.node.token):
-            self.add(self.node.operand)
-            self.assemble("pop", ["ax"])
             self.assemble("xor", ["ax", "1"])
-            self.assemble("push", ["ax"])
 
         else:
             raise NotImplementedError(f"Unary operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
+
+        self._save_operand()
 
 
 
