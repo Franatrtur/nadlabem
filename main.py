@@ -62,7 +62,7 @@ def main() -> None:
         )
 
         if config.verbose:
-            with open("logo.txt", "r") as file:
+            with open("logo.txt", "r", encoding="utf8") as file:
                 print("\033[96m" + file.read() + '\033[0m')
 
         translator = Compiler(config)
@@ -96,7 +96,7 @@ def main() -> None:
                 print()
                 print("\33[44m", f"Saved to file: {out}", '\033[0m')
 
-            with open(out, 'w') as output_file:
+            with open(out, 'w', encoding="utf8") as output_file:
                 output_file.write(output)
 
         else:
