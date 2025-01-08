@@ -321,7 +321,7 @@ class IncludeParser(Parser):
             OpenBraceToken("<virtual>", token.line),
             NewLineToken("<virtual>", token.line)
         ] + Tokenizer(config=self.config, location=module_path).tokenize(
-            source_code=module_path.read_text()
+            source_code=module_path.read_text(encoding="utf8")
         ) + [
             CloseBraceToken("<virtual>", token.line),
             NewLineToken("<virtual>", token.line)

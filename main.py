@@ -45,7 +45,7 @@ def main() -> None:
     if not file_path.is_file():
         raise ValueError(f"The input file {file_path} does not exist!")
 
-    with file_path.open() as file:
+    with file_path.open(encoding="utf8") as file:
         code = file.read()
 
         if args.target not in CompilationTarget.targets:
