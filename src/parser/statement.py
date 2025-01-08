@@ -86,10 +86,10 @@ class IfParser(Parser):
         self.devour(CloseParenToken)
         body = CodeBlockParser(parent=self).parse()
 
-        if not self.is_ahead(ElseToken):
+        if not self.is_ahead(ElseToken, skip_newline=True):
             return IfNode(token, condition, body, else_body=None, parser=self)
 
-        self.devour(ElseToken)
+        self.devour(ElseToken, skip_newline=True)
         else_body = CodeBlockParser(parent=self).parse()
         return IfNode(token, condition, body, else_body, parser=self)
 
@@ -110,7 +110,7 @@ class WhileParser(Parser):
         else:
             token = self.devour(DoToken)
             body = CodeBlockParser(parent=self).parse()
-            self.devour(WhileToken)
+            self.devour(WhileToken, skip_newline=True)
             condition = self._condition()
         return WhileNode(token, condition, body, parser=self)
 

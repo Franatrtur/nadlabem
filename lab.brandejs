@@ -1,46 +1,6 @@
-include "lab2.brandejs" as my_name
-include "lab2.brandejs"
-
-my_name.fn(
-    my_name.a,
-    a + my_name.a
-)
-
-def myfn(){
-    include "inline.brandejs" not as module
-}
+include "std/lib.brandejs" as std
 
 
-
-
-
-
-; def printf(string: @char[], number: int) -> void {
-;     i: int = 0
-;     byte: char = string[0]
-;     while(byte > 0c) {
-;         if (byte == '%') {
-;             symbol: char = string[i + 1]
-
-;             if (symbol == 'd') {
-;                 print_decimal(number)
-;                 i = i + 2
-;                 continue
-;             }
-;             if (symbol == 'h') {
-;                 print_hex(number)
-;                 i = i + 2
-;                 continue
-;             }
-
-;             error(*"printf: invalid format")
-;         }
-
-;         i = i + 1
-;     }
-; }
-
-
-; def print_decimal(number: int) -> void {
-
-; }
+line: char[]* = std.io.get_line()
+std.io.printf(*"Délka stringu hexadecimálně: %h \r\n", std.str.len(line))
+std.io.println(line)

@@ -1,0 +1,7 @@
+include "../std/io.brandejs"
+
+i: int = 5
+
+if (i == 3)         print(*"i is 3")
+else if (i == 5)    print(*"i is 5")
+else                print(*"i is something else")

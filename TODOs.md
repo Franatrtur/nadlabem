@@ -8,6 +8,11 @@
  - add flags for disabling optimization and/or pruning  
  - add flags for verbally describing pruning
 
+## Small things
+ - add string as alias for char[] (or char[]* ?)
+ - add byte as alias for char and word as alias for int
+ - REDO FOR statement to increment even on continue. (not sure if i did this already?)
+
 ## Standard library
 
 ### stdio (Standard Input/Output)
@@ -36,9 +41,9 @@ pow(base: int, exp: int) -> int: Computes base raised to exp.
 ### stdstr (String Manipulation)
 Functions for working with strings.
 
-strlen(s: char*) -> int: Returns the length of a string.
-strcmp(s1: char*, s2: char*) -> int: Compares two strings.
-strcpy(dest: char*, src: char*) -> void: Copies a string.
+strlen(s: char*) -> int: Returns the length of a string.  
+strcmp(s1: char*, s2: char*) -> int: Compares two strings.  
+strcpy(dest: char*, src: char*) -> void: Copies a string.  
 strcat(dest: char*, src: char*) -> void: Concatenates two strings.
 
 ### stdmath (Mathematics)

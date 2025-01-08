@@ -1,0 +1,33 @@
+; STD: strcpy(source: @char[], destination: @char[]) -> int
+; copies string from source to destination, ending with null byte
+; returns: length of source string
+def cpy(source: @char[], destination: @char[]) -> int {
+    i: int = 0
+    while (source[i] != 0c) {
+        destination[i] = source[i]
+        ++i
+    }
+    destination[i] = 0c
+    return i
+}
+
+; STD: strlen(string: @char[]) -> int
+; returns: length of string, excluding null byte
+def len(bytes: @char[]) -> int {
+    i: int = 0
+    while (bytes[i] != 0c) {
+        ++i
+    }
+    return i
+}
+
+; STD: strcmp(string1: @char[], string2: @char[]) -> int
+; returns: 0 if string1 == string2, -1 if string1 < string2, 1 if string1 > string2
+def cmp(string1: @char[], string2: @char[]) -> int {
+    i: int = 0
+    while (string1[i] == string2[i]){
+        if (string1[i] == 0) return 0
+    }
+    if (string1[i] > string2[i]) return 1
+    else return -1
+}

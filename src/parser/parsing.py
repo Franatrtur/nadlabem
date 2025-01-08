@@ -13,15 +13,15 @@ class Parser(Node):
         self.parent.children.append(self)
         self.root: "ProgramParser"
 
-    def devour(self, token_type: Type[Token]) -> Token:
+    def devour(self, token_type: Type[Token], skip_newline: bool = False) -> Token:
         """Eats desired token type, returns eaten token, throws proper SyntaxError if not found"""
-        return self.root.devour(token_type, parser=self)
+        return self.root.devour(token_type, parser=self, skip_newline=skip_newline)
 
-    def look_ahead(self) -> Token:
-        return self.root.look_ahead()
+    def look_ahead(self, skip_newline: bool = False) -> Token:
+        return self.root.look_ahead(skip_newline)
 
-    def is_ahead(self, token_type: Type[Token]) -> bool:
-        return token_type.match(self.root.look_ahead())
+    def is_ahead(self, token_type: Type[Token], skip_newline: bool = False) -> bool:
+        return token_type.match(self.root.look_ahead(skip_newline))
 
     @property
     def current_location(self) -> Path:

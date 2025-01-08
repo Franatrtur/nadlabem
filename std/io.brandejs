@@ -24,30 +24,35 @@ def get_char() -> char {
 ; Číslo odpovídá počtu bajtů, který může služba maximálně načíst. 
 ; Služba načte jeden celý řádek až do maximální zadané délky.
 
-INPUT_BUFFER: char[82] = [80c]
-INPUT: @char[80] =@= (*INPUT_BUFFER::int - 2) :: char[]*
+INPUT_BUFFER: char[83] = [80c]
+; 1st byte for buffer length
+; 2nd byte for laoded length
+; 80  bytes for content
+; 83rd byte for null byte if needed
+INPUT: @char[81] =@= (*INPUT_BUFFER::int + 2) :: char[]*
 
 def get_line() -> char[80]* {
     $ mov ah, 0x0a	            ; Identifikace služby Načíst řádek z terminálu
-    $ mov dx, {INPUT_BUFFER}	; Offset začátku bufferu v segmentu dle DS
+    $ lea dx, [{INPUT_BUFFER}]	; Offset začátku bufferu v segmentu dle DS
     $ int 0x21		            ; resp. int 33 poskytne službu
+    length: char = INPUT_BUFFER[1]
+    INPUT[length] = 0c
     return *INPUT
 }
-; usage
+; ;usage
 ; a: char[]* = get_line()
-; a = a
+; ;then copy the string somewhere
 
-HEX_OUTPUT_BUFFER: char[5] = "0000"
+HEX_STRING: char[5] = "0000"
 
 def print_hex(number: int) -> void {
-    if (number == 0) {
-        put_char('0')
-        return
-    }
+
+    ;TODO: redo using a for loop as we need to set all the digits
+    ; otherwise it will leave any previous digits on places where 0s should be
 
     i: int = 0
     while (number > 0) {
-        last: int = (number % 16)
+        last: int = number & 0xf ; isolate last hex digit
 
         if (last < 10) {
             last = last + 0x30
@@ -55,12 +60,12 @@ def print_hex(number: int) -> void {
             last = last + 0x37
         }
 
-        HEX_OUTPUT_BUFFER[3 - i] = (last :: char)
+        HEX_STRING[3 - i] = last :: char
         number = number >> 4
-        i = i + 1
+        ++i
     }
 
-    print(*HEX_OUTPUT_BUFFER)
+    print(*HEX_STRING)
 }
 
 def print(str: @char[]) -> void {
@@ -74,9 +79,9 @@ def print(str: @char[]) -> void {
 }
 
 def print_dos(str: char[]*) -> void {
-    $ mov ah, 9	                ; Identifikace služby Vypsat řetězec bajtů na terminál
-    $ mov dx, word[{str}]       ; Offset začátku řetězce v segmentu dle DS
-    $ int 0x21                  ; resp. int 33 poskytne službu
+    $ mov ah, 9	        ; Identifikace služby Vypsat řetězec bajtů na terminál
+    $ lea dx, [{str}]   ; Offset začátku řetězce v segmentu dle DS
+    $ int 0x21          ; resp. int 33 poskytne službu
 }
 
 def println(str: @char[]) -> void {
@@ -84,3 +89,36 @@ def println(str: @char[]) -> void {
     put_char(13c)   ; 13 - CR
     put_char(10c)   ; 10 - LF
 }
+
+def printf(string: @char[], number: int) -> void {
+    i: int = 0
+    character: char = string[i]
+
+    while(character != 0c) {
+
+        if (character == '%') {
+            symbol: char = string[i + 1]
+
+            if (symbol == 'd') {
+                print(*"printf: decimal not implemented")
+                ;print_decimal(number)
+            }
+            if (symbol == 'h') {
+                print_hex(number)
+            }
+            else print(*"printf: invalid format")
+            i = i + 2
+            character = string[i]
+            continue
+        }
+        else put_char(character)
+
+        ++i
+        character = string[i]
+    }
+}
+
+
+; def print_decimal(number: int) -> void {
+
+; }

@@ -87,7 +87,7 @@ class Namespace(Context):
         elif name in self.modules:
                 return self.modules[name].resolve_names(name_token, components[1:])
 
-        raise NameError(f"Undefined namespace {repr(name)} in compound term {repr(name_token.string)}", name_token.line, context=self)
+        raise NameError(f"Undefined namespace {repr(name)} in compound name {repr(name_token.string)}", name_token.line, context=self)
 
 
 class Symbol:

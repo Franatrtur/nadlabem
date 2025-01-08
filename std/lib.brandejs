@@ -1,11 +1,91 @@
 include "io.brandejs" as io
+include "str.brandejs" as str
 
+
+; STD: assert(condition: bool, message: @char[]) -> void
+; raises error if condition is false
 def assert(condition: bool, message: @char[]) -> void {
     if (not condition) error(*message)
 }
 
+; STD: error(message: @char[]) -> void
+; prints error message and jumps to error label
 def error(message: @char[]) -> void {
     io.println(*"Error occured:")
     io.println(*message)
     $ jmp error
 }
+
+; STD: exit() -> void
+; jumps to exit label and ends the program
+; TODO: add optional argument for exiting with error
+def exit() -> void {
+    $ jmp exit
+}
+
+
+
+
+; HEAP_MEMORY: int[2048] = []
+
+; ; Metadata for blocks: Each block starts with two words (size and free flag)
+; ; Size includes metadata itself, free flag is 1 if free, 0 if allocated
+
+; ; Malloc implementation
+; def malloc(size: int) -> int[]* {
+;     ; Align size to even number (16-bit words)
+;     size = (size + 1) & ~1
+
+;     i: int = 0
+;     while (i < 2048) {
+;         block_size: int = HEAP_MEMORY[i]
+;         is_free: int = HEAP_MEMORY[i + 1]
+
+;         if (is_free == 1 and block_size >= size + 2) {
+;             ; Found a suitable free block
+;             HEAP_MEMORY[i + 1] = 0  ; Mark block as allocated
+
+;             ; If there’s enough space, split the block
+;             if (block_size > size + 2) {
+;                 HEAP_MEMORY[i + size + 2] = block_size - size - 2
+;                 HEAP_MEMORY[i + size + 3] = 1  ; New block is free
+;                 HEAP_MEMORY[i] = size + 2  ; Update current block size
+;             }
+
+;             return (*HEAP_MEMORY::int + i + 2) :: int[]*
+;         }
+
+;         ; Move to the next block
+;         i = i + block_size
+;     }
+
+;     ; No suitable block found
+;     error(*"Out of memory")
+; }
+
+; ; Free implementation
+; def free(ptr: int[]*) -> void {
+;     ; Calculate the start of the block
+;     block_start: int = (ptr::int - *HEAP_MEMORY::int) - 2
+
+;     ; Mark block as free
+;     HEAP_MEMORY[block_start + 1] = 1
+
+;     ; Try to coalesce with the next block if it’s free
+;     next_block_start: int = block_start + HEAP_MEMORY[block_start]
+;     if (next_block_start < 2048 and HEAP_MEMORY[next_block_start + 1] == 1) {
+;         HEAP_MEMORY[block_start] = HEAP_MEMORY[block_start] + HEAP_MEMORY[next_block_start]
+;     }
+
+;     ; Try to coalesce with the previous block if it’s free
+;     i: int = 0
+;     while (i < block_start) {
+;         prev_block_start: int = i
+;         prev_block_size: int = HEAP_MEMORY[prev_block_start]
+;         if (prev_block_start + prev_block_size == block_start and HEAP_MEMORY[prev_block_start + 1] == 1) {
+;             HEAP_MEMORY[prev_block_start] = HEAP_MEMORY[prev_block_start] + HEAP_MEMORY[block_start]
+;             break
+;         }
+;         i = i + prev_block_size
+;     }
+; }

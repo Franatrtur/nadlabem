@@ -1,5 +1,5 @@
 include "../../std/lib.brandejs"
-include "../../std/io.brjs"
+include "../../std/io.brandejs"
 
 main()
 

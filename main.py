@@ -17,6 +17,11 @@ parser.add_argument("-nomap", "--nomapping", action="store_true", help="Dont gen
 parser.add_argument("-nocom", "--nocomments", action="store_true", help="Erase all comments flag")
 parser.add_argument("-novb", "--noverbose", action="store_true", help="Dont generate generation info output")
 
+# Obfuscation
+parser.add_argument("-r", "--random", action="store_true", help="Randomize labels")
+parser.add_argument("-heavy", "--unoptimize", action="store_true", help="Dont optimize the generated assembly")
+parser.add_argument("-full", "--noprune", action="store_true", help="Dont prune out redundant code")
+
 parser.add_argument("-out", "--output", help="Output file destination (default=same file.asm)", default=None)
 parser.add_argument("-p", "--print", action="store_true", help="Print to console instead of writing to file", default=None)
 parser.add_argument("-dev", "--devmode", action="store_true", help="Developper mode flag")

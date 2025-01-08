@@ -30,11 +30,11 @@ class ProgramParser(Parser):
         program_block = CodeBlockParser(parent=self, force_multiline=True).parse()
         return ProgramNode(program_block.children, parser=self)
 
-    def devour(self, token_type: Type[Token], parser: Parser | None) -> Token:
+    def devour(self, token_type: Type[Token], parser: Parser | None, skip_newline: bool = False) -> Token:
         if self.is_done:
             raise SyntaxError(f"Unexpected end of input, expected {token_type.__name__} but got nothing", line=self.tokens[self.i - 1].line, parser=parser)
 
-        skip_newline = self.nested > 0
+        skip_newline = skip_newline or self.nested > 0
 
         while skip_newline and NewLineToken.match(self.tokens[self.i]):
             self.i += 1
@@ -60,9 +60,9 @@ class ProgramParser(Parser):
         else:
             raise SyntaxError(f"Expected {token_type.__name__}, but got {self.tokens[self.i]} instead", line=self.tokens[self.i].line, parser=parser, suggestion=find_suggestion(token_type, self.tokens[self.i], parser))
 
-    def look_ahead(self) -> Token:
+    def look_ahead(self, skip_newline: bool = False) -> Token:
 
-        skip_newline = self.nested > 0
+        skip_newline = skip_newline or self.nested > 0
 
         if self.is_done:
             return None
