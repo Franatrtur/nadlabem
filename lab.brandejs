@@ -1,6 +1,7 @@
-include "std/lib.brandejs" as std
+include "std/lib.brandejs"
 
 
-line: char[]* = std.io.get_line()
-std.io.printf(*"Délka stringu hexadecimálně: %h \r\n", std.str.len(line))
-std.io.println(line)
+line: char[]* = get_line()
+myline: char[]* = malloc(81)
+strcpy(myline, line)
+println(myline)

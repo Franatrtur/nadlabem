@@ -1,19 +1,18 @@
-; STD: strcpy(source: @char[], destination: @char[]) -> int
+; STD: strcpy(destination: @char[], source: @char[]) -> int
 ; copies string from source to destination, ending with null byte
 ; returns: length of source string
-def cpy(source: @char[], destination: @char[]) -> int {
+def strcpy(destination: @char[], source: @char[]) -> int {
     i: int = 0
-    while (source[i] != 0c) {
+    do {
         destination[i] = source[i]
         ++i
-    }
-    destination[i] = 0c
+    } while (source[i] != 0c)
     return i
 }
 
 ; STD: strlen(string: @char[]) -> int
 ; returns: length of string, excluding null byte
-def len(bytes: @char[]) -> int {
+def strlen(bytes: @char[]) -> int {
     i: int = 0
     while (bytes[i] != 0c) {
         ++i
@@ -23,11 +22,30 @@ def len(bytes: @char[]) -> int {
 
 ; STD: strcmp(string1: @char[], string2: @char[]) -> int
 ; returns: 0 if string1 == string2, -1 if string1 < string2, 1 if string1 > string2
-def cmp(string1: @char[], string2: @char[]) -> int {
+def strcmp(string1: @char[], string2: @char[]) -> int {
     i: int = 0
     while (string1[i] == string2[i]){
         if (string1[i] == 0c) return 0
+        ++i
     }
     if (string1[i] > string2[i]) return 1
-    else return -1
+    else return 0xFFFF  ; -1
+}
+
+; STD: strcat(destination: @char[], source: @char[]) -> int
+; concatenates source to destination, ending with null byte
+; warning: - destination string must be large enough to hold both strings!
+;          - both strings must be null-terminated!
+; returns: length of resulting destination string
+def strcat(destination: @char[], source: @char[]) -> int {
+    i: int = strlen(*destination)
+    j: int = 0
+    
+    do {
+        current: char = source[j]
+        destination[i + j] = current
+        ++j
+    } while (current != 0c)
+
+    return i + j
 }

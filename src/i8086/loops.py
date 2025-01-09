@@ -14,24 +14,27 @@ class WhileTranslator(Translator):
     
         #TODO: put all this code in if not isinstance(self.node.condition, LogicalNode):
         # but if it IS a logical node, we can map the jump command based on the operator (==, <, >, >=, ...)
-        self.loop_label: str = self.node.scope.generate_id("while")
-        self.out_label: str = self.node.scope.generate_id("wout")
-        self.assemble("nop", label=self.loop_label)
+        loop_label: str = self.node.scope.generate_id("while")
+        out_label: str = self.node.scope.generate_id("wout")
+        self.assemble("nop", label=loop_label)
 
-        if WhileToken.match(self.node.token):
+        self.continue_label: str = loop_label
+        self.break_label: str = out_label
+
+        if not self.node.do_loop:
             self.add(self.node.condition)
             self.assemble("pop", ["ax"])
-            self.assemble("jz", [self.out_label])
+            self.assemble("jz", [out_label])
 
         self.add(self.node.body)
 
-        if DoToken.match(self.node.token):
+        if self.node.do_loop:
             self.add(self.node.condition)
             self.assemble("pop", ["ax"])
-            self.assemble("jnz", [self.out_label])
+            self.assemble("jnz", [out_label])
         
-        self.assemble("jmp", [self.loop_label])
-        self.assemble("nop", label=self.out_label)
+        self.assemble("jmp", [loop_label])
+        self.assemble("nop", label=out_label)
 
 
 class ForTranslator(Translator):
@@ -41,27 +44,30 @@ class ForTranslator(Translator):
     def make(self) -> None:
         self.node: ForNode
 
-        self.loop_label: str = self.node.scope.generate_id("for")
-        self.out_label: str = self.node.scope.generate_id("fout")
-        self.continue_label: str = self.node.scope.generate_id("finc")
+        loop_label: str = self.node.scope.generate_id("for")
+        out_label: str = self.node.scope.generate_id("fout")
+        increment_label: str = self.node.scope.generate_id("finc")
+
+        self.continue_label: str = increment_label
+        self.break_label: str = out_label
 
         self.add(self.node.initialization)
 
-        self.assemble("nop", label=self.loop_label)
+        self.assemble("nop", label=loop_label)
 
         self.add(self.node.condition)
 
         self.assemble("pop", ["ax"])
-        self.assemble("jz", [self.out_label])
+        self.assemble("jz", [out_label])
 
         self.add(self.node.body)
 
-        self.assemble("nop", label=self.continue_label)
+        self.assemble("nop", label=increment_label)
 
         self.add(self.node.increment)
         
-        self.assemble("jmp", [self.loop_label])
-        self.assemble("nop", label=self.out_label)
+        self.assemble("jmp", [loop_label])
+        self.assemble("nop", label=out_label)
 
 
 class PassTranslator(Translator):
@@ -95,7 +101,7 @@ class BreakTranslator(Translator):
         
         loop: WhileTranslator | ForTranslator = self.find_loop(self)
 
-        self.assemble("jmp", [loop.out_label])
+        self.assemble("jmp", [loop.break_label])
 
 
 class ContinueTranslator(Translator):
@@ -107,7 +113,4 @@ class ContinueTranslator(Translator):
         
         loop: WhileTranslator | ForTranslator = BreakTranslator.find_loop(self)
 
-        if isinstance(loop, ForTranslator):
-            self.assemble("jmp", [loop.continue_label])
-        else:
-            self.assemble("jmp", [loop.loop_label])
+        self.assemble("jmp", [loop.continue_label])

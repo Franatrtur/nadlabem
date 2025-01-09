@@ -1,5 +1,5 @@
-include "io.brandejs" as io
-include "str.brandejs" as str
+include "io.brandejs"
+include "str.brandejs"
 
 
 ; STD: assert(condition: bool, message: @char[]) -> void
@@ -11,8 +11,8 @@ def assert(condition: bool, message: @char[]) -> void {
 ; STD: error(message: @char[]) -> void
 ; prints error message and jumps to error label
 def error(message: @char[]) -> void {
-    io.println(*"Error occured:")
-    io.println(*message)
+    println(*"[Error occured]")
+    println(*message)
     $ jmp error
 }
 
@@ -26,66 +26,55 @@ def exit() -> void {
 
 
 
-; HEAP_MEMORY: int[2048] = []
+HEAP: char[4096] = []
+HEAP_TAKENh: int = 0
+HEAP_TAKENl: int = 0
+HEAP_LENGTHS: char[32] = []
 
-; ; Metadata for blocks: Each block starts with two words (size and free flag)
-; ; Size includes metadata itself, free flag is 1 if free, 0 if allocated
+; 32bit mask for 128byte blocks flags for occupation
 
-; ; Malloc implementation
-; def malloc(size: int) -> int[]* {
-;     ; Align size to even number (16-bit words)
-;     size = (size + 1) & ~1
+; Malloc implementation
+def malloc(size: int) -> char[]* {
+    ; Calculate blocks needed (rounding up)
+    blocks: int = (size + 127) / 128
+    found: int = 0  ; how many consecutive free blocks found
 
-;     i: int = 0
-;     while (i < 2048) {
-;         block_size: int = HEAP_MEMORY[i]
-;         is_free: int = HEAP_MEMORY[i + 1]
+    ; returns nth bit from the 32bit double word
+    def block_taken(n: int) -> bool {
+        if (n >= 16) return ((HEAP_TAKENl >> n) & 1) :: bool
+        else return ((HEAP_TAKENh >> (n - 16)) & 1) :: bool
+    }
 
-;         if (is_free == 1 and block_size >= size + 2) {
-;             ; Found a suitable free block
-;             HEAP_MEMORY[i + 1] = 0  ; Mark block as allocated
+    for (i: int = 0, i < 32, ++i) {
+        if (block_taken(i)) {
+            found = 0
+        } else {
+            found = found + 1
+            if (found == blocks) {
+                ; suitable block sequence found, return pointer to first block
+                HEAP_LENGTHS[i - found] = found :: char
+                return *HEAP + ((i - found) * 128) :: char[]*
+            }
+        }
+    }
 
-;             ; If there’s enough space, split the block
-;             if (block_size > size + 2) {
-;                 HEAP_MEMORY[i + size + 2] = block_size - size - 2
-;                 HEAP_MEMORY[i + size + 3] = 1  ; New block is free
-;                 HEAP_MEMORY[i] = size + 2  ; Update current block size
-;             }
+    ; No suitable block found
+    error(*"malloc: Out of memory")
+}
 
-;             return (*HEAP_MEMORY::int + i + 2) :: int[]*
-;         }
+; Free implementation
+def free(ptr: char[]*) -> void {
+    ; Calculate the block index
+    start: int = (ptr - *HEAP) :: int / 128
+    blocks: int = HEAP_LENGTHS[start] :: int
+    
+    
+    def free_block(n: int) -> void {
+        if (n >= 16) HEAP_TAKENl = HEAP_TAKENl & ~(1 << n)
+        else HEAP_TAKENh = HEAP_TAKENh & ~(1 << (n - 16))
+    }
 
-;         ; Move to the next block
-;         i = i + block_size
-;     }
+    for(i: int = 0, i < blocks, ++i) free_block(start + i)
 
-;     ; No suitable block found
-;     error(*"Out of memory")
-; }
-
-; ; Free implementation
-; def free(ptr: int[]*) -> void {
-;     ; Calculate the start of the block
-;     block_start: int = (ptr::int - *HEAP_MEMORY::int) - 2
-
-;     ; Mark block as free
-;     HEAP_MEMORY[block_start + 1] = 1
-
-;     ; Try to coalesce with the next block if it’s free
-;     next_block_start: int = block_start + HEAP_MEMORY[block_start]
-;     if (next_block_start < 2048 and HEAP_MEMORY[next_block_start + 1] == 1) {
-;         HEAP_MEMORY[block_start] = HEAP_MEMORY[block_start] + HEAP_MEMORY[next_block_start]
-;     }
-
-;     ; Try to coalesce with the previous block if it’s free
-;     i: int = 0
-;     while (i < block_start) {
-;         prev_block_start: int = i
-;         prev_block_size: int = HEAP_MEMORY[prev_block_start]
-;         if (prev_block_start + prev_block_size == block_start and HEAP_MEMORY[prev_block_start + 1] == 1) {
-;             HEAP_MEMORY[prev_block_start] = HEAP_MEMORY[prev_block_start] + HEAP_MEMORY[block_start]
-;             break
-;         }
-;         i = i + prev_block_size
-;     }
-; }
+    HEAP_LENGTHS[start + i] = 0c
+}

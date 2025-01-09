@@ -31,7 +31,7 @@ class ProgramI8086Translator(ProgramTranslator):
         self.declarations: list[list[Assembly]] = []
         self.macros: dict[str, list[Assembly]] = {}
 
-        data_segment = "heap" if self.config.generate_mapping else "data"   # cheeky
+        data_segment = "data" # "heap" if self.config.generate_mapping else "data"   # cheeky
 
         self.special("cpu 8086")
         self.special("segment code")

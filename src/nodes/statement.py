@@ -1,5 +1,5 @@
 from ..tree import Node
-from ..tokenizer import Token, TypeToken, NameToken
+from ..tokenizer import Token, TypeToken, NameToken, DoToken
 from .scope import Context, Symbol, Namespace
 from typing import Type
 from .types import VariableType, FunctionType, Void, Int, Char, Bool, Array, DeclarationType, ExpressionType, ValueType, Comparator
@@ -171,8 +171,10 @@ class IfNode(StatementNode):
 
 class WhileNode(StatementNode):
     def __init__(self, token: Token, condition: ExpressionNode, body: CodeBlockNode, parser: "Parser"):
-        super().__init__(token, [condition, body], parser)
+        do_loop: bool = DoToken.match(token)
+        super().__init__(token, [body, condition] if do_loop else [condition, body], parser)
         self.condition = condition
+        self.do_loop: bool = do_loop
         self.body = body
 
     def verify(self) -> None:

@@ -151,7 +151,7 @@ class Comparator:
 
     @staticmethod
     def _binary_operation(left: ValueType, right: ValueType, allowed: set[ValueType], node: ASTNode) -> None:
-        if not isinstance(left, ValueType) or not isinstance(right, ValueType) or left is not right:
+        if not isinstance(left, ValueType) or not isinstance(right, ValueType) or not Comparator.match(left, right):
             raise TypeError(f"Cannot perform binary operation {node.token.string} on types {left} and {right}", node.token.line, allowed=allowed)
 
     @staticmethod

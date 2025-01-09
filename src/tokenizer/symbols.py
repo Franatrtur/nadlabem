@@ -146,7 +146,6 @@ BinaryNotToken = Token.literal("~", "BinaryNotToken")
 BinaryShiftRightToken = Token.literal(">>", "BinaryShiftRightToken")
 BinaryShiftLeftToken = Token.literal("<<", "BinaryShiftLeftToken")
 BinaryRotateRightToken = Token.literal(">>>", "BinaryRotateRightToken")
-BinaryShiftLeftToken = Token.literal("<<<", "BinaryShiftLeftToken")
 
 PlusToken = Token.literal("+", "PlusToken")
 MinusToken = Token.literal("-", "MinusToken")
@@ -249,7 +248,6 @@ TOKEN_DETECTORS = [
     BinaryShiftRightToken,
     BinaryShiftLeftToken,
     BinaryRotateRightToken,
-    BinaryShiftLeftToken,
 
     PlusToken,
     MinusToken,
@@ -329,7 +327,6 @@ BinaryToken = Token.any(
     BinaryShiftRightToken,
     BinaryShiftLeftToken,
     BinaryRotateRightToken,
-    BinaryShiftLeftToken,
     class_name="BinaryToken"
 )
 
