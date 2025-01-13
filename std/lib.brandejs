@@ -41,19 +41,28 @@ def malloc(size: int) -> char[]* {
 
     ; returns nth bit from the 32bit double word
     def block_taken(n: int) -> bool {
-        if (n >= 16) return ((HEAP_TAKENl >> n) & 1) :: bool
+        if (n < 16) return ((HEAP_TAKENl >> n) & 1) :: bool
         else return ((HEAP_TAKENh >> (n - 16)) & 1) :: bool
+    }
+
+    def take_block(n: int) -> void {
+        if (n < 16) HEAP_TAKENl = HEAP_TAKENl | (1 << n)
+        else HEAP_TAKENh = HEAP_TAKENh | (1 << (n - 16))
+        ;printf(*"Taking block %h\r\n", n)
     }
 
     for (i: int = 0, i < 32, ++i) {
         if (block_taken(i)) {
             found = 0
         } else {
-            found = found + 1
+            ++found
             if (found == blocks) {
                 ; suitable block sequence found, return pointer to first block
-                HEAP_LENGTHS[i - found] = found :: char
-                return *HEAP + ((i - found) * 128) :: char[]*
+                x: int = i - found + 1
+                HEAP_LENGTHS[x] = found :: char
+                ;printf(*"Found blocks from %h\r\n", x)
+                for(j: int = 0, j < blocks, ++j) take_block(x + j)
+                return *HEAP + ((x) * 128) :: char[]*
             }
         }
     }
@@ -67,14 +76,39 @@ def free(ptr: char[]*) -> void {
     ; Calculate the block index
     start: int = (ptr - *HEAP) :: int / 128
     blocks: int = HEAP_LENGTHS[start] :: int
+    ;printf(*"Freeing from %h - ", start)
+    ;printf(*"%h blocks\r\n", blocks)
     
     
     def free_block(n: int) -> void {
-        if (n >= 16) HEAP_TAKENl = HEAP_TAKENl & ~(1 << n)
+        if (n < 16) HEAP_TAKENl = HEAP_TAKENl & ~(1 << n)
         else HEAP_TAKENh = HEAP_TAKENh & ~(1 << (n - 16))
+        ;printf(*"Freed block %h\r\n", n)
     }
 
     for(i: int = 0, i < blocks, ++i) free_block(start + i)
 
     HEAP_LENGTHS[start + i] = 0c
+}
+
+def memcpy() -> void {
+    pass
+}
+
+def memcmp() -> void {
+    pass
+}
+
+def memset() -> void {
+    pass
+}
+
+def input() -> char[81]* {
+    line: char[]* = get_line()
+
+    newstr: char[]* = malloc(81)
+
+    strcpy(newstr, line)
+
+    return newstr
 }

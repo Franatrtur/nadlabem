@@ -31,9 +31,10 @@ class WhileTranslator(Translator):
         if self.node.do_loop:
             self.add(self.node.condition)
             self.assemble("pop", ["ax"])
-            self.assemble("jnz", [out_label])
-        
-        self.assemble("jmp", [loop_label])
+            self.assemble("jnz", [loop_label])
+        else:
+            self.assemble("jmp", [loop_label])
+
         self.assemble("nop", label=out_label)
 
 

@@ -34,10 +34,10 @@ class VariableDeclarationTranslator(Translator):
         #TODO: handle dynamic expressions in arrays
         variable.declaration = [
             Assembly(self.config, "d"+elem_option, vals, label=variable.symbol.id)
-        ]
+        ] if vals else []
         if lenval < variable.var_type.expression_type.size:
             variable.declaration.append(
-                Assembly(self.config, "res"+elem_option, [str(variable.var_type.expression_type.size - len(vals))])
+                Assembly(self.config, "res"+elem_option, [str(variable.var_type.expression_type.size - len(vals))], label= "" if vals else variable.symbol.id)
             )
 
         self.program: ProgramI8086Translator
@@ -107,12 +107,12 @@ class AssignmentTranslator(Translator):
 
         target_index: str = ""
 
+        self.add(self.node.value)
+
         if self.node.index is not None:
             self.add(self.node.index)
             self.assemble("pop", ["si"])
             target_index = "si"
-
-        self.add(self.node.value)
 
         if self.node.by_reference:
             self.assemble("pop", ["ax"])

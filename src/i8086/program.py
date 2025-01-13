@@ -39,6 +39,7 @@ class ProgramI8086Translator(ProgramTranslator):
         self.assemble("mov", ["bx", data_segment], label="..start")   # start of execution
         self.assemble("mov", ["ds", "bx"])                      # data segment init
         self.assemble("mov", ["ss", "bx"])                      # stack segment init - aligned with data segment
+        self.assemble("mov", ["es", "bx"])                      # text segment init - aligned with data segment
         self.assemble("mov", ["sp", "dno"])                     # stack pointer init
         self.assemble("mov", ["bp", "sp"])                      # base pointer init, set to stack pointer
 

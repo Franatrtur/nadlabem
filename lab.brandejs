@@ -1,7 +1,9 @@
 include "std/lib.brandejs"
 
+do {
+    line: @char[] =@= input()
+    println(*line)
+    free(*line)
+} while(line[0] != 0c)
 
-line: char[]* = get_line()
-myline: char[]* = malloc(81)
-strcpy(myline, line)
-println(myline)
+

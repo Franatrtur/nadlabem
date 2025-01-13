@@ -43,29 +43,18 @@ def get_line() -> char[80]* {
 ; a: char[]* = get_line()
 ; ;then copy the string somewhere
 
-HEX_STRING: char[5] = "0000"
-
 def print_hex(number: int) -> void {
 
-    ;TODO: redo using a for loop as we need to set all the digits
-    ; otherwise it will leave any previous digits on places where 0s should be
-
-    i: int = 0
-    while (number > 0) {
+    for (i: int = 0, i < 4, ++i) {
+        number = number >>> 12
         last: int = number & 0xf ; isolate last hex digit
-
         if (last < 10) {
-            last = last + 0x30
+            last = last + 0x30   ; decimal digit
         } else {
-            last = last + 0x37
+            last = last + 0x37   ; letter digit
         }
-
-        HEX_STRING[3 - i] = last :: char
-        number = number >> 4
-        ++i
+        put_char(last :: char)
     }
-
-    print(*HEX_STRING)
 }
 
 def print(str: @char[]) -> void {
@@ -73,7 +62,7 @@ def print(str: @char[]) -> void {
     character: char = str[0]
     while(character != 0c){
         put_char(character)
-        i = i + 1
+        ++i
         character = str[i]
     }
 }
@@ -117,6 +106,7 @@ def printf(string: @char[], number: int) -> void {
         character = string[i]
     }
 }
+
 
 
 ; def print_decimal(number: int) -> void {

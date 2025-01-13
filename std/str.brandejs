@@ -1,12 +1,22 @@
+include "io.brandejs"
+
 ; STD: strcpy(destination: @char[], source: @char[]) -> int
 ; copies string from source to destination, ending with null byte
-; returns: length of source string
+; returns: length of source string, including null byte
 def strcpy(destination: @char[], source: @char[]) -> int {
     i: int = 0
+    ; dseg: int = 0
+    ; $ mov bx, ds
+    ; $ mov word[{dseg}], bx
+    ; dseg = dseg << 4
+    ; print_hex(dseg + *source :: int)
+    ; put_char('>')
+    ; print_hex(dseg + *destination :: int)
     do {
-        destination[i] = source[i]
+        character: char = source[i]
+        destination[i] = character
         ++i
-    } while (source[i] != 0c)
+    } while (character != 0c)
     return i
 }
 

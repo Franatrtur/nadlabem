@@ -9,7 +9,7 @@
  - add flags for verbally describing pruning
 
 ## Small things
- - add string as alias for char[] (or char[]* ?)
+ - add string as alias for char[] (or char[]* ? - probably not)
  - add byte as alias for char and word as alias for int
  - REDO FOR statement to increment even on continue. (not sure if i did this already?)
 
