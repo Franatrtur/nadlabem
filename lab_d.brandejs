@@ -1,0 +1,63 @@
+include "std/lib.brandejs"
+
+bincislo: @char[] =@= get_line()
+CISLO: char = 0c
+
+def chybny_vstup() -> void {
+    println(*"Chybný vstup")
+    exit()
+}
+
+if(strlen(*bincislo) != 8)
+    chybny_vstup()
+
+for (i: int = 0, i < 8, ++i){
+    CISLO = CISLO << 1c
+    if(bincislo[i] == '0')
+        pass
+    else if(bincislo[i] == '1')
+        ++CISLO
+    else
+        chybny_vstup()
+}
+
+
+
+; Obsah bajtu v binární soustavě. Vypíšete právě 8 dvojkových číslic čísla (tj. vč. případných levostranných nul).
+print(*bincislo)
+;print_int(CISLO as int, 2,8, False)
+put_char(' ')
+
+; Obsah bajtu v oktalové soustavě. Vypíšete právě 3 osmičkové číslice čísla (tj. vč. případných levostranných nul).
+; def print_int(number: int, base: int, length: int, sign: bool)
+print_int(CISLO :: int, 8, 3, False)
+put_char(' ')
+
+; Obsah bajtu v hexadecimální soustavě. Vypíšete právě 2 šestnáctkové číslice čísla (tj. vč. případné levostranné nuly). Používáte písmena malé abecedy.
+print_int(CISLO as int, 16, 2, False)
+put_char(' ')
+
+; Obsah bajtu v dekadické soustavě jako číslo bez znaménka. Vypíšete 1-3 desítkové číslice bez nadbytečných levostranných nul.
+print_int(CISLO as int, 10, 0, False)
+put_char(' ')
+
+; Obsah bajtu v dekadické soustavě jako číslo se znaménkem ve dvojkovém doplňkovém kódu. Vypíšete 1-3 desítkové číslice bez nadbytečných levostranných nul. Záporné číslo musí být uvozené znaménkem '-', kladné číslo je bez znaménka.
+print_int(CISLO :: +int, 10, 0, True)
+
+; Pokud bajt obsahuje ordinální hodnotu ASCII písmena (malého nebo velkého) nebo číslice, vypíšete ASCII znak. V opačném případě nevypisujete nic (ani nadbytečnou mezeru oddělovače údajů).
+if ((CISLO >= 'A' and CISLO <= 'Z') or (CISLO >= 'a' and CISLO <= 'z') or (CISLO >= '0' and CISLO <= '9')){
+    put_char(' ')
+    put_char(CISLO)
+}
+
+; Pokud bajt obsahuje dvě BCD číslice, zobrazíte právě 2 BCD číslice (tj. vč. případné levostranné nuly). V opačném případě nevypisujete nic (ani nadbytečnou mezeru oddělovače údajů).
+nib1: char = CISLO >> 4c
+nib2: char = CISLO & 15c
+if (nib1 <= 9c and nib2 <= 9c){
+    put_char(' ')
+    put_char(nib1 + '0')
+    put_char(nib2 + '0')
+}
+
+put_char('\r')
+put_char('\n')

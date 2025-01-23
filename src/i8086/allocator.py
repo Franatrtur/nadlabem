@@ -62,9 +62,9 @@ class Variable:
         self.frame = StackFrame.frames[symbol.scope]
         Variable.variables[symbol] = self
 
-        #the amount of bytes taken in memory
         self.offset: int | None = offset
         self.var_type: VariableType = self.symbol.node.node_type
+        # the amount of bytes taken in memory
         self.bytes: int = sizeof(self.var_type)
         self.is_static: bool = isinstance(self.symbol.scope, Namespace)
         self.is_reference: bool = self.var_type.is_reference

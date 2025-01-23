@@ -11,11 +11,10 @@
 ## Small things
  - add string as alias for char[] (or char[]* ? - probably not)
  - add byte as alias for char and word as alias for int
- - REDO FOR statement to increment even on continue. (not sure if i did this already?)
 
 ## Standard library
 
-### stdio (Standard Input/Output)
+### stdio (Standard Input/Output) - done
 Handles user input and output.  
 
 print(str: char*): Outputs a string to the console.  
@@ -38,7 +37,7 @@ max(a: int, b: int) -> int: Returns the larger of two numbers.
 min(a: int, b: int) -> int: Returns the smaller of two numbers.  
 pow(base: int, exp: int) -> int: Computes base raised to exp.  
 
-### stdstr (String Manipulation)
+### stdstr (String Manipulation) - done
 Functions for working with strings.
 
 strlen(s: char*) -> int: Returns the length of a string.  

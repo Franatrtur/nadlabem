@@ -1,5 +1,5 @@
 from ..translator import Translator, Assembly
-from ..nodes.statement import VariableDeclarationNode, AssignmentNode, IncrementalNode
+from ..nodes.statement import VariableDeclarationNode, AssignmentNode, IncrementalNode, ASTNode
 from ..nodes.expression import VariableReferenceNode, LiteralNode, ArrayLiteralNode
 from .sizeof import sizeof
 from ..tokenizer.symbols import StringLiteralToken, NumberToken, IncrementToken, DecrementToken
@@ -15,14 +15,21 @@ class VariableDeclarationTranslator(Translator):
 
     def make_array(self, variable: Variable, array_type: Array) -> None:
         self.node: VariableDeclarationNode
+        to_assign: list[tuple[int, ASTNode]] = []
 
         if isinstance(self.node.assignment.token, StringLiteralToken):
             vals = StringReferenceTranslator.assembly_string(self.node.assignment.token)
             lenval = len(self.node.assignment.token.bytes)
-        
+
         else:
             self.node.assignment: ArrayLiteralNode
-            vals = [val.token.value for val in self.node.assignment.elements]
+            vals: list[str] = []
+            for i, val_node in enumerate(self.node.assignment.elements):
+                if isinstance(val_node, LiteralNode):
+                    vals.append(val_node.token.value)
+                else:
+                    vals.append("?")
+                    to_assign.append((i, val_node))
             lenval = len(vals)
 
         elem_option = "b"
@@ -35,6 +42,7 @@ class VariableDeclarationTranslator(Translator):
         variable.declaration = [
             Assembly(self.config, "d"+elem_option, vals, label=variable.symbol.id)
         ] if vals else []
+        
         if lenval < variable.var_type.expression_type.size:
             variable.declaration.append(
                 Assembly(self.config, "res"+elem_option, [str(variable.var_type.expression_type.size - len(vals))], label= "" if vals else variable.symbol.id)
@@ -45,7 +53,7 @@ class VariableDeclarationTranslator(Translator):
             self.program.declare(variable.declaration)
 
         if not variable.is_static:
-            #use the movsb or movsw to move the goddamn data
+            # use the movsb or movsw to move the goddamn data
             self.config.warn(NadLabemError("Using local arrays by value (storing on stack) is extremely inefficient", self.node.token.line))
 
             self.assemble("lea", ["si", f"[{variable.symbol.id}]"])
@@ -58,6 +66,19 @@ class VariableDeclarationTranslator(Translator):
                 self.assemble("mov", ["cx", f"{variable.bytes // 2}"])
                 self.assemble("rep", ["movsw"])
 
+        if to_assign:
+
+            variable.load_pointer(self, "bx", "")
+    
+            for i, val_node in to_assign:
+                self.add(val_node)
+                self.assemble("pop", ["ax"])
+                
+                prefix = "word" if sizeof(val_node.node_type) == 2 else "byte"
+                self.assemble("mov", [f"{prefix}[bx + {i * sizeof(val_node.node_type)}]", "ax"])
+
+
+
     def make(self) -> None:
         self.node: VariableDeclarationNode
 
@@ -66,9 +87,6 @@ class VariableDeclarationTranslator(Translator):
 
         if self.variable.is_static:
             self.program.variables.append(variable)
-
-        # if isinstance(self.node.assignment, LiteralNode):
-        #     pass
 
         if isinstance(variable.var_type.expression_type, Array) and not self.node.by_reference:
             return self.make_array(variable, variable.var_type.expression_type)
@@ -79,8 +97,23 @@ class VariableDeclarationTranslator(Translator):
             self.assemble("pop", ["ax"])
             variable.store_pointer(self, "ax")
 
+        elif isinstance(self.node.assignment, LiteralNode) and variable.is_static and not variable.is_reference:
+            definition: str = "<definition>"
+            bytelen = sizeof(self.node.assignment.node_type)
+            if bytelen == 1:
+                definition = "db"
+            elif bytelen == 2:
+                definition = "dw"
+            elif bytelen == 4:
+                definition = "dd"
+
+            variable.declaration = [
+                Assembly(self.config, definition, [self.node.assignment.token.value], label=variable.symbol.id)
+            ]
+
         else:
-            src_reg: str = ""
+
+            src_reg: str = "<src_reg>"
             bytelen = sizeof(self.node.assignment.node_type)
             if bytelen == 1:
                 src_reg = "al"
@@ -116,7 +149,7 @@ class AssignmentTranslator(Translator):
 
         if self.node.by_reference:
             self.assemble("pop", ["ax"])
-            variable.store_pointer(translator, "ax")
+            variable.store_pointer(self, "ax")
 
         else:
             src_reg: str = ""
@@ -131,7 +164,7 @@ class AssignmentTranslator(Translator):
 
             self.assemble("pop", ["ax"])
         
-        Variable.variables[self.node.variable.symbol].store_value(self, as_type=self.node.value.node_type, source_register=src_reg, index_register=target_index)
+            variable.store_value(self, as_type=self.node.value.node_type, source_register=src_reg, index_register=target_index)
 
 
 class VariableReferenceTranslator(Translator):
@@ -206,6 +239,6 @@ class IncrementalTranslator(Translator):
 
         #variable.store_value(self, "!! ERROR, see i8086/var.py line 195 in incremental translator !!")
 
-        self.result[-1]
+        #self.result[-1]
 
 

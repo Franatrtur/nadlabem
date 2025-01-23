@@ -217,8 +217,8 @@ class Comparator:
     @staticmethod
     def function_call_statement(function_type: FunctionType, arguments: list[ExpressionType], node: ASTNode) -> None:
         Comparator.function_call(function_type, arguments, node)
-        if function_type.return_type is not Void:
-            node.config.warn(TypeError(f"Non-void return type {function_type.return_type} in function call statement, assign the return value to a variable", node.token.line))
+        # if function_type.return_type is not Void:
+        #    node.config.warn(TypeError(f"Non-void return type {function_type.return_type} in function call statement, assign the return value to a variable", node.token.line))
 
     @staticmethod
     def variable_reference(var_type: VariableType,

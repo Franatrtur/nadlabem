@@ -1,6 +1,7 @@
 from ..translator import Translator
 from ..nodes.statement import WhileNode, ForNode, PassNode, BreakNode, ContinueNode
 from ..tokenizer.symbols import DoToken, WhileToken
+from .ifelse import ConditionalJump
 
 
 #TODO: add break and continue
@@ -12,8 +13,6 @@ class WhileTranslator(Translator):
     def make(self) -> None:
         self.node: WhileNode
     
-        #TODO: put all this code in if not isinstance(self.node.condition, LogicalNode):
-        # but if it IS a logical node, we can map the jump command based on the operator (==, <, >, >=, ...)
         loop_label: str = self.node.scope.generate_id("while")
         out_label: str = self.node.scope.generate_id("wout")
         self.assemble("nop", label=loop_label)
@@ -21,17 +20,15 @@ class WhileTranslator(Translator):
         self.continue_label: str = loop_label
         self.break_label: str = out_label
 
+        self.condition: ConditionalJump = ConditionalJump(self, self.node.condition)
+
         if not self.node.do_loop:
-            self.add(self.node.condition)
-            self.assemble("pop", ["ax"])
-            self.assemble("jz", [out_label])
+            self.condition.jump(out_label, on=False)
 
         self.add(self.node.body)
 
         if self.node.do_loop:
-            self.add(self.node.condition)
-            self.assemble("pop", ["ax"])
-            self.assemble("jnz", [loop_label])
+            self.condition.jump(loop_label, on=True)
         else:
             self.assemble("jmp", [loop_label])
 
@@ -56,10 +53,9 @@ class ForTranslator(Translator):
 
         self.assemble("nop", label=loop_label)
 
-        self.add(self.node.condition)
+        self.condition: ConditionalJump = ConditionalJump(self, self.node.condition)
 
-        self.assemble("pop", ["ax"])
-        self.assemble("jz", [out_label])
+        self.condition.jump(out_label, on=False)
 
         self.add(self.node.body)
 

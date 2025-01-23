@@ -1,0 +1,38 @@
+
+module Date {
+    year: int = 0
+    month: char = 0c
+    day: char = 0c
+    weekday: char = 0c
+}
+
+def load_date() -> void {
+    $ mov ah, 0x2a	; Identifikace služby Zjisti systémové datum
+    $ int 0x21         ; resp. int 33 poskytne službu
+    ; Služba vrací rok v registru CX,měsíc v registru DH, den v měsíci v registru DL
+    ; a pořadí dne v týdnu (neděle je 0) v registru AL.
+    Date.weekday = $al
+    Date.day = $dl
+    Date.month = $dh
+    Date.year = $cx
+}
+
+module Time {
+    hour: char = 0c
+    minute: char = 0c
+    second: char = 0c
+    hundred: char = 0c
+}
+
+def load_time() -> void {
+    $ mov AH, 0x2c	; Identifikace služby Zjisti systémový čas
+    $ int 0x21         ; resp. int 33 poskytne službu
+    ; Služba vrací hodinu (24hodinový režim) v registru CH,
+    ; minutu v registru CL, sekundu v registru DH, počet setin sekundy v registru DL.
+    Time.hour = $ch
+    Time.minute = $cl
+    Time.second = $dh
+    Time.hundred = $dl
+}
+
+

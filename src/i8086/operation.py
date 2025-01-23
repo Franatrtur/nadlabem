@@ -1,11 +1,12 @@
 from ..translator import Translator, Assembly
-from ..nodes.expression import (BinaryOperationNode, UnaryOperationNode, AdditiveNode, MultiplicativeNode, BinaryNode, ComparisonNode)
+from ..nodes.expression import (BinaryOperationNode, UnaryOperationNode, AdditiveNode, MultiplicativeNode,
+                                BinaryNode, ComparisonNode, LogicalNode, ExpressionNode)
 from ..tokenizer.symbols import (PlusToken, MinusToken, DivideToken, SignedDivideToken, ModuloToken, Token,
-                                StarToken, BinaryNotToken, LogicalNotToken, IsEqualToken,
-                                BinaryAndToken, BinaryOrToken, BinaryXorToken, BinaryRotateRightToken,
+                                StarToken, BinaryNotToken, LogicalNotToken, IsEqualToken, BinaryRotateLeftToken,
+                                BinaryAndToken, BinaryOrToken, BinaryXorToken, BinaryRotateRightToken, ComparisonToken,
                                 BinaryShiftLeftToken, BinaryShiftRightToken, LessThanToken, GreaterThanToken,
                                 IsLtEqToken, IsGtEqToken, IsNotEqualToken, SignedIsLtEqToken, SignedIsGtEqToken,
-                                SignedGreaterThanToken, SignedLessThanToken)
+                                SignedGreaterThanToken, SignedLessThanToken, LogicalAndToken, LogicalOrToken)
 from .sizeof import sizeof
 from ..nodes.types import Double, Char, Int, Bool, ValueType
 from .allocator import Variable
@@ -15,25 +16,33 @@ class BinaryOperationTranslator(Translator):
 
     # node_type = BinaryOperationNode
 
-    def _load_operands(self, swap: bool = False):
+    @staticmethod
+    def load(translator: Translator, left: ExpressionNode, right: ExpressionNode, swap: bool = False) -> None:
 
         if swap:
-            self.add(self.node.left)
-            self.add(self.node.right)
+            fst, snd = left, right
         else:
-            self.add(self.node.right)
-            self.add(self.node.left)
+            fst, snd = right, left
+        
+        translator.add(fst)
+        translator.add(snd)
 
-        if self.node.left.node_type is Double:
-            self.assemble("pop", ["dx"])
-            self.assemble("pop", ["ax"])
-            self.assemble("pop", ["cx"])
-            self.assemble("pop", ["bx"])
+        if fst.node_type is Double:
+            translator.assemble("pop", ["dx"])
+            translator.assemble("pop", ["ax"])
         else:
-            self.assemble("pop", ["ax"])
-            self.assemble("pop", ["bx"])
+            translator.assemble("pop", ["ax"])
+        
+        if snd.node_type is Double:
+            translator.assemble("pop", ["cx"])
+            translator.assemble("pop", ["bx"])
+        else:
+            translator.assemble("pop", ["bx"])
 
-    def _save_result(self):
+    def _load_operands(self, swap: bool = False) -> None:
+        self.load(self, self.node.left, self.node.right, swap)
+
+    def _save_result(self) -> None:
         
         self.assemble("push", ["ax"])
         if self.node.node_type is Double:
@@ -44,16 +53,18 @@ class ComparisonTranslator(BinaryOperationTranslator):
 
     node_type = ComparisonNode
 
+    @staticmethod
+    def _analyze_comparison(token: ComparisonToken) -> tuple[bool, bool, bool, bool]:
+        equality = Token.any(IsEqualToken, IsNotEqualToken).match(token)
+        signed = Token.any(SignedGreaterThanToken, SignedIsGtEqToken, SignedLessThanToken, SignedIsLtEqToken).match(token)
+        swapped = not Token.any(LessThanToken, IsGtEqToken, SignedLessThanToken, SignedIsGtEqToken).match(token)
+        inverted = Token.any(IsNotEqualToken, IsGtEqToken, IsLtEqToken, SignedIsGtEqToken, SignedIsLtEqToken).match(token)
+        return equality, signed, swapped, inverted
+
     def make(self) -> None:
         self.node: ComparisonNode
 
-        equality = Token.any(IsEqualToken, IsNotEqualToken).match(self.node.token)
-
-        signed = Token.any(SignedGreaterThanToken, SignedIsGtEqToken, SignedLessThanToken, SignedIsLtEqToken).match(self.node.token)
-
-        swapped = not Token.any(LessThanToken, IsGtEqToken, SignedLessThanToken, SignedIsGtEqToken).match(self.node.token)
-
-        inverted = Token.any(IsNotEqualToken, IsGtEqToken, IsLtEqToken, SignedIsGtEqToken, SignedIsLtEqToken).match(self.node.token)
+        equality, signed, swapped, inverted = self._analyze_comparison(self.node.token)
 
         self._load_operands(swapped)
 
@@ -132,6 +143,10 @@ class BinaryTranslator(BinaryOperationTranslator):
         elif BinaryRotateRightToken.match(self.node.token):
             self.assemble("mov", ["cx", "bx"])
             self.assemble("ror", ["ax" if sizeof(self.node.left.node_type) == 2 else "al", "cl"])
+
+        elif BinaryRotateLeftToken.match(self.node.token):
+            self.assemble("mov", ["cx", "bx"])
+            self.assemble("rol", ["ax" if sizeof(self.node.left.node_type) == 2 else "al", "cl"])
         
         elif BinaryShiftLeftToken.match(self.node.token):
             self.assemble("mov", ["cx", "bx"])
@@ -140,6 +155,27 @@ class BinaryTranslator(BinaryOperationTranslator):
         elif BinaryShiftRightToken.match(self.node.token):
             self.assemble("mov", ["cx", "bx"])
             self.assemble("shr", ["ax" if sizeof(self.node.left.node_type) == 2 else "al", "cl"])
+        
+        else:
+            raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)
+
+        self._save_result()
+
+
+class LogicalTranslator(BinaryOperationTranslator):
+
+    node_type = LogicalNode
+
+    def make(self) -> None:
+        self.node: BinaryNode
+        
+        self._load_operands()
+
+        if LogicalAndToken.match(self.node.token):
+            self.assemble("and", ["ax", "bx"])
+
+        elif LogicalOrToken.match(self.node.token):
+            self.assemble("or", ["ax", "bx"])
         
         else:
             raise NotImplementedError(f"Operation {self.node.token.string} not implemented yet for i8086", self.node.token.line)

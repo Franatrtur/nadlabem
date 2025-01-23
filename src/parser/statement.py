@@ -16,6 +16,9 @@ from ..errors import SyntaxError, NadLabemError, NameError
 from ..tokenizer import Tokenizer
 
 
+#TODO: force multiline (simulating braced) is only for program parser anyway
+# it could be good to split the functionality into program parser and code block parser
+# and streamline the whole thing
 class CodeBlockParser(Parser):
 
     def __init__(self, parent: Parser, force_multiline: bool = False):
@@ -34,10 +37,10 @@ class CodeBlockParser(Parser):
             return CodeBlockNode(statement.token, [statement], parser=self)
 
         statements: list[StatementNode] = []
-        self.braced = self.is_ahead(OpenBraceToken) and not self.force_multiline
+        self.braced = self.is_ahead(OpenBraceToken, True) and not self.force_multiline
 
         if self.braced:
-            self.devour(OpenBraceToken)
+            self.devour(OpenBraceToken, True)
             self.devour(NewLineToken)
 
         while not self._multiline_stop():
@@ -57,7 +60,7 @@ class ModuleParser(Parser):
     def __init__(self, parent: Parser, started: Token | None = None):
         super().__init__(parent)
         self.started: Token | None = started
-    
+
     def parse(self) -> ModuleNode:
 
         token = self.started if self.started is not None else self.devour(ModuleToken)
@@ -68,7 +71,7 @@ class ModuleParser(Parser):
             parent = self
         else:
             parent = self.parent
-        
+
         body: list[StatementNode] = CodeBlockParser(parent=parent).parse().children
 
         module_node = ModuleNode(token, name_token, body, parser=self)
@@ -119,7 +122,7 @@ class ForParser(Parser):
 
     def parse(self) -> ForNode:
         tok = self.devour(ForToken)
-        self.devour(OpenParenToken)
+        self.devour(OpenParenToken, skip_newline=True)
         initialization = StatementParser(parent=self).parse()
         self.devour(CommaToken)
         condition = ExpressionParser(parent=self).parse()
@@ -192,7 +195,6 @@ class AssignmentParser(Parser):
             expression = ExpressionParser(parent=self).parse()
             return VariableDeclarationNode(name_token, expression, var_type, parser=self)
 
-        # else
         if not self.is_ahead(EqualsToken):
             raise SyntaxError(f"Declaration of {repr(name_token.string)} by value must assign a value", name_token.line)
     
@@ -365,6 +367,9 @@ class StatementParser(Parser):
         if self.is_done:
             raise SyntaxError("Unexpected end of input, expected a statement after the statement", self.root.tokens[-1].line)
         
+        if self.is_ahead(NewLineToken):
+            self.devour(NewLineToken)
+
         if not self.is_ahead(Token.any(*STATEMENTS.keys())):
             actual = self.look_ahead()
             raise SyntaxError(f"Expected a statement, but found {actual} instead", actual.line)

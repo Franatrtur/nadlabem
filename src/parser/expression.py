@@ -1,7 +1,7 @@
 from .parsing import Parser
 from ..tokenizer import (Token, ComparisonToken, LogicalToken, AdditiveToken, MultiplicativeToken, StringLiteralToken, DoubleColonToken,
                         UnaryToken, LiteralToken, NameToken, OpenParenToken, CloseParenToken, DollarToken, AtToken, PlusToken,
-                        ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken, TypeToken, StarToken)
+                        ArrayBeginToken, ArrayEndToken, CommaToken, NewLineToken, BinaryToken, TypeToken, StarToken, AsToken)
 from typing import Type
 from ..nodes.expression import (ExpressionNode, ComparisonNode, AdditiveNode, MultiplicativeNode, CastNode,
                                 VariableReferenceNode, LogicalNode, BinaryNode, UnaryOperationNode, StringReferenceNode,
@@ -97,13 +97,14 @@ class ExpressionParser(Parser):
         
         result = self.primary()
 
-        while self.is_ahead(DoubleColonToken):
+        while self.is_ahead(Token.any(DoubleColonToken, AsToken)):
             signed: bool = False
+            token = self.devour(Token.any(DoubleColonToken, AsToken))
+            
             if self.is_ahead(PlusToken):
                 self.devour(PlusToken)
                 signed = True
             
-            token = self.devour(DoubleColonToken)
             value_type = TypeParser(parent=self).value_type()
 
             result = CastNode(token, value_type, result, signed, parser=self)
@@ -181,7 +182,7 @@ class ExpressionParser(Parser):
         elif self.is_ahead(OpenParenToken):
             self.devour(OpenParenToken)  # consume '('
             expr = self.expression()
-            
+
             self.devour(CloseParenToken)
             
             return expr

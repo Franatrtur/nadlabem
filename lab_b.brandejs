@@ -1,0 +1,74 @@
+include "std/lib.brandejs"
+
+def wtf() -> void {
+    println(*"?")
+    exit()
+}
+; Čtěte opakovaně řádky z terminálu. Na řádku smí být jeden z těchto čtyř příkazů:
+
+; date
+; date /t
+; time
+; time /t
+; Zadaných řádků s příkazy smí být libovolný počet. Na řádku nesmí být žádné mezery (či jiné znaky) navíc.
+; Pokud na vstupu najdete nepovolenou kombinaci znaků, vypište na výstup ? následovaný CR a LF a ukončete program.
+
+; Nastudujte v Popisu emulátoru způsob volání služeb zjištění aktuálního data a času.
+
+; Jednotlivé příkazy nechť reagují výpisy aktuálního data a času ve tvaru:
+
+; date
+; The current date is: Thu 01/23/2025
+; date /t
+; Thu 01/23/2025
+; time
+; The current time is: 16:19:11.22
+; time /t
+; 04:19 PM
+; Všechny vypsané řádky musí být ukončeny dvojicí znaků CR LF.
+; Pořadí data 01/23/2025 musí být americké měsíc/den/rok. Ve výpisu time /t je hodina ve 12hodinovém režimu. Ve výpisu time je ve 24hodinovém režimu.
+
+; Ve 12hodinovém režimu se místo hodiny 0 píše hodina 12.
+
+load_date()
+load_time()
+
+while (
+    not input_done()
+) {
+    cmd: @char[] =@= get_line()
+
+    if (strcmp(*cmd, *"date") == 0)
+        date()
+
+    ; else if (strcmp(*cmd, *"date /t") == 0)
+    ;     date_t()
+
+    ; else if (strcmp(*cmd, *"time") == 0)
+    ;     time()
+
+    ; else if (strcmp(*cmd, *"time /t") == 0)
+    ;     time_t()
+
+    ; else
+    ;     wtf()
+}
+
+days: char[]*[] = [
+    *"Sun$",
+    *"Mon$",
+    *"Tue$",
+    *"Wed$",
+    *"Thu$",
+    *"Fri$",
+    *"Sat$"
+]
+
+def print_day_of_week() -> void {
+    print_dos(days[5])
+}
+    
+def date() -> void {
+    print(*"The current date is: ")
+    print_day_of_week()
+}

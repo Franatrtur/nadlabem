@@ -67,9 +67,17 @@ class CastTranslator(Translator):
             self.assemble("push", ["ax"])
 
         elif result_type is Bool:
+            self.assemble("pop", ["ax"])
             if origin_type is Double:
                 self.assemble("pop", ["dx"])
+                self.assemble("or", ["ax", "dx"])
+            self.assemble("pushf")
             self.assemble("pop", ["ax"])
+            self.assemble("mov", ["cl", "6"])  # zero flag
+            self.assemble("shr", ["ax", "cl"])
+            self.assemble("and", ["ax", "1"])
+            self.assemble("xor", ["ax", "1"])
+            self.assemble("push", ["ax"])
             
         else:
             raise NotImplementedError(f"Casting from {origin_type} to {result_type} is not yet implemented in i8086", self.node.token.line)

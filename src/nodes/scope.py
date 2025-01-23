@@ -25,7 +25,7 @@ class Context(Node):
     def get_symbol(self, name_token: NameToken) -> "Symbol":
         return self.resolve_names(name_token, name_token.components)
 
-    def resolve_names(self, name_token: NameToken, components: list[str]):
+    def resolve_names(self, name_token: NameToken, components: list[str]) -> "Symbol":
         name = components[0]
 
         if len(components) == 1:
@@ -57,37 +57,49 @@ class Namespace(Context):
         self.modules: dict[str, Namespace] = {}
         self.direct: list[Namespace] = []   # ordered so later defined namespaces override earlier ones
 
+        if parent and not isinstance(parent, Namespace):
+            raise NameError("Cannot define namespace in functions local context", node.token.line, parent=parent)
+
+    def named_space(self, name: str) -> "None | Namespace":
+        if name in self.modules:
+            return self.modules[name]
+
+        for module in self.direct:
+            found = module.named_space(name)
+            if found is not None:
+                return found
+    
+        return None
+
     def relate(self, name_token: NameToken | None, namespace: "Namespace"):
         if name_token is None:
             self.direct.append(namespace)
         else:
-            if name_token.string in self.modules:
-                raise NadLabemError(f"Duplicate namespace name {repr(name_token.string)}", line=name_token.line)
+            taken = self.named_space(name_token.string)
+            if taken:
+                raise NameError(f"Duplicate namespace name {repr(name_token.string)}", line=name_token.line, defined_at=taken.node.token.line)
             self.modules[name_token.string] = namespace
 
-    def find_name(self, name: str) -> "Symbol | None":
-        if name in self.symbols:
-            return self.symbols[name]
-        for module in self.direct:
-            attempt: Symbol | None = module.find_name(name)
-            if attempt is not None:
-                return attempt
-        return None
-
-    def resolve_names(self, name_token: NameToken, components: list[str]):
+    def resolve_names(self, name_token: NameToken, components: list[str], forward: bool = False) -> "Symbol":
         name = components[0]
 
         if len(components) == 1:
-            found = self.find_name(name)
-            if found is None:
-                raise NameError(f"Undefined name {repr(name)}", name_token.line, context=self)
-
-            return found
+            if name in self.symbols:
+                return self.symbols[name]
 
         elif name in self.modules:
-                return self.modules[name].resolve_names(name_token, components[1:])
+            return self.modules[name].resolve_names(name_token, components[1:], forward=False)
 
-        raise NameError(f"Undefined namespace {repr(name)} in compound name {repr(name_token.string)}", name_token.line, context=self)
+        for module in self.direct:
+            attempt: Symbol | None = module.resolve_names(name_token, components, forward=True)
+            if attempt is not None:
+                return attempt
+
+        if forward:
+            return None
+
+        nametype: str = f"namespace {repr(name)} in compound name {repr(name_token.string)}" if len(components) > 1 else f"name {repr(name)}"
+        raise NameError(f"Undefined {nametype}", name_token.line, context=self)
 
 
 class Symbol:

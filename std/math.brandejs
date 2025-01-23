@@ -1,0 +1,5 @@
+
+DIVMOD_RESULT: list[int] = []
+def divmod(a: int, b: int){
+    $ 
+}

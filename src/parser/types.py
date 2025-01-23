@@ -27,24 +27,20 @@ class TypeParser(Parser):
                 result = value_type
                 break
 
-        while self.is_ahead(StarToken):
-            self.devour(StarToken)
-            result = Pointer(result)
+        while self.is_ahead(StarToken) or self.is_ahead(ArrayBeginToken):
 
-        #handle arrays
-        if self.is_ahead(ArrayBeginToken):
-            self.devour(ArrayBeginToken)
-            array_length = None
-            if not self.is_ahead(ArrayEndToken):
-                array_length = self.devour(NumberToken).value
+            if self.is_ahead(StarToken):
+                self.devour(StarToken)
+                result = Pointer(result)
 
-            self.devour(ArrayEndToken)
-            result = Array(result, size=array_length)
+            else:
+                self.devour(ArrayBeginToken)
+                array_length = None
+                if not self.is_ahead(ArrayEndToken):
+                    array_length = self.devour(NumberToken).value
 
-        #handle pointers once more
-        if self.is_ahead(StarToken):
-            self.devour(StarToken)
-            result = Pointer(result)
+                self.devour(ArrayEndToken)
+                result = Array(result, size=array_length)
 
         return result
 

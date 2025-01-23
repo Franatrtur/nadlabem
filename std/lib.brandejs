@@ -1,11 +1,13 @@
 include "io.brandejs"
 include "str.brandejs"
+include "time.brandejs"
 
 
 ; STD: assert(condition: bool, message: @char[]) -> void
 ; raises error if condition is false
 def assert(condition: bool, message: @char[]) -> void {
-    if (not condition) error(*message)
+    if (not condition)
+        error(*message)
 }
 
 ; STD: error(message: @char[]) -> void
@@ -54,15 +56,17 @@ def malloc(size: int) -> char[]* {
     for (i: int = 0, i < 32, ++i) {
         if (block_taken(i)) {
             found = 0
-        } else {
+        }
+        else {
             ++found
             if (found == blocks) {
                 ; suitable block sequence found, return pointer to first block
                 x: int = i - found + 1
                 HEAP_LENGTHS[x] = found :: char
                 ;printf(*"Found blocks from %h\r\n", x)
-                for(j: int = 0, j < blocks, ++j) take_block(x + j)
-                return *HEAP + ((x) * 128) :: char[]*
+                for(j: int = 0, j < blocks, ++j)
+                    take_block(x + j)
+                return *HEAP + (x * 128) :: char[]*
             }
         }
     }
@@ -103,10 +107,14 @@ def memset() -> void {
     pass
 }
 
-def input() -> char[81]* {
+def input() -> char[101]* {
+
+    if (input_done())
+        error(*"input: Input exhausted")
+
     line: char[]* = get_line()
 
-    newstr: char[]* = malloc(81)
+    newstr: char[]* = malloc(101)
 
     strcpy(newstr, line)
 

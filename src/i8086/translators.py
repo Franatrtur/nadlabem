@@ -4,7 +4,7 @@ from ..nodes.node import AbstractSyntaxTreeNode
 
 from .literal import LiteralTranslator, StringReferenceTranslator
 from .var import VariableDeclarationTranslator, VariableReferenceTranslator, AssignmentTranslator, IncrementalTranslator
-from .operation import AdditiveTranslator, MultiplicativeTranslator, BinaryTranslator, ComparisonTranslator, UnaryOperationTranslator
+from .operation import AdditiveTranslator, LogicalTranslator, MultiplicativeTranslator, BinaryTranslator, ComparisonTranslator, UnaryOperationTranslator
 from .assembly import AssemblyTranslator, AssemblyExpressionTranslator
 from .ifelse import IfTranslator
 from .loops import WhileTranslator, ForTranslator, PassTranslator, ContinueTranslator, BreakTranslator
@@ -22,6 +22,7 @@ TRANSLATORS: list[Type[Translator]] = [
     AdditiveTranslator,
     MultiplicativeTranslator,
     BinaryTranslator,
+    LogicalTranslator,
     ComparisonTranslator,
     UnaryOperationTranslator,
     VariableReferenceTranslator,

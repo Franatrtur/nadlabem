@@ -4,7 +4,6 @@ def put_char(character: char) -> void {
     $ int 0x21      ; resp. int 33 poskytne službu
 }
 
-;TODO: do a get_char get_line with a 80 char buffer
 def get_char() -> char {
     $ mov ah, 1     ; Identifikace služby Načíst jeden bajt z terminálu
     $ int 0x21      ; resp. int 33 poskytne službu
@@ -24,14 +23,14 @@ def get_char() -> char {
 ; Číslo odpovídá počtu bajtů, který může služba maximálně načíst. 
 ; Služba načte jeden celý řádek až do maximální zadané délky.
 
-INPUT_BUFFER: char[83] = [80c]
+INPUT_BUFFER: char[103] = [100c]
 ; 1st byte for buffer length
 ; 2nd byte for laoded length
-; 80  bytes for content
-; 83rd byte for null byte if needed
-INPUT: @char[81] =@= (*INPUT_BUFFER::int + 2) :: char[]*
+; 100  bytes for content
+; 103rd byte for null byte if needed
+INPUT: @char[101] =@= (*INPUT_BUFFER::int + 2) :: char[]*
 
-def get_line() -> char[80]* {
+def get_line() -> char[101]* {
     $ mov ah, 0x0a	            ; Identifikace služby Načíst řádek z terminálu
     $ lea dx, [{INPUT_BUFFER}]	; Offset začátku bufferu v segmentu dle DS
     $ int 0x21		            ; resp. int 33 poskytne službu
@@ -41,18 +40,29 @@ def get_line() -> char[80]* {
 }
 ; ;usage
 ; a: char[]* = get_line()
-; ;then copy the string somewhere
+; ;then use/copy the string somewhere
+
+
+def input_done() -> bool {
+    $ mov ah, 0x0b	; Identifikace služby Zjisti stav čtení z terminálu
+    $ int 0x21         ; resp. int 33 poskytne službu
+    ; Služba vrací AL=0xff, pokud je k dispozici alespoň jeden nepřečtený bajt.
+    ; Jinak vrací služba AL=0, tzn. že vstup už byl čtením vyčerpán.
+    return $al == 0c
+}
+
 
 def print_hex(number: int) -> void {
 
     for (i: int = 0, i < 4, ++i) {
-        number = number >>> 12
+        number = number <<< 4
         last: int = number & 0xf ; isolate last hex digit
-        if (last < 10) {
+
+        if (last < 10)
             last = last + 0x30   ; decimal digit
-        } else {
+        else
             last = last + 0x37   ; letter digit
-        }
+
         put_char(last :: char)
     }
 }
@@ -89,13 +99,12 @@ def printf(string: @char[], number: int) -> void {
             symbol: char = string[i + 1]
 
             if (symbol == 'd') {
-                print(*"printf: decimal not implemented")
-                ;print_decimal(number)
+                print_decimal(number)
             }
-            if (symbol == 'h') {
+            else if (symbol == 'h') {
                 print_hex(number)
             }
-            else print(*"printf: invalid format")
+            else print(*"[printf: Invalid format]")
             i = i + 2
             character = string[i]
             continue
@@ -107,8 +116,76 @@ def printf(string: @char[], number: int) -> void {
     }
 }
 
+module print_decimal {
+    DIGITS: char[6] = []
+}
+def print_decimal(number: int) -> void {
+    index: int = 0
+
+    do {
+        last_digit: int = number % 10
+        print_decimal.DIGITS[index] = last_digit :: char + '0'
+        number = number / 10
+        ++index
+    } while (number > 0)
+
+    ; Print digits in reverse order
+    while (index > 0) {
+        --index
+        put_char(print_decimal.DIGITS[index])
+    }
+}
+
+def print_bool(boolean: bool) -> void {
+    if (boolean)
+        print(*"true")
+    else
+        print(*"false")
+}
+
+module print_int {
+    RESULT: char[32] = []
+    DIGITS: char[] = "0123456789abcdefghijklmnopqrstuvwxyz"
+}
+def print_int(number: int, base: int, length: int, sign: bool) -> void {
+    index: int = 0
+
+    if (sign and number <+ 0){
+        put_char('-')
+        number = -number
+    }
+
+    do {
+        last_digit: int = number % base
+        print_int.RESULT[index] = print_int.DIGITS[last_digit]
+        number = number / base
+        ++index
+    } while (number > 0 or index < length)
+
+    ; Print digits in reverse order
+    while (index > 0) {
+        --index
+        put_char(print_int.RESULT[index])
+    }
+}
 
 
-; def print_decimal(number: int) -> void {
+; module read_int {
+;     DIGITS: char[128] = []
+;     for(i: int = 0, i < 36, ++i){
+;         DIGITS[print_int.DIGITS[i]] = i
+;     }
+; }
+; def read_int(str: @char[], base: int) -> int {
+;     number: int = 0
+;     i: int = 0
+;     character: char = str[i]
 
+;     while (character != 0c) {
+;         number = number * base + read_int.DIGITS[character]
+;         ++i
+;         character = str[i]
+;     }
+
+;     return number
 ; }
