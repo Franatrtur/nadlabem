@@ -17,41 +17,39 @@ def wtf() -> void {
 
 ; Jednotlivé příkazy nechť reagují výpisy aktuálního data a času ve tvaru:
 
-; date
-; The current date is: Thu 01/23/2025
-; date /t
-; Thu 01/23/2025
-; time
-; The current time is: 16:19:11.22
-; time /t
-; 04:19 PM
 ; Všechny vypsané řádky musí být ukončeny dvojicí znaků CR LF.
 ; Pořadí data 01/23/2025 musí být americké měsíc/den/rok. Ve výpisu time /t je hodina ve 12hodinovém režimu. Ve výpisu time je ve 24hodinovém režimu.
 
 ; Ve 12hodinovém režimu se místo hodiny 0 píše hodina 12.
 
-load_date()
-load_time()
 
-while (
-    not input_done()
-) {
-    cmd: @char[] =@= get_line()
+def main() -> void {
 
-    if (strcmp(*cmd, *"date") == 0)
-        date()
+    Date.load()
+    Time.load()
+    
+    while (not input_done())
+    {
+        cmd: char[]* = get_line()
 
-    ; else if (strcmp(*cmd, *"date /t") == 0)
-    ;     date_t()
+        if (strcmp(cmd, *"date") == 0)
+            date()
 
-    ; else if (strcmp(*cmd, *"time") == 0)
-    ;     time()
+        else if (strcmp(cmd, *"date /t") == 0)
+            date_t()
 
-    ; else if (strcmp(*cmd, *"time /t") == 0)
-    ;     time_t()
+        else if (strcmp(cmd, *"time") == 0)
+            time()
 
-    ; else
-    ;     wtf()
+        else if (strcmp(cmd, *"time /t") == 0)
+            time_t()
+
+        else
+            wtf()
+
+        put_char('\r')
+        put_char('\n')
+    }
 }
 
 days: char[]*[] = [
@@ -63,12 +61,61 @@ days: char[]*[] = [
     *"Fri$",
     *"Sat$"
 ]
+def print_day_of_week(weekday: char) -> void {
+    print_dos(days[weekday])
+}
 
-def print_day_of_week() -> void {
-    print_dos(days[5])
-}
-    
+; date
+; The current date is: Thu 01/23/2025
 def date() -> void {
-    print(*"The current date is: ")
-    print_day_of_week()
+    print_dos(*"The current date is: $")
+    date_t()
 }
+
+; date /t
+; Thu 01/23/2025
+def date_t() -> void {
+    print_day_of_week(Date.weekday)
+    put_char(' ')
+    print_int(Date.month as int, 10, 2, false)
+    put_char('/')
+    print_int(Date.day as int, 10, 2, false)
+    put_char('/')
+    print_int(Date.year, 10, 4, false)
+}
+
+
+; time
+; The current time is: 16:19:11.22
+def time() -> void {
+    print_dos(*"The current time is: $")
+    print_int(Time.hour as int, 10, 2, false)
+    put_char(':')
+    print_int(Time.minute as int, 10, 2, false)
+    put_char(':')
+    print_int(Time.second as int, 10, 2, false)
+    put_char('.')
+    print_int(Time.hundredth as int, 10, 2, false)
+}
+
+def adjust_hour(hour: int) -> int {
+    hour = hour % 12
+    if(hour == 0)
+        return 12
+    return hour
+}
+
+; time /t
+; 04:19 PM
+def time_t() -> void {
+    print_int(adjust_hour(Time.hour as int), 10, 2, false)
+    put_char(':')
+    print_int(Time.minute as int, 10, 2, false)
+    if (Time.hour >= 12c)
+        print_dos(*" PM$")
+    else
+        print_dos(*" AM$")
+}
+
+
+main()

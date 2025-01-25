@@ -54,9 +54,12 @@ class Optimizer:
 
             # ideas:
             #  - labeled nops: nops can be removed and their label given to the next instruction
-            #    if it is unlabeled
+            #    if it is unlabeled (basicly "label nop" --> "label:")
             #  - things like mov ax, val   and then   mov bx, ax
             #  - things like sub  sp, 0
+            #  - things like xor  ax, 1
+            #                cmp  ax, 0
+            #                jz   wout4
 
             self.add(op) # add to result unmodified if we didnt skip and continue
 

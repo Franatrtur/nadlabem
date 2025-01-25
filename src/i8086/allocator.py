@@ -36,7 +36,7 @@ class StackFrame:
 
             if isinstance(symbol.node, VariableDeclarationNode):
 
-                self.var_bytes += sizeof(symbol.node.node_type.expression_type)
+                self.var_bytes += sizeof(symbol.node.node_type)
                 variable = Variable(symbol, -self.var_bytes)
                 self.variables.append(variable)
 
