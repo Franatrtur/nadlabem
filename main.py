@@ -13,14 +13,19 @@ parser.add_argument("file", help="The input file name")
 parser.add_argument("-cpu", "--target", "--processor", help="Choose Processor target (default=i8086)", default="i8086")
 
 parser.add_argument("-lax", "--forgive", "--nostrict", action="store_true", help="Reduce strictness when verifying the program")
-parser.add_argument("-nomap", "--nomapping", action="store_true", help="Dont generate mapping comments flag")
-parser.add_argument("-nocom", "--nocomments", action="store_true", help="Erase all comments flag")
-parser.add_argument("-novb", "--noverbose", action="store_true", help="Dont generate generation info output")
+parser.add_argument("-nomap", "--nomapping", action="store_true", help="Dont generate mapping comments")
+parser.add_argument("-nocom", "--nocomments", action="store_true", help="Erase all comments")
+parser.add_argument("-q", "-novb", "--quiet", action="store_true", help="Dont generate generation info output")
 
 # Obfuscation
-parser.add_argument("-r", "--random", action="store_true", help="Randomize labels")
+parser.add_argument("-o", "--obfuscate", action="store_true", help="Forget label names")
 parser.add_argument("-heavy", "--unoptimize", action="store_true", help="Dont optimize the generated assembly")
 parser.add_argument("-full", "--noprune", action="store_true", help="Dont prune out redundant code")
+
+parser.add_argument("-min", "--minify", action="store_true", help="Obfuscate and minify (-o & -nocom & -nomap)")
+
+# AST output
+parser.add_argument("-dot", "--ast", action="store_true", help="Save the AST of the program as a DOT file")
 
 parser.add_argument("-out", "--output", help="Output file destination (default=same file.asm)", default=None)
 parser.add_argument("-p", "--print", action="store_true", help="Print to console instead of writing to file", default=None)
@@ -55,10 +60,11 @@ def main() -> None:
             location = Path(file_path),
             target = args.target,
             strict = not args.forgive,
-            generate_mapping = not args.nomapping,
-            erase_comments = args.nocomments,
+            generate_mapping = not args.nomapping and not args.minify,
+            erase_comments = args.nocomments or args.minify,
             tabspaces = int(args.tabspaces),
-            verbose = not args.noverbose
+            verbose = not args.quiet,
+            obfuscate = args.obfuscate or args.minify
         )
 
         if config.verbose:

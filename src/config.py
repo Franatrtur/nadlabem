@@ -11,7 +11,8 @@ class CompilationConfig:
             generate_mapping: bool = True,
             erase_comments: bool = False,
             tabspaces: int = 8,
-            verbose: bool = True):
+            verbose: bool = True,
+            obfuscate: bool = False):
 
         self.location: Path | None = location
         self.target: str = target
@@ -20,6 +21,7 @@ class CompilationConfig:
         self.erase_comments: bool = erase_comments
         self.tabspaces: int = tabspaces
         self.verbose: bool = verbose
+        self.obfuscate: bool = obfuscate
 
         self.compiler: "Compiler" = None
 
@@ -31,4 +33,4 @@ class CompilationConfig:
         self.compiler.warnings.append(error)
 
     def __str__(self):
-        return f"CompilationConfig(target={self.target}, strict={self.strict}, generate_mapping={self.generate_mapping}, erase_comments={self.erase_comments}, tabspaces={self.tabspaces}, verbose={self.verbose})"
+        return f"CompilationConfig(target={self.target}, strict={self.strict}, generate_mapping={self.generate_mapping}, erase_comments={self.erase_comments}, tabspaces={self.tabspaces}, ...)"

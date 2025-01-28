@@ -36,6 +36,7 @@ class Context(Node):
         return self.parent.resolve_names(name_token, components)
 
     def generate_id(self, name_suggestion: str) -> str:
+        name_suggestion = "_" if self.config.obfuscate else name_suggestion  # forget label on obfuscation
         symbol_id = name_suggestion
         num = 1
         while symbol_id in self.root.ids or symbol_id in RESERVED_NAMES:
@@ -54,6 +55,7 @@ class Namespace(Context):
 
     def __init__(self, node: "ASTNode", parent: Union["Context", None] = None):
         super().__init__(node, parent)
+        self.config = node.config
         self.modules: dict[str, Namespace] = {}
         self.direct: list[Namespace] = []   # ordered so later defined namespaces override earlier ones
 

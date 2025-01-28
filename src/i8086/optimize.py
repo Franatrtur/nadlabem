@@ -50,11 +50,12 @@ class Optimizer:
                     self.skip()
                     continue
 
-            # 2) ... ?
+            # 2) Handle nops
+            if op.operation == "nop":
+                op.operation = None
+                continue
 
             # ideas:
-            #  - labeled nops: nops can be removed and their label given to the next instruction
-            #    if it is unlabeled (basicly "label nop" --> "label:")
             #  - things like mov ax, val   and then   mov bx, ax
             #  - things like sub  sp, 0
             #  - things like xor  ax, 1

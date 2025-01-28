@@ -22,6 +22,8 @@ class Assembly:
 
         if self.label is None:
             init = " " * self.config.tabspaces
+        elif self.operation is None:
+            init = self.label + ":"
         elif len(self.label) < self.config.tabspaces:
             init = self.label + " " * (self.config.tabspaces - len(self.label))
         else:
@@ -30,7 +32,8 @@ class Assembly:
 
         arg_sep = "" if not self.arguments else " " + (" " * (4 - len(self.operation)))
         
-        line_string = f"{init}{self.operation}{arg_sep}{', '.join(map(str, self.arguments))}"
+        op = self.operation if self.operation is not None else ""
+        line_string = f"{init}{op}{arg_sep}{', '.join(map(str, self.arguments))}"
             
         mapstr = ""
 
