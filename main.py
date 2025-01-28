@@ -64,7 +64,8 @@ def main() -> None:
             erase_comments = args.nocomments or args.minify,
             tabspaces = int(args.tabspaces),
             verbose = not args.quiet,
-            obfuscate = args.obfuscate or args.minify
+            obfuscate = args.obfuscate or args.minify,
+            optimize = not args.unoptimize,
         )
 
         if config.verbose:

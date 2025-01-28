@@ -12,7 +12,8 @@ class CompilationConfig:
             erase_comments: bool = False,
             tabspaces: int = 8,
             verbose: bool = True,
-            obfuscate: bool = False):
+            obfuscate: bool = False,
+            optimize: bool = True):
 
         self.location: Path | None = location
         self.target: str = target
@@ -22,6 +23,7 @@ class CompilationConfig:
         self.tabspaces: int = tabspaces
         self.verbose: bool = verbose
         self.obfuscate: bool = obfuscate
+        self.optimize: bool = optimize
 
         self.compiler: "Compiler" = None
 

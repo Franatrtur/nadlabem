@@ -103,7 +103,8 @@ class ProgramI8086Translator(ProgramTranslator):
         for declaration in self.declarations:
             self.result.extend(declaration)
 
-        self.optimize()
+        if self.config.optimize:
+            self.optimize()
 
     
     def declare(self, variable_declaration: list[Assembly]) -> None:

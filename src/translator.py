@@ -40,7 +40,7 @@ class Assembly:
         if self.mapping and not self.config.erase_comments:
             mapstr = " " + (" " * (4 * self.config.tabspaces - len(line_string)) + f";{self.mapping}")
 
-        ending = "\n" if self.line_break else ""
+        ending = "\n" if self.line_break and self.config.generate_mapping else ""
 
         return superlabel + line_string + mapstr + ending
 
