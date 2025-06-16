@@ -30,4 +30,4 @@ See language.asm for currently planned abstractions and structures.
 
 ### Maintainers
  - Franatrtur
- - chickenien
+ - chramiq
