@@ -1,5 +1,0 @@
-include "std/lib.brandejs"
-
-
-a: int = 5 * 3
-a = a
