@@ -8,6 +8,7 @@ from .allocator import Variable, StackFrame
 from ..errors import NotImplementedError, NadLabemError
 from .program import ProgramI8086Translator
 from .literal import StringReferenceTranslator
+from .loops import WhileTranslator, ForTranslator
 
 class VariableDeclarationTranslator(Translator):
 
@@ -97,7 +98,7 @@ class VariableDeclarationTranslator(Translator):
             self.assemble("pop", ["ax"])
             variable.store_pointer(self, "ax")
 
-        elif isinstance(self.node.assignment, LiteralNode) and variable.is_static and not variable.is_reference:
+        elif isinstance(self.node.assignment, LiteralNode) and variable.is_static and not variable.is_reference and not (self.closest_parent(WhileTranslator) or self.closest_parent(ForTranslator)):
             definition: str = "<definition>"
             bytelen = sizeof(self.node.assignment.node_type)
             if bytelen == 1:
