@@ -10,7 +10,6 @@ The NadLabem compiler translates **Brandejs**, a language with a familiar C-like
 
 ## Features
 
-- **Hybrid Syntax:** Enjoy a comfortable mix of C-style blocks and Python-style function definitions.
 - **Static Typing:** Catch errors early with type checking for variables and function signatures.
 - **Modern Constructs:** Use `for` loops, `while` loops, `if/else` statements, `break`, and `continue`.
 - **Modules and Namespacing:** Organize your code with a clean and simple module system.
@@ -21,7 +20,6 @@ The NadLabem compiler translates **Brandejs**, a language with a familiar C-like
     - **Optimization:** Minify and obfuscate your code for smaller, tighter assembly.
     - **AST Export:** Visualize your program's structure with `.dot` file exports of the Abstract Syntax Tree. *(planned feature)*
     - **No Dependencies:** Written in pure Python, it runs anywhere with no external libraries needed.
-- **Open Source:** Fork it, fix it, improve it!
 
 ## Usage
 

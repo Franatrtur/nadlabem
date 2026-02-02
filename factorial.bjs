@@ -1,0 +1,17 @@
+include "std/io.brandejs" as io
+
+; Calculates the factorial of a number.
+def fact(num: int) -> int {
+    if (num <= 1) {
+        return 1
+    }
+    return num * fact(num - 1)
+}
+
+; Calculate factorial of 5.
+result: int = fact(5)
+
+; Print the result to the output.
+io.print(*"Factorial of 5 is: ")
+io.print_decimal(result)
+io.println(*"")
